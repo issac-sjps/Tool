@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡易 HTML 即時模擬器</title>
+    <style>
+        /* 基礎排版設定 */
+        body {
+            display: flex; /* 讓左右兩邊並排 */
+            height: 100vh; /* 填滿整個螢幕高度 */
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+        }
+
+        /* 左邊編輯區與右邊預覽區的共同設定 */
+        .container {
+            flex: 1; /* 左右各佔一半空間 */
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 18px;
+        }
+
+        /* 輸入框樣式 */
+        textarea {
+            flex: 1;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace; /* 使用等寬字體讓程式碼更好看 */
+            font-size: 16px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            resize: none; /* 防止使用者亂拉大小 */
+            outline: none;
+            background-color: #282c34;
+            color: #abb2bf;
+        }
+        
+        textarea:focus {
+            border-color: #61afef; /* 點擊時邊框變色 */
+        }
+
+        /* 預覽視窗樣式 */
+        iframe {
+            flex: 1;
+            width: 100%;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff; /* 預設白色背景 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🧑‍💻 輸入 HTML 程式碼</h2>
+        <textarea id="html-code" placeholder="請在這裡輸入你的 HTML 標籤，例如：<h1>你好！</h1>"></textarea>
+    </div>
+
+    <div class="container">
+        <h2>👀 實際畫面預覽</h2>
+        <iframe id="preview-window"></iframe>
+    </div>
+
+    <script>
+        // 取得輸入框和預覽視窗的元素
+        const htmlCodeInput = document.getElementById('html-code');
+        const previewWindow = document.getElementById('preview-window');
+
+        // 當輸入框的內容有任何「輸入」時，就會執行這個動作
+        htmlCodeInput.addEventListener('input', function() {
+            // 取得目前輸入框裡的程式碼
+            const code = htmlCodeInput.value;
+            
+            // 取得 iframe 裡面的網頁文件 (document)
+            const iframeDoc = previewWindow.contentWindow.document;
+            
+            // 將輸入的程式碼寫入 iframe 中
+            iframeDoc.open();
+            iframeDoc.write(code);
+            iframeDoc.close();
+        });
+    </script>
+
+</body>
+</html>
