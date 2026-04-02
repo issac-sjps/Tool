@@ -180,10 +180,12 @@
 
     <div class="sub-panel active" id="panel-two">
       <div class="form-group">
-        <label>每行一筆，姓名與地址以 <strong>Tab 鍵</strong> 分隔</label>
-        <textarea class="paste-area" id="paste-two" placeholder="範例（Tab分隔）：&#10;王大明	高雄市左營區自由三路1號&#10;李小華	台北市中正區重慶南路一段122號"></textarea>
+        <label>每行一筆，姓名與地址以 <strong>Tab 鍵</strong> 分隔（直接從 Excel 複製貼上即可）</label>
+        <textarea class="paste-area" id="paste-two" placeholder="範例：&#10;王大明	高雄市左營區自由三路1號&#10;李小華	台北市中正區重慶南路一段122號"></textarea>
       </div>
-      <div class="paste-hint">格式：<code>姓名 [Tab] 地址</code>　（郵遞區號可在名單管理補填，但強烈建議一起填入）</div>
+      <div class="paste-hint">
+        ⚠️ <strong>注意：</strong>地址中若含有空格，系統可能誤判欄位切割。如遇此情況，請先匯入後到「名單管理」手動編輯地址。
+      </div>
       <div class="import-ok" id="ok-two"></div>
       <div class="import-err" id="err-two"></div>
       <div style="margin-top:11px;display:flex;gap:8px">
@@ -194,10 +196,13 @@
 
     <div class="sub-panel" id="panel-three">
       <div class="form-group">
-        <label>每行一筆，三欄以 <strong>Tab 鍵</strong> 分隔</label>
-        <textarea class="paste-area" id="paste-three" placeholder="範例（Tab分隔）：&#10;王大明	813023	高雄市左營區自由三路1號&#10;李小華	100041	台北市中正區重慶南路一段122號"></textarea>
+        <label>每行一筆，三欄以 <strong>Tab 鍵</strong> 分隔（直接從 Excel 複製貼上即可）</label>
+        <textarea class="paste-area" id="paste-three" placeholder="範例：&#10;王大明	813023	高雄市左營區自由三路1號&#10;李小華	100041	台北市中正區重慶南路一段122號"></textarea>
       </div>
-      <div class="paste-hint">格式：<code>姓名 [Tab] 郵遞區號 [Tab] 地址</code></div>
+      <div class="paste-hint">
+        格式：<code>姓名 [Tab] 郵遞區號 [Tab] 地址</code><br>
+        ⚠️ <strong>注意：</strong>地址中若含有空格，系統可能誤判欄位切割。如遇此情況，請先匯入後到「名單管理」手動編輯地址。
+      </div>
       <div class="import-ok" id="ok-three"></div>
       <div class="import-err" id="err-three"></div>
       <div style="margin-top:11px;display:flex;gap:8px">
@@ -255,10 +260,10 @@
   <div class="settings-grid">
     <div class="card">
       <div class="card-title">✏️ 編輯</div>
-      <div class="form-group"><label>單位名稱</label><input type="text" id="s-name" value="新莊國小"></div>
+      <div class="form-group"><label>單位名稱</label><input type="text" id="s-name" value="左營區新莊國小"></div>
       <div class="form-group"><label>部門／附加說明（選填）</label><input type="text" id="s-dept" placeholder="如：教務處、總務處"></div>
-      <div class="form-group"><label>郵遞區號（6碼）</label><input type="text" id="s-zip" value="242028" maxlength="10"></div>
-      <div class="form-group"><label>寄件地址</label><input type="text" id="s-address" value="新北市新莊區中正路七十六號"></div>
+      <div class="form-group"><label>郵遞區號（6碼）</label><input type="text" id="s-zip" value="813023" maxlength="10"></div>
+      <div class="form-group"><label>寄件地址</label><input type="text" id="s-address" value="高雄市左營區自由三路一號"></div>
       <div class="form-group"><label>收件敬語</label>
         <select id="s-salute">
           <option value="敬啟">敬啟</option><option value="收">收</option>
@@ -273,7 +278,6 @@
       <div class="label-cell">
         <div class="label-top">
           <div class="label-sender-block" id="preview-sender"></div>
-          <div class="label-stamp-box">貼郵票處</div>
         </div>
         <div class="label-recv" style="margin-top:7px">
           <div class="rz">813023</div>
@@ -344,7 +348,7 @@
 
 <script>
 let recipients=[], editIndex=-1;
-const DEF={name:'新莊國小',dept:'',zip:'242028',address:'新北市新莊區中正路七十六號',salute:'敬啟'};
+const DEF={name:'左營區新莊國小',dept:'',zip:'813023',address:'高雄市左營區自由三路一號',salute:'敬啟'};
 let S={...DEF};
 
 function init(){
@@ -414,31 +418,37 @@ function parsePaste(mode){
   const raw=document.getElementById('paste-'+mode).value.trim();
   if(!raw){showMsg(mode,false,'請先貼上資料');return;}
   const lines=raw.split('\n').filter(l=>l.trim());
-  const parsed=[], errs=[];
+  const parsed=[], errs=[], spaceRows=[];
   for(let i=0;i<lines.length;i++){
     const line=lines[i];
+    // 優先 Tab 分割（Excel 複製貼上預設就是 Tab）
     let cols=line.split('\t').map(c=>c.trim());
-    // fallback: 多空格分割
+    let usedSpace=false;
     if(cols.length<2){
-      cols=line.trim().split(/\s{2,}/).map(c=>c.trim()).filter(c=>c);
+      // 嘗試多空格 fallback，並標記警告
+      const sc=line.trim().split(/\s{2,}/).map(c=>c.trim()).filter(c=>c);
+      if(sc.length>=2){cols=sc;usedSpace=true;}
     }
     if(mode==='two'){
       if(cols.length>=2&&cols[0]&&cols[1]){
+        if(usedSpace) spaceRows.push(i+1);
         parsed.push({name:cols[0],zip:'',address:cols.slice(1).join(' ')});
       } else errs.push(i+1);
-    } else { // three: 姓名 郵遞區號 地址
+    } else {
       if(cols.length>=3&&cols[0]&&cols[2]){
+        if(usedSpace) spaceRows.push(i+1);
         parsed.push({name:cols[0],zip:cols[1]||'',address:cols.slice(2).join(' ')});
       } else if(cols.length===2&&cols[0]&&cols[1]){
+        if(usedSpace) spaceRows.push(i+1);
         parsed.push({name:cols[0],zip:'',address:cols[1]});
-        errs.push(i+1+' (郵遞區號空白)');
       } else errs.push(i+1);
     }
   }
-  if(!parsed.length){showMsg(mode,false,'無法解析資料，請確認欄位以 Tab 分隔');return;}
+  if(!parsed.length){showMsg(mode,false,'無法解析資料。請確認欄位之間有 <strong>Tab</strong> 分隔（從 Excel 直接框選複製貼上即可）');return;}
   importData(parsed);
   let msg=`匯入 <strong>${parsed.length}</strong> 筆`;
-  if(errs.length) msg+=`，第 ${errs.slice(0,5).join('、')} 行略過`;
+  if(errs.length) msg+=`，${errs.length} 行無法解析略過`;
+  if(spaceRows.length) msg+=`<br>⚠️ 第 ${spaceRows.slice(0,5).join('、')} 行是以<strong>空格</strong>切割，若地址本身含空格可能有誤，建議至「② 名單管理」確認並修正。`;
   showMsg(mode,true,msg);
   toast(`✅ 匯入 ${parsed.length} 筆`);
 }
@@ -581,7 +591,6 @@ function buildLabel(r, addrOnly){
   return `<div class="label-cell">
     <div class="label-top">
       <div class="label-sender-block">${buildSHTML(S)}</div>
-      <div class="label-stamp-box">貼郵票處</div>
     </div>
     <div class="label-recv">
       <div class="rz">${r.zip||''}</div>
@@ -634,7 +643,7 @@ function printLabels(list, addrOnly){
     .lt{display:flex;justify-content:space-between;align-items:flex-start;}
     .ls{font-size:8.5pt;line-height:1.75;color:#444;}
     .ls .sn{font-weight:700;font-size:9.5pt;color:#222;}
-    .stmp{border:1px solid #aaa;width:21mm;height:16mm;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#aaa;flex-shrink:0;margin-left:3mm;}
+    .stmp{display:none;}
     .lr{padding-left:${addrOnly?'0':'16mm'};padding-right:3mm;${addrOnly?'display:flex;flex-direction:column;justify-content:center;flex:1':''}}
     .rz{font-size:13.5pt;font-weight:700;letter-spacing:.2em;color:#8b3a2a;margin-bottom:1mm;}
     .ra{font-size:10pt;line-height:1.6;}
@@ -693,6 +702,20 @@ function renderReprint(){
       </div>
     </div>`).join('');
 }
+
+// Tab 鍵在 textarea 中插入 \t 而非跳焦點
+['paste-two','paste-three'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('keydown',function(e){
+    if(e.key==='Tab'){
+      e.preventDefault();
+      const s=this.selectionStart, en=this.selectionEnd;
+      this.value=this.value.substring(0,s)+'\t'+this.value.substring(en);
+      this.selectionStart=this.selectionEnd=s+1;
+    }
+  });
+});
 
 init();
 </script>
