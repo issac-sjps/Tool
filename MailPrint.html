@@ -7,395 +7,127 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-
   :root {
-    --ink: #1a1410;
-    --ink-light: #4a3f35;
-    --ink-faint: #8a7a6e;
-    --paper: #faf8f4;
-    --paper-warm: #f3ede3;
-    --paper-border: #ddd5c8;
-    --accent: #8b3a2a;
-    --accent-light: #c4614d;
-    --accent-pale: #f5e8e5;
-    --green: #2a6b4a;
-    --green-pale: #e5f2eb;
-    --blue: #2a4a8b;
-    --blue-pale: #e5eaf5;
-    --shadow: rgba(26,20,16,0.08);
-    --shadow-md: rgba(26,20,16,0.14);
+    --ink:#1a1410;--ink-light:#4a3f35;--ink-faint:#8a7a6e;
+    --paper:#faf8f4;--paper-warm:#f3ede3;--paper-border:#ddd5c8;
+    --accent:#8b3a2a;--accent-light:#c4614d;--accent-pale:#f5e8e5;
+    --green:#2a6b4a;--green-pale:#e5f2eb;
+    --blue:#2a4a8b;--blue-pale:#e5eaf5;
+    --orange:#c47a1a;--orange-pale:#fdf3e0;
+    --shadow:rgba(26,20,16,0.08);--shadow-md:rgba(26,20,16,0.14);
   }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  nav{background:var(--ink);display:flex;align-items:center;padding:0 0 0 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow-md);}
+  .nav-brand{font-family:'Noto Serif TC',serif;font-size:14px;color:#e8dfd0;letter-spacing:.08em;padding:13px 18px 13px 0;border-right:1px solid #3a3028;margin-right:6px;white-space:nowrap;}
+  .nav-tabs{display:flex;flex:1;overflow-x:auto;}
+  .nav-tab{background:none;border:none;color:#a09080;font-family:'Noto Sans TC',sans-serif;font-size:13px;padding:13px 15px;cursor:pointer;white-space:nowrap;transition:color .2s;letter-spacing:.02em;}
+  .nav-tab:hover{color:#e8dfd0;}
+  .nav-tab.active{color:#fff;background:var(--accent);}
+  .nav-tab .badge{display:inline-block;background:var(--accent-light);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle;}
+  .nav-tab.active .badge{background:rgba(255,255,255,.3);}
 
-  body {
-    font-family: 'Noto Sans TC', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-  }
+  .page{display:none;padding:26px 22px;max-width:1080px;margin:0 auto;}
+  .page.active{display:block;}
+  .page-header{display:flex;align-items:baseline;gap:10px;margin-bottom:22px;padding-bottom:13px;border-bottom:2px solid var(--paper-border);}
+  .page-title{font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700;}
+  .page-subtitle{font-size:13px;color:var(--ink-faint);}
 
-  /* ── NAV ── */
-  nav {
-    background: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 0;
-    padding: 0 0 0 24px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px var(--shadow-md);
-  }
-  .nav-brand {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 15px;
-    color: #e8dfd0;
-    letter-spacing: 0.08em;
-    padding: 14px 24px 14px 0;
-    border-right: 1px solid #3a3028;
-    margin-right: 8px;
-    white-space: nowrap;
-  }
-  .nav-tabs { display: flex; gap: 0; flex: 1; overflow-x: auto; }
-  .nav-tab {
-    background: none;
-    border: none;
-    color: #a09080;
-    font-family: 'Noto Sans TC', sans-serif;
-    font-size: 13px;
-    padding: 14px 18px;
-    cursor: pointer;
-    white-space: nowrap;
-    position: relative;
-    transition: color 0.2s;
-    letter-spacing: 0.04em;
-  }
-  .nav-tab:hover { color: #e8dfd0; }
-  .nav-tab.active {
-    color: #fff;
-    background: var(--accent);
-  }
-  .nav-tab .badge {
-    display: inline-block;
-    background: var(--accent-light);
-    color: #fff;
-    font-size: 10px;
-    padding: 1px 6px;
-    border-radius: 10px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-  .nav-tab.active .badge { background: rgba(255,255,255,0.3); }
+  .card{background:#fff;border:1px solid var(--paper-border);border-radius:8px;padding:17px 20px;margin-bottom:16px;box-shadow:0 1px 4px var(--shadow);}
+  .card-title{font-size:12px;font-weight:700;color:var(--ink-faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:11px;}
 
-  /* ── PAGES ── */
-  .page { display: none; padding: 32px 28px; max-width: 1100px; margin: 0 auto; }
-  .page.active { display: block; }
+  .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 15px;border-radius:6px;font-size:13px;font-family:'Noto Sans TC',sans-serif;font-weight:500;cursor:pointer;border:none;transition:all .15s;}
+  .btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent-light);}
+  .btn-secondary{background:var(--paper-warm);color:var(--ink);border:1px solid var(--paper-border);}.btn-secondary:hover{background:var(--paper-border);}
+  .btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#1e5438;}
+  .btn-danger{background:#c0392b;color:#fff;}.btn-danger:hover{background:#a93226;}
+  .btn-sm{padding:5px 10px;font-size:12px;}.btn-icon{padding:5px 8px;}
 
-  .page-header {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 28px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--paper-border);
-  }
-  .page-title {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-  .page-subtitle { font-size: 13px; color: var(--ink-faint); }
+  .toggle-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--paper-warm);border-radius:8px;border:1px solid var(--paper-border);}
+  .toggle-switch{position:relative;width:42px;height:24px;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.3s;}
+  .toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+  input:checked+.toggle-slider{background:var(--green);}
+  input:checked+.toggle-slider:before{transform:translateX(18px);}
 
-  /* ── CARDS ── */
-  .card {
-    background: #fff;
-    border: 1px solid var(--paper-border);
-    border-radius: 8px;
-    padding: 20px 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 4px var(--shadow);
-  }
-  .card-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--ink-faint);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
+  input[type=text],input[type=search],textarea,select{font-family:'Noto Sans TC',sans-serif;font-size:13px;border:1px solid var(--paper-border);border-radius:6px;padding:7px 11px;background:#fff;color:var(--ink);transition:border-color .2s;width:100%;}
+  input[type=text]:focus,input[type=search]:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-pale);}
+  label{font-size:13px;color:var(--ink-light);display:block;margin-bottom:4px;}
+  .form-group{margin-bottom:12px;}
 
-  /* ── BUTTONS ── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-family: 'Noto Sans TC', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.15s;
-    letter-spacing: 0.03em;
-  }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent-light); }
-  .btn-secondary { background: var(--paper-warm); color: var(--ink); border: 1px solid var(--paper-border); }
-  .btn-secondary:hover { background: var(--paper-border); }
-  .btn-green { background: var(--green); color: #fff; }
-  .btn-green:hover { background: #1e5438; }
-  .btn-blue { background: var(--blue); color: #fff; }
-  .btn-blue:hover { background: #1e3870; }
-  .btn-danger { background: #c0392b; color: #fff; }
-  .btn-danger:hover { background: #a93226; }
-  .btn-sm { padding: 5px 12px; font-size: 12px; }
-  .btn-icon { padding: 6px 10px; }
+  .drop-zone{border:2px dashed var(--paper-border);border-radius:10px;padding:28px 18px;text-align:center;cursor:pointer;transition:all .2s;background:var(--paper-warm);}
+  .drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:var(--accent-pale);}
+  .drop-icon{font-size:30px;margin-bottom:7px;}
+  .drop-label{font-size:14px;color:var(--ink-light);margin-bottom:3px;}
+  .drop-hint{font-size:12px;color:var(--ink-faint);}
+  #excel-input{display:none;}
 
-  /* ── INPUTS ── */
-  input[type=text], input[type=search], textarea, select {
-    font-family: 'Noto Sans TC', sans-serif;
-    font-size: 13px;
-    border: 1px solid var(--paper-border);
-    border-radius: 6px;
-    padding: 8px 12px;
-    background: #fff;
-    color: var(--ink);
-    transition: border-color 0.2s;
-    width: 100%;
-  }
-  input[type=text]:focus, input[type=search]:focus, textarea:focus, select:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-pale);
-  }
-  label { font-size: 13px; color: var(--ink-light); display: block; margin-bottom: 5px; }
-  .form-group { margin-bottom: 14px; }
+  .sub-tabs{display:flex;border-bottom:2px solid var(--paper-border);margin-bottom:14px;}
+  .sub-tab{background:none;border:none;font-size:13px;padding:8px 16px;cursor:pointer;color:var(--ink-faint);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Noto Sans TC',sans-serif;transition:all .2s;}
+  .sub-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+  .sub-panel{display:none;}.sub-panel.active{display:block;}
 
-  /* ── IMPORT PAGE ── */
-  .import-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media(max-width:700px){ .import-grid { grid-template-columns: 1fr; } }
+  .paste-area{width:100%;height:170px;resize:vertical;font-size:13px;line-height:1.9;}
+  .paste-hint{font-size:12px;color:var(--ink-faint);margin-top:5px;line-height:1.7;}
+  .import-ok{margin-top:10px;padding:8px 12px;background:var(--green-pale);border-radius:6px;font-size:13px;color:var(--green);display:none;}
+  .import-err{margin-top:10px;padding:8px 12px;background:#fdecea;border-radius:6px;font-size:13px;color:#c0392b;display:none;}
 
-  .drop-zone {
-    border: 2px dashed var(--paper-border);
-    border-radius: 10px;
-    padding: 36px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: var(--paper-warm);
-  }
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--accent);
-    background: var(--accent-pale);
-  }
-  .drop-icon { font-size: 36px; margin-bottom: 10px; }
-  .drop-label { font-size: 14px; color: var(--ink-light); margin-bottom: 6px; }
-  .drop-hint { font-size: 12px; color: var(--ink-faint); }
-  #excel-input { display: none; }
+  .zip-warn{background:var(--orange-pale);border:1px solid #f0c060;border-radius:8px;padding:12px 15px;font-size:13px;color:#7a4a00;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;}
+  .zip-warn .wi{font-size:20px;flex-shrink:0;}
 
-  .paste-area {
-    width: 100%;
-    height: 200px;
-    resize: vertical;
-    font-family: 'Noto Sans TC', monospace;
-    font-size: 13px;
-    line-height: 1.8;
-  }
-  .paste-hint {
-    font-size: 12px;
-    color: var(--ink-faint);
-    margin-top: 6px;
-    line-height: 1.6;
-  }
-  .import-preview {
-    margin-top: 14px;
-    padding: 10px 14px;
-    background: var(--green-pale);
-    border-radius: 6px;
-    font-size: 13px;
-    color: var(--green);
-    display: none;
-  }
+  .list-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:13px;flex-wrap:wrap;}
+  .search-wrap{position:relative;flex:1;min-width:150px;}
+  .search-wrap input{padding-left:29px;}
+  .search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-size:13px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead tr{background:var(--paper-warm);}
+  th{padding:9px 12px;text-align:left;font-weight:600;color:var(--ink-faint);font-size:12px;letter-spacing:.06em;border-bottom:2px solid var(--paper-border);}
+  td{padding:9px 12px;border-bottom:1px solid var(--paper-border);vertical-align:middle;}
+  tr:hover td{background:var(--paper-warm);}
+  .td-act{display:flex;gap:4px;}
+  .no-data{text-align:center;color:var(--ink-faint);padding:34px;}
+  .tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:10px;}
+  .tag-zip{background:var(--blue-pale);color:var(--blue);}
+  .tag-nozip{background:#fdecea;color:#c0392b;font-weight:600;}
 
-  /* ── LIST PAGE ── */
-  .list-toolbar {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-  .search-wrap { position: relative; flex: 1; min-width: 180px; }
-  .search-wrap input { padding-left: 32px; }
-  .search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--ink-faint);
-    font-size: 14px;
-  }
+  .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:600px){.settings-grid{grid-template-columns:1fr;}}
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead tr { background: var(--paper-warm); }
-  th {
-    padding: 10px 14px;
-    text-align: left;
-    font-weight: 600;
-    color: var(--ink-faint);
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    border-bottom: 2px solid var(--paper-border);
-  }
-  td { padding: 10px 14px; border-bottom: 1px solid var(--paper-border); vertical-align: middle; }
-  tr:hover td { background: var(--paper-warm); }
-  .td-actions { display: flex; gap: 6px; }
-  .no-data { text-align: center; color: var(--ink-faint); padding: 40px; }
+  /* LABEL — 國內橫式信封格式 */
+  .label-cell{border:1px dashed #b0a898;padding:5.5mm 6.5mm;min-height:56mm;display:flex;flex-direction:column;justify-content:space-between;background:#fff;font-family:'Noto Serif TC',serif;}
+  .label-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .label-sender-block{font-size:8pt;line-height:1.75;color:#444;}
+  .label-sender-block .sn{font-weight:700;font-size:9.5pt;color:#222;}
+  .label-stamp-box{border:1px solid #aaa;width:21mm;height:16mm;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#aaa;flex-shrink:0;margin-left:3mm;}
+  .label-recv{text-align:left;padding-left:16mm;padding-right:3mm;}
+  .label-recv .rz{font-size:13pt;font-weight:700;letter-spacing:.2em;color:var(--accent);margin-bottom:1mm;}
+  .label-recv .ra{font-size:10pt;line-height:1.6;}
+  .label-recv .rn{font-size:13pt;font-weight:700;margin-top:1.5mm;}
+  .label-recv .rs{font-size:10pt;color:#666;margin-left:2mm;}
+  .label-empty{border:1px dashed #ddd8d0;min-height:56mm;background:repeating-linear-gradient(45deg,transparent,transparent 7px,#f8f5f0 7px,#f8f5f0 8px);}
 
-  /* ── SETTINGS PAGE ── */
-  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media(max-width:600px){ .settings-grid { grid-template-columns: 1fr; } }
-  .preview-label-box {
-    background: var(--paper-warm);
-    border: 1px solid var(--paper-border);
-    border-radius: 8px;
-    padding: 20px;
-    font-family: 'Noto Serif TC', serif;
-    font-size: 14px;
-    line-height: 2;
-    min-height: 100px;
-  }
+  .a4-sheet{background:#fff;border:1px solid var(--paper-border);box-shadow:0 4px 18px var(--shadow-md);width:210mm;max-width:100%;margin:0 auto 22px;padding:9mm;display:grid;grid-template-columns:1fr 1fr;gap:4mm;}
 
-  /* ── MODAL ── */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: #fff;
-    border-radius: 10px;
-    padding: 28px 32px;
-    width: 480px;
-    max-width: 95vw;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  }
-  .modal-title { font-family: 'Noto Serif TC', serif; font-size: 18px; margin-bottom: 20px; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:10px;padding:24px 28px;width:450px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+  .modal-title{font-family:'Noto Serif TC',serif;font-size:17px;margin-bottom:16px;}
+  .modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;}
 
-  /* ── PRINT PREVIEW PAGE ── */
-  .print-toolbar {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .print-info {
-    font-size: 13px;
-    color: var(--ink-faint);
-    margin-left: auto;
-  }
-  .a4-sheet-preview {
-    background: #fff;
-    border: 1px solid var(--paper-border);
-    box-shadow: 0 4px 20px var(--shadow-md);
-    width: 210mm;
-    max-width: 100%;
-    margin: 0 auto 24px;
-    padding: 10mm;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4mm;
-  }
-  .label-cell {
-    border: 1px dashed #c0b8b0;
-    padding: 7mm 8mm;
-    min-height: 62mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    page-break-inside: avoid;
-  }
-  .label-sender {
-    font-size: 9pt;
-    color: #555;
-    line-height: 1.7;
-    font-family: 'Noto Serif TC', serif;
-  }
-  .label-sender .s-name { font-weight: 700; font-size: 10pt; }
-  .label-receiver {
-    text-align: right;
-    font-family: 'Noto Serif TC', serif;
-    line-height: 1.9;
-    margin-top: 8px;
-  }
-  .label-receiver .r-zip { font-size: 13pt; font-weight: 700; letter-spacing: 0.15em; color: var(--accent); }
-  .label-receiver .r-address { font-size: 10pt; }
-  .label-receiver .r-name { font-size: 14pt; font-weight: 700; margin-top: 2px; }
-  .label-receiver .r-salute { font-size: 10pt; color: var(--ink-faint); }
-  .label-empty {
-    border: 1px dashed #e0d8d0;
-    min-height: 62mm;
-    background: repeating-linear-gradient(45deg,transparent,transparent 6px,#f8f5f1 6px,#f8f5f1 7px);
-  }
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--ink);color:#fff;padding:8px 19px;border-radius:20px;font-size:13px;opacity:0;transition:all .3s;z-index:999;pointer-events:none;white-space:nowrap;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-  /* ── REPRINT PAGE ── */
-  .reprint-result { margin-top: 20px; }
-  .reprint-label-preview {
-    background: #fff;
-    border: 1px solid var(--paper-border);
-    border-radius: 8px;
-    padding: 20px;
-    max-width: 400px;
-    font-family: 'Noto Serif TC', serif;
-  }
-
-  /* ── TOAST ── */
-  .toast {
-    position: fixed;
-    bottom: 28px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--ink);
-    color: #fff;
-    padding: 10px 22px;
-    border-radius: 20px;
-    font-size: 13px;
-    opacity: 0;
-    transition: all 0.3s;
-    z-index: 999;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── PRINT STYLES ── */
-  @media print {
-    body > *:not(#print-frame) { display: none !important; }
-    #print-frame { display: block !important; }
-  }
-  #print-frame { display: none; }
-
-  @page { size: A4; margin: 10mm; }
-
-  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
-  .tag-zip { background: var(--blue-pale); color: var(--blue); }
-
-  .divider { border: none; border-top: 1px solid var(--paper-border); margin: 16px 0; }
-
-  .stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
-  .stat-item { font-size: 13px; color: var(--ink-light); }
-  .stat-item strong { color: var(--accent); font-size: 18px; margin-right: 3px; }
+  hr.div{border:none;border-top:1px solid var(--paper-border);margin:13px 0;}
+  .stat-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:13px;}
+  .stat-item{font-size:13px;color:var(--ink-light);}
+  .stat-item strong{color:var(--accent);font-size:16px;margin-right:2px;}
+  .print-toolbar{display:flex;gap:9px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+  .print-info{font-size:13px;color:var(--ink-faint);margin-left:auto;}
+  .mode-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600;margin-right:6px;}
+  .mode-full{background:var(--blue-pale);color:var(--blue);}
+  .mode-addr{background:var(--green-pale);color:var(--green);}
 </style>
 </head>
 <body>
@@ -403,58 +135,74 @@
 <nav>
   <div class="nav-brand">📮 郵件標籤系統</div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('import')">① 匯入名單</button>
-    <button class="nav-tab" onclick="showPage('list')">② 名單管理 <span class="badge" id="badge-count">0</span></button>
-    <button class="nav-tab" onclick="showPage('settings')">③ 寄件人設定</button>
-    <button class="nav-tab" onclick="showPage('preview')">④ 預覽列印</button>
-    <button class="nav-tab" onclick="showPage('reprint')">⑤ 補印</button>
+    <button class="nav-tab active" onclick="showPage('import',this)">① 匯入名單</button>
+    <button class="nav-tab" onclick="showPage('list',this)">② 名單管理 <span class="badge" id="badge-count">0</span></button>
+    <button class="nav-tab" onclick="showPage('settings',this)">③ 寄件人設定</button>
+    <button class="nav-tab" onclick="showPage('preview',this)">④ 預覽列印</button>
+    <button class="nav-tab" onclick="showPage('reprint',this)">⑤ 補印</button>
   </div>
 </nav>
 
-<!-- ═══════════════════════════════════════════════
-     PAGE 1: 匯入名單
-════════════════════════════════════════════════ -->
+<!-- PAGE 1 匯入 -->
 <div class="page active" id="page-import">
   <div class="page-header">
     <div class="page-title">匯入名單</div>
-    <div class="page-subtitle">支援 Excel 上傳或直接貼上文字</div>
+    <div class="page-subtitle">Excel 上傳 或 貼上文字</div>
   </div>
 
-  <div class="import-grid">
-    <!-- Excel -->
-    <div class="card">
-      <div class="card-title">📊 Excel 匯入</div>
-      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('excel-input').click()">
-        <div class="drop-icon">📂</div>
-        <div class="drop-label">點擊或拖放 Excel 檔案</div>
-        <div class="drop-hint">.xlsx / .xls 格式<br>欄位：郵遞區號（選填）、收件人、地址</div>
+  <div class="zip-warn">
+    <div class="wi">⚠️</div>
+    <div>
+      <strong>郵遞區號為必填！</strong>　台灣現行採用 <strong>3+3 共 6 碼</strong>（如 <code>242028</code>）。<br>
+      請務必在資料中填入郵遞區號，否則協助寄件的人需另行查詢，增加額外工作。<br>
+      可至 <a href="https://www.post.gov.tw/post/internet/SearchZone/index.jsp" target="_blank" style="color:var(--accent);font-weight:600">▸ 中華郵政郵遞區號查詢</a> 快速查找。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Excel 匯入</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('excel-input').click()">
+      <div class="drop-icon">📂</div>
+      <div class="drop-label">點擊或拖放 Excel 檔案（.xlsx / .xls）</div>
+      <div class="drop-hint">欄位順序：A欄 姓名 ／ B欄 郵遞區號 ／ C欄 地址</div>
+    </div>
+    <input type="file" id="excel-input" accept=".xlsx,.xls" onchange="handleExcel(this)">
+    <div class="import-ok" id="excel-ok"></div>
+    <div class="import-err" id="excel-err"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 貼上名單</div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchSub('two',this)">兩欄（姓名 ／ 地址）</button>
+      <button class="sub-tab" onclick="switchSub('three',this)">三欄（姓名 ／ 郵遞區號 ／ 地址）</button>
+    </div>
+
+    <div class="sub-panel active" id="panel-two">
+      <div class="form-group">
+        <label>每行一筆，姓名與地址以 <strong>Tab 鍵</strong> 分隔</label>
+        <textarea class="paste-area" id="paste-two" placeholder="範例（Tab分隔）：&#10;王大明	高雄市左營區自由三路1號&#10;李小華	台北市中正區重慶南路一段122號"></textarea>
       </div>
-      <input type="file" id="excel-input" accept=".xlsx,.xls" onchange="handleExcel(this)">
-      <div class="import-preview" id="excel-preview"></div>
-      <hr class="divider">
-      <div class="paste-hint">
-        <strong>Excel 欄位格式：</strong><br>
-        A欄：郵遞區號（可空白） ／ B欄：收件人姓名 ／ C欄：完整地址<br>
-        或 A欄：收件人 ／ B欄：地址（無郵遞區號）
+      <div class="paste-hint">格式：<code>姓名 [Tab] 地址</code>　（郵遞區號可在名單管理補填，但強烈建議一起填入）</div>
+      <div class="import-ok" id="ok-two"></div>
+      <div class="import-err" id="err-two"></div>
+      <div style="margin-top:11px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="parsePaste('two')">✅ 確認匯入</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('paste-two').value=''">清空</button>
       </div>
     </div>
 
-    <!-- Paste -->
-    <div class="card">
-      <div class="card-title">📋 貼上名單</div>
+    <div class="sub-panel" id="panel-three">
       <div class="form-group">
-        <label>每行一筆，欄位以 Tab 或空格隔開</label>
-        <textarea class="paste-area" id="paste-area" placeholder="範例格式（Tab分隔）：&#10;80143	王大明	高雄市三民區九如一路100號&#10;10041	李小華	台北市中正區重慶南路一段122號&#10;&#10;或兩欄（無郵遞區號）：&#10;王大明	高雄市三民區九如一路100號"></textarea>
+        <label>每行一筆，三欄以 <strong>Tab 鍵</strong> 分隔</label>
+        <textarea class="paste-area" id="paste-three" placeholder="範例（Tab分隔）：&#10;王大明	813023	高雄市左營區自由三路1號&#10;李小華	100041	台北市中正區重慶南路一段122號"></textarea>
       </div>
-      <div class="paste-hint">
-        支援格式：<br>
-        ▸ 三欄：郵遞區號 ／ 姓名 ／ 地址<br>
-        ▸ 兩欄：姓名 ／ 地址（郵遞區號可之後補填）
-      </div>
-      <div class="import-preview" id="paste-preview"></div>
-      <div style="margin-top:14px; display:flex; gap:10px;">
-        <button class="btn btn-primary" onclick="parsePaste()">✅ 確認匯入</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('paste-area').value=''">清空</button>
+      <div class="paste-hint">格式：<code>姓名 [Tab] 郵遞區號 [Tab] 地址</code></div>
+      <div class="import-ok" id="ok-three"></div>
+      <div class="import-err" id="err-three"></div>
+      <div style="margin-top:11px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="parsePaste('three')">✅ 確認匯入</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('paste-three').value=''">清空</button>
       </div>
     </div>
   </div>
@@ -463,159 +211,128 @@
     <div class="card-title">⚙️ 匯入選項</div>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
       <input type="checkbox" id="opt-replace" style="width:auto">
-      取代現有名單（不勾選則追加）
+      取代現有名單（不勾選則追加至末尾）
     </label>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     PAGE 2: 名單管理
-════════════════════════════════════════════════ -->
+<!-- PAGE 2 名單管理 -->
 <div class="page" id="page-list">
   <div class="page-header">
     <div class="page-title">名單管理</div>
-    <div class="page-subtitle">檢視、編輯及刪除收件人</div>
+    <div class="page-subtitle">檢視、編輯、刪除收件人</div>
   </div>
-
   <div class="list-toolbar">
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
       <input type="search" id="list-search" placeholder="搜尋收件人或地址…" oninput="renderList()">
     </div>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ 新增</button>
-    <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 清空名單</button>
-    <button class="btn btn-secondary btn-sm" onclick="exportCsv()">⬇ 匯出 CSV</button>
+    <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 清空</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportCsv()">⬇ CSV</button>
   </div>
-
   <div class="stat-row" id="list-stats"></div>
-
   <div class="card" style="padding:0;overflow:hidden">
-    <table id="list-table">
-      <thead>
-        <tr>
-          <th style="width:40px">#</th>
-          <th style="width:90px">郵遞區號</th>
-          <th style="width:100px">收件人</th>
-          <th>地址</th>
-          <th style="width:120px">操作</th>
-        </tr>
-      </thead>
+    <table>
+      <thead><tr>
+        <th style="width:36px">#</th>
+        <th style="width:88px">郵遞區號</th>
+        <th style="width:96px">收件人</th>
+        <th>地址</th>
+        <th style="width:108px">操作</th>
+      </tr></thead>
       <tbody id="list-tbody"></tbody>
     </table>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     PAGE 3: 寄件人設定
-════════════════════════════════════════════════ -->
+<!-- PAGE 3 設定 -->
 <div class="page" id="page-settings">
   <div class="page-header">
     <div class="page-title">寄件人設定</div>
-    <div class="page-subtitle">設定將印在每張標籤左上角</div>
+    <div class="page-subtitle">儲存於本機，關閉後仍保留</div>
   </div>
-
   <div class="settings-grid">
     <div class="card">
-      <div class="card-title">✏️ 編輯資料</div>
-      <div class="form-group">
-        <label>寄件人名稱（單位）</label>
-        <input type="text" id="s-name" value="新莊國小">
-      </div>
-      <div class="form-group">
-        <label>部門／附加說明（選填，如：教務處）</label>
-        <input type="text" id="s-dept" placeholder="如：教務處、總務處">
-      </div>
-      <div class="form-group">
-        <label>郵遞區號</label>
-        <input type="text" id="s-zip" value="242028" maxlength="10">
-      </div>
-      <div class="form-group">
-        <label>寄件地址</label>
-        <input type="text" id="s-address" value="新北市新莊區中正路七十六號">
-      </div>
-      <div class="form-group">
-        <label>收件敬語（印在收件人後面）</label>
+      <div class="card-title">✏️ 編輯</div>
+      <div class="form-group"><label>單位名稱</label><input type="text" id="s-name" value="新莊國小"></div>
+      <div class="form-group"><label>部門／附加說明（選填）</label><input type="text" id="s-dept" placeholder="如：教務處、總務處"></div>
+      <div class="form-group"><label>郵遞區號（6碼）</label><input type="text" id="s-zip" value="242028" maxlength="10"></div>
+      <div class="form-group"><label>寄件地址</label><input type="text" id="s-address" value="新北市新莊區中正路七十六號"></div>
+      <div class="form-group"><label>收件敬語</label>
         <select id="s-salute">
-          <option value="敬啟">敬啟</option>
-          <option value="收">收</option>
-          <option value="台啟">台啟</option>
-          <option value="惠啟">惠啟</option>
+          <option value="敬啟">敬啟</option><option value="收">收</option>
+          <option value="台啟">台啟</option><option value="惠啟">惠啟</option>
         </select>
       </div>
-      <button class="btn btn-green" onclick="saveSettings()">💾 儲存設定</button>
-      <button class="btn btn-secondary" style="margin-left:8px" onclick="resetSettings()">↩ 恢復預設</button>
+      <button class="btn btn-green" onclick="saveSettings()">💾 儲存</button>
+      <button class="btn btn-secondary" style="margin-left:8px" onclick="resetSettings()">↩ 預設</button>
     </div>
-
     <div class="card">
-      <div class="card-title">👁 標籤預覽</div>
-      <div class="label-cell" style="border:1px dashed #c0b8b0; padding: 14px 16px;">
-        <div class="label-sender" id="preview-sender"></div>
-        <div class="label-receiver" style="margin-top:14px">
-          <div class="r-zip" id="preview-r-zip">80143</div>
-          <div class="r-address" id="preview-r-addr">高雄市三民區九如一路 100 號</div>
-          <div class="r-name" id="preview-r-name">王大明 <span class="r-salute" id="preview-salute">敬啟</span></div>
+      <div class="card-title">👁 標籤預覽（橫式信封規格）</div>
+      <div class="label-cell">
+        <div class="label-top">
+          <div class="label-sender-block" id="preview-sender"></div>
+          <div class="label-stamp-box">貼郵票處</div>
+        </div>
+        <div class="label-recv" style="margin-top:7px">
+          <div class="rz">813023</div>
+          <div class="ra">高雄市左營區自由三路一號</div>
+          <div class="rn">王大明　<span class="rs" id="preview-salute">敬啟</span></div>
         </div>
       </div>
-      <p style="font-size:12px;color:var(--ink-faint);margin-top:10px">此為示意，實際收件人資料由名單決定</p>
+      <p style="font-size:11px;color:var(--ink-faint);margin-top:7px">示意用，收件人資料由名單決定</p>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     PAGE 4: 預覽列印
-════════════════════════════════════════════════ -->
+<!-- PAGE 4 預覽列印 -->
 <div class="page" id="page-preview">
   <div class="page-header">
     <div class="page-title">預覽列印</div>
-    <div class="page-subtitle">確認版面無誤後再列印</div>
+    <div class="page-subtitle">每頁 A4 排 8 格（2×4），確認後列印</div>
   </div>
-
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">🖨 列印模式</div>
+    <div class="toggle-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-addr-only" onchange="renderPreview()">
+        <span class="toggle-slider"></span>
+      </label>
+      <div>
+        <span style="font-size:13px;font-weight:500">僅印收件人地址（不含寄件人）</span>
+        <span style="font-size:12px;color:var(--ink-faint)"> — 適合信封上已印好學校資料時使用</span>
+      </div>
+    </div>
+  </div>
   <div class="print-toolbar">
     <button class="btn btn-green" onclick="doPrint()">🖨 列印全部</button>
-    <button class="btn btn-secondary" onclick="renderPreview()">🔄 重新整理預覽</button>
+    <button class="btn btn-secondary" onclick="renderPreview()">🔄 重新整理</button>
     <span class="print-info" id="print-info"></span>
   </div>
-
   <div id="preview-sheets"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     PAGE 5: 補印
-════════════════════════════════════════════════ -->
+<!-- PAGE 5 補印 -->
 <div class="page" id="page-reprint">
   <div class="page-header">
     <div class="page-title">補印</div>
     <div class="page-subtitle">搜尋特定收件人，單獨列印</div>
   </div>
-
   <div class="card">
     <div class="card-title">🔍 搜尋收件人</div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <input type="search" id="reprint-search" placeholder="輸入收件人姓名或地址關鍵字…" style="max-width:400px" oninput="renderReprint()">
-    </div>
+    <input type="search" id="reprint-search" placeholder="輸入姓名或地址關鍵字…" style="max-width:380px" oninput="renderReprint()">
   </div>
-
   <div id="reprint-results"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     EDIT MODAL
-════════════════════════════════════════════════ -->
+<!-- MODAL -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal">
     <div class="modal-title" id="modal-title">編輯收件人</div>
-    <div class="form-group">
-      <label>郵遞區號</label>
-      <input type="text" id="m-zip" placeholder="如：80143" maxlength="10">
-    </div>
-    <div class="form-group">
-      <label>收件人姓名 *</label>
-      <input type="text" id="m-name" placeholder="王大明">
-    </div>
-    <div class="form-group">
-      <label>完整地址 *</label>
-      <input type="text" id="m-address" placeholder="高雄市三民區九如一路100號">
-    </div>
+    <div class="form-group"><label>收件人姓名 *</label><input type="text" id="m-name" placeholder="王大明"></div>
+    <div class="form-group"><label>郵遞區號（6碼，強烈建議填入）</label><input type="text" id="m-zip" placeholder="如：813023" maxlength="10"></div>
+    <div class="form-group"><label>完整地址 *</label><input type="text" id="m-address" placeholder="高雄市左營區自由三路一號"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">取消</button>
       <button class="btn btn-primary" onclick="saveModal()">儲存</button>
@@ -623,472 +340,361 @@
   </div>
 </div>
 
-<!-- Print frame -->
-<div id="print-frame"></div>
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ══════════════════════════════════
-// STATE
-// ══════════════════════════════════
-let recipients = [];
-let editIndex = -1;
+let recipients=[], editIndex=-1;
+const DEF={name:'新莊國小',dept:'',zip:'242028',address:'新北市新莊區中正路七十六號',salute:'敬啟'};
+let S={...DEF};
 
-const DEFAULT_SETTINGS = {
-  name: '新莊國小',
-  dept: '',
-  zip: '242028',
-  address: '新北市新莊區中正路七十六號',
-  salute: '敬啟'
-};
+function init(){
+  const r=localStorage.getItem('mls_r'); if(r) recipients=JSON.parse(r);
+  const s=localStorage.getItem('mls_s'); if(s) S={...DEF,...JSON.parse(s)};
+  loadSUI(); updateBadge();
+}
+function saveR(){localStorage.setItem('mls_r',JSON.stringify(recipients)); updateBadge();}
+function updateBadge(){document.getElementById('badge-count').textContent=recipients.length;}
 
-let settings = { ...DEFAULT_SETTINGS };
-
-// ── Init ──
-function init() {
-  const saved = localStorage.getItem('mls_recipients');
-  if (saved) recipients = JSON.parse(saved);
-  const savedSettings = localStorage.getItem('mls_settings');
-  if (savedSettings) settings = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
-  loadSettingsUI();
-  updateBadge();
+function showPage(n,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(n==='list') renderList();
+  if(n==='preview') renderPreview();
+  if(n==='reprint') renderReprint();
+  if(n==='settings') updatePrvSender();
 }
 
-function save() {
-  localStorage.setItem('mls_recipients', JSON.stringify(recipients));
-  updateBadge();
+function toast(msg,dur=2500){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
 }
 
-function updateBadge() {
-  document.getElementById('badge-count').textContent = recipients.length;
+function switchSub(tab,btn){
+  document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sub-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
 }
 
-// ── Navigation ──
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
-  if (name === 'list') renderList();
-  if (name === 'preview') renderPreview();
-  if (name === 'reprint') renderReprint();
-  if (name === 'settings') updatePreviewSender();
-}
+/* ── EXCEL ── */
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])processExcel(e.dataTransfer.files[0]);});
+function handleExcel(inp){if(inp.files[0])processExcel(inp.files[0]);}
 
-// ── Toast ──
-function toast(msg, dur = 2500) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), dur);
-}
-
-// ══════════════════════════════════
-// IMPORT — Excel
-// ══════════════════════════════════
-const dropZone = document.getElementById('drop-zone');
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) processExcel(file);
-});
-
-function handleExcel(input) {
-  if (input.files[0]) processExcel(input.files[0]);
-}
-
-function processExcel(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const wb = XLSX.read(e.target.result, { type: 'binary' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-      const parsed = [];
-      for (let i = 0; i < rows.length; i++) {
-        const row = rows[i].map(c => String(c).trim());
-        if (row.every(c => !c)) continue;
-        // Detect: 3 cols (zip, name, addr) or 2 cols (name, addr)
-        if (row.length >= 3 && row[1] && row[2]) {
-          // Check if first col looks like zip
-          if (/^\d{3,6}$/.test(row[0]) || row[0] === '') {
-            parsed.push({ zip: row[0], name: row[1], address: row[2] });
-          } else {
-            parsed.push({ zip: '', name: row[0], address: row[1] });
-          }
-        } else if (row.length >= 2 && row[0] && row[1]) {
-          parsed.push({ zip: '', name: row[0], address: row[1] });
-        }
+function processExcel(file){
+  const rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const parsed=[];
+      for(const row of rows){
+        const c=row.map(x=>String(x).trim());
+        if(c.every(x=>!x)) continue;
+        if(c.length>=3&&c[0]&&c[2]) parsed.push({name:c[0],zip:c[1]||'',address:c[2]});
+        else if(c.length>=2&&c[0]&&c[1]) parsed.push({name:c[0],zip:'',address:c[1]});
       }
-      if (parsed.length === 0) { toast('⚠️ 未讀取到有效資料，請確認欄位格式'); return; }
+      if(!parsed.length){showMsg('excel',false,'未讀取到有效資料，請確認格式（A=姓名 B=郵遞區號 C=地址）');return;}
       importData(parsed);
-      document.getElementById('excel-preview').style.display = 'block';
-      document.getElementById('excel-preview').innerHTML = `✅ 成功讀取 <strong>${parsed.length}</strong> 筆資料`;
-      toast(`✅ 匯入 ${parsed.length} 筆`);
-    } catch (err) {
-      toast('❌ 讀取 Excel 失敗：' + err.message);
-    }
+      showMsg('excel',true,`成功讀取 <strong>${parsed.length}</strong> 筆`);
+      toast(`✅ Excel 匯入 ${parsed.length} 筆`);
+    }catch(err){showMsg('excel',false,'讀取失敗：'+err.message);}
   };
-  reader.readAsBinaryString(file);
+  rd.readAsBinaryString(file);
 }
 
-// ── Import — Paste ──
-function parsePaste() {
-  const raw = document.getElementById('paste-area').value.trim();
-  if (!raw) { toast('⚠️ 請先貼上資料'); return; }
-  const lines = raw.split('\n').filter(l => l.trim());
-  const parsed = [];
-  for (const line of lines) {
-    const cols = line.split(/\t|  +/).map(c => c.trim()).filter(c => c);
-    if (cols.length >= 3 && /^\d{3,6}$/.test(cols[0])) {
-      parsed.push({ zip: cols[0], name: cols[1], address: cols.slice(2).join(' ') });
-    } else if (cols.length >= 2) {
-      parsed.push({ zip: '', name: cols[0], address: cols.slice(1).join(' ') });
+/* ── PASTE ── */
+function parsePaste(mode){
+  const raw=document.getElementById('paste-'+mode).value.trim();
+  if(!raw){showMsg(mode,false,'請先貼上資料');return;}
+  const lines=raw.split('\n').filter(l=>l.trim());
+  const parsed=[], errs=[];
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    let cols=line.split('\t').map(c=>c.trim());
+    // fallback: 多空格分割
+    if(cols.length<2){
+      cols=line.trim().split(/\s{2,}/).map(c=>c.trim()).filter(c=>c);
+    }
+    if(mode==='two'){
+      if(cols.length>=2&&cols[0]&&cols[1]){
+        parsed.push({name:cols[0],zip:'',address:cols.slice(1).join(' ')});
+      } else errs.push(i+1);
+    } else { // three: 姓名 郵遞區號 地址
+      if(cols.length>=3&&cols[0]&&cols[2]){
+        parsed.push({name:cols[0],zip:cols[1]||'',address:cols.slice(2).join(' ')});
+      } else if(cols.length===2&&cols[0]&&cols[1]){
+        parsed.push({name:cols[0],zip:'',address:cols[1]});
+        errs.push(i+1+' (郵遞區號空白)');
+      } else errs.push(i+1);
     }
   }
-  if (parsed.length === 0) { toast('⚠️ 無法解析，請確認格式'); return; }
+  if(!parsed.length){showMsg(mode,false,'無法解析資料，請確認欄位以 Tab 分隔');return;}
   importData(parsed);
-  document.getElementById('paste-preview').style.display = 'block';
-  document.getElementById('paste-preview').innerHTML = `✅ 解析並匯入 <strong>${parsed.length}</strong> 筆資料`;
+  let msg=`匯入 <strong>${parsed.length}</strong> 筆`;
+  if(errs.length) msg+=`，第 ${errs.slice(0,5).join('、')} 行略過`;
+  showMsg(mode,true,msg);
   toast(`✅ 匯入 ${parsed.length} 筆`);
 }
 
-function importData(parsed) {
-  const replace = document.getElementById('opt-replace').checked;
-  if (replace) {
-    recipients = parsed;
+function showMsg(key,ok,msg){
+  const ok_id = key==='excel'?'excel-ok':'ok-'+key;
+  const err_id= key==='excel'?'excel-err':'err-'+key;
+  const okEl=document.getElementById(ok_id);
+  const errEl=document.getElementById(err_id);
+  if(ok){if(okEl){okEl.innerHTML='✅ '+msg;okEl.style.display='block';}if(errEl)errEl.style.display='none';}
+  else{if(errEl){errEl.innerHTML='⚠️ '+msg;errEl.style.display='block';}if(okEl)okEl.style.display='none';}
+}
+
+function importData(parsed){
+  if(document.getElementById('opt-replace').checked) recipients=parsed;
+  else recipients=[...recipients,...parsed];
+  saveR();
+}
+
+/* ── LIST ── */
+function renderList(){
+  const q=document.getElementById('list-search').value.toLowerCase();
+  const filtered=recipients.map((r,i)=>({...r,_i:i}))
+    .filter(r=>!q||r.name.toLowerCase().includes(q)||r.address.toLowerCase().includes(q)||(r.zip||'').includes(q));
+  const tb=document.getElementById('list-tbody');
+  if(!filtered.length){
+    tb.innerHTML=`<tr><td colspan="5" class="no-data">${recipients.length===0?'尚無資料，請先匯入名單':'找不到符合的資料'}</td></tr>`;
   } else {
-    recipients = [...recipients, ...parsed];
+    tb.innerHTML=filtered.map(r=>`<tr>
+      <td style="color:var(--ink-faint)">${r._i+1}</td>
+      <td>${r.zip?`<span class="tag tag-zip">${r.zip}</span>`:`<span class="tag tag-nozip">！未填</span>`}</td>
+      <td><strong>${r.name}</strong></td>
+      <td>${r.address}</td>
+      <td class="td-act">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal(${r._i})">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="delR(${r._i})">🗑</button>
+      </td>
+    </tr>`).join('');
   }
-  save();
-  updateBadge();
+  const nz=recipients.filter(r=>!r.zip).length;
+  document.getElementById('list-stats').innerHTML=`
+    <div class="stat-item"><strong>${recipients.length}</strong> 筆</div>
+    ${nz?`<div class="stat-item" style="color:#c0392b"><strong>${nz}</strong> 筆缺郵遞區號</div>`:''}
+    ${filtered.length!==recipients.length?`<div class="stat-item">（顯示 ${filtered.length} 筆）</div>`:''}`;
+}
+function delR(i){if(!confirm(`確定刪除「${recipients[i].name}」？`))return;recipients.splice(i,1);saveR();renderList();toast('已刪除');}
+function clearAll(){if(!confirm(`確定清空全部 ${recipients.length} 筆？`))return;recipients=[];saveR();renderList();toast('已清空');}
+function exportCsv(){
+  const rows=[['姓名','郵遞區號','地址'],...recipients.map(r=>[r.name,r.zip,r.address])];
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='收件人名單.csv';a.click();
 }
 
-// ══════════════════════════════════
-// LIST PAGE
-// ══════════════════════════════════
-function renderList() {
-  const q = document.getElementById('list-search').value.toLowerCase();
-  const filtered = recipients.map((r, i) => ({ ...r, _i: i }))
-    .filter(r => !q || r.name.toLowerCase().includes(q) || r.address.toLowerCase().includes(q) || r.zip.includes(q));
-
-  const tbody = document.getElementById('list-tbody');
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="no-data">
-      ${recipients.length === 0 ? '尚無資料，請先匯入名單' : '找不到符合的資料'}
-    </td></tr>`;
-  } else {
-    tbody.innerHTML = filtered.map((r, idx) => `
-      <tr>
-        <td style="color:var(--ink-faint)">${r._i + 1}</td>
-        <td><span class="tag tag-zip">${r.zip || '—'}</span></td>
-        <td><strong>${r.name}</strong></td>
-        <td>${r.address}</td>
-        <td class="td-actions">
-          <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal(${r._i})" title="編輯">✏️</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRecipient(${r._i})" title="刪除">🗑</button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  document.getElementById('list-stats').innerHTML = `
-    <div class="stat-item"><strong>${recipients.length}</strong> 筆收件人</div>
-    ${filtered.length !== recipients.length ? `<div class="stat-item">（篩選顯示 ${filtered.length} 筆）</div>` : ''}
-  `;
-}
-
-function deleteRecipient(i) {
-  if (!confirm(`確定刪除「${recipients[i].name}」？`)) return;
-  recipients.splice(i, 1);
-  save();
-  renderList();
-  toast('已刪除');
-}
-
-function clearAll() {
-  if (!confirm(`確定清空全部 ${recipients.length} 筆資料？`)) return;
-  recipients = [];
-  save();
-  renderList();
-  toast('已清空名單');
-}
-
-function exportCsv() {
-  const rows = [['郵遞區號', '收件人', '地址'], ...recipients.map(r => [r.zip, r.name, r.address])];
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = '收件人名單.csv'; a.click();
-}
-
-// ══════════════════════════════════
-// MODAL
-// ══════════════════════════════════
-function openAddModal() {
-  editIndex = -1;
-  document.getElementById('modal-title').textContent = '新增收件人';
-  document.getElementById('m-zip').value = '';
-  document.getElementById('m-name').value = '';
-  document.getElementById('m-address').value = '';
+/* ── MODAL ── */
+function openAddModal(){
+  editIndex=-1;
+  document.getElementById('modal-title').textContent='新增收件人';
+  ['m-name','m-zip','m-address'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('edit-modal').classList.add('open');
 }
-
-function openEditModal(i) {
-  editIndex = i;
-  const r = recipients[i];
-  document.getElementById('modal-title').textContent = '編輯收件人';
-  document.getElementById('m-zip').value = r.zip || '';
-  document.getElementById('m-name').value = r.name;
-  document.getElementById('m-address').value = r.address;
+function openEditModal(i){
+  editIndex=i;const r=recipients[i];
+  document.getElementById('modal-title').textContent='編輯收件人';
+  document.getElementById('m-name').value=r.name;
+  document.getElementById('m-zip').value=r.zip||'';
+  document.getElementById('m-address').value=r.address;
   document.getElementById('edit-modal').classList.add('open');
 }
-
-function closeModal() {
-  document.getElementById('edit-modal').classList.remove('open');
+function closeModal(){document.getElementById('edit-modal').classList.remove('open');}
+function saveModal(){
+  const name=document.getElementById('m-name').value.trim();
+  const zip=document.getElementById('m-zip').value.trim();
+  const address=document.getElementById('m-address').value.trim();
+  if(!name||!address){toast('⚠️ 姓名與地址為必填');return;}
+  if(editIndex===-1) recipients.push({name,zip,address});
+  else recipients[editIndex]={name,zip,address};
+  saveR();renderList();closeModal();
+  toast(editIndex===-1?'已新增':'已儲存');
 }
+document.getElementById('edit-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-function saveModal() {
-  const zip = document.getElementById('m-zip').value.trim();
-  const name = document.getElementById('m-name').value.trim();
-  const address = document.getElementById('m-address').value.trim();
-  if (!name || !address) { toast('⚠️ 姓名與地址為必填'); return; }
-  if (editIndex === -1) {
-    recipients.push({ zip, name, address });
-  } else {
-    recipients[editIndex] = { zip, name, address };
-  }
-  save();
-  renderList();
-  closeModal();
-  toast(editIndex === -1 ? '已新增' : '已儲存');
+/* ── SETTINGS ── */
+function loadSUI(){
+  document.getElementById('s-name').value=S.name;
+  document.getElementById('s-dept').value=S.dept||'';
+  document.getElementById('s-zip').value=S.zip;
+  document.getElementById('s-address').value=S.address;
+  document.getElementById('s-salute').value=S.salute;
+  updatePrvSender();
 }
-
-// Click outside to close
-document.getElementById('edit-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-// ══════════════════════════════════
-// SETTINGS
-// ══════════════════════════════════
-function loadSettingsUI() {
-  document.getElementById('s-name').value = settings.name;
-  document.getElementById('s-dept').value = settings.dept || '';
-  document.getElementById('s-zip').value = settings.zip;
-  document.getElementById('s-address').value = settings.address;
-  document.getElementById('s-salute').value = settings.salute;
-}
-
-function saveSettings() {
-  settings = {
-    name: document.getElementById('s-name').value.trim(),
-    dept: document.getElementById('s-dept').value.trim(),
-    zip: document.getElementById('s-zip').value.trim(),
-    address: document.getElementById('s-address').value.trim(),
-    salute: document.getElementById('s-salute').value,
+function saveSettings(){
+  S={
+    name:document.getElementById('s-name').value.trim(),
+    dept:document.getElementById('s-dept').value.trim(),
+    zip:document.getElementById('s-zip').value.trim(),
+    address:document.getElementById('s-address').value.trim(),
+    salute:document.getElementById('s-salute').value
   };
-  localStorage.setItem('mls_settings', JSON.stringify(settings));
-  updatePreviewSender();
-  toast('✅ 設定已儲存');
+  localStorage.setItem('mls_s',JSON.stringify(S));
+  updatePrvSender();toast('✅ 設定已儲存');
 }
-
-function resetSettings() {
-  settings = { ...DEFAULT_SETTINGS };
-  localStorage.removeItem('mls_settings');
-  loadSettingsUI();
-  updatePreviewSender();
-  toast('已恢復預設值');
-}
-
-function updatePreviewSender() {
-  const s = {
-    name: document.getElementById('s-name').value,
-    dept: document.getElementById('s-dept').value,
-    zip: document.getElementById('s-zip').value,
-    address: document.getElementById('s-address').value,
-    salute: document.getElementById('s-salute').value,
+function resetSettings(){S={...DEF};localStorage.removeItem('mls_s');loadSUI();toast('已恢復預設');}
+function updatePrvSender(){
+  const cur={
+    name:document.getElementById('s-name')?.value||S.name,
+    dept:document.getElementById('s-dept')?.value||S.dept,
+    zip:document.getElementById('s-zip')?.value||S.zip,
+    address:document.getElementById('s-address')?.value||S.address,
+    salute:document.getElementById('s-salute')?.value||S.salute
   };
-  document.getElementById('preview-sender').innerHTML = buildSenderHTML(s);
-  document.getElementById('preview-salute').textContent = s.salute;
+  const el=document.getElementById('preview-sender');
+  if(el) el.innerHTML=buildSHTML(cur);
+  const sl=document.getElementById('preview-salute');
+  if(sl) sl.textContent=cur.salute;
 }
-
-// Live preview on input
-['s-name','s-dept','s-zip','s-address','s-salute'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', updatePreviewSender);
-  if (el) el.addEventListener('change', updatePreviewSender);
+['s-name','s-dept','s-zip','s-address','s-salute'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){el.addEventListener('input',updatePrvSender);el.addEventListener('change',updatePrvSender);}
 });
-
-function buildSenderHTML(s) {
-  let html = `<div class="s-name">寄件人：${s.name}`;
-  if (s.dept) html += `　${s.dept}`;
-  html += `</div>`;
-  if (s.zip) html += `<div>${s.zip}</div>`;
-  html += `<div>${s.address}</div>`;
-  return html;
+function buildSHTML(s){
+  let h=`<div class="sn">${s.name}${s.dept?'　'+s.dept:''}</div>`;
+  if(s.zip) h+=`<div>${s.zip}</div>`;
+  h+=`<div>${s.address}</div>`;
+  return h;
 }
 
-// ══════════════════════════════════
-// PREVIEW / PRINT
-// ══════════════════════════════════
-function buildLabelHTML(r, s) {
-  return `
-    <div class="label-cell">
-      <div class="label-sender">${buildSenderHTML(s)}</div>
-      <div class="label-receiver">
-        <div class="r-zip">${r.zip || ''}</div>
-        <div class="r-address">${r.address}</div>
-        <div class="r-name">${r.name}　<span class="r-salute">${s.salute}</span></div>
+/* ── LABEL ── */
+function buildLabel(r, addrOnly){
+  if(addrOnly){
+    return `<div class="label-cell" style="justify-content:center">
+      <div class="label-recv" style="padding-left:0">
+        <div class="rz">${r.zip||''}</div>
+        <div class="ra">${r.address}</div>
+        <div class="rn">${r.name}　<span class="rs">${S.salute}</span></div>
       </div>
+    </div>`;
+  }
+  return `<div class="label-cell">
+    <div class="label-top">
+      <div class="label-sender-block">${buildSHTML(S)}</div>
+      <div class="label-stamp-box">貼郵票處</div>
     </div>
-  `;
+    <div class="label-recv">
+      <div class="rz">${r.zip||''}</div>
+      <div class="ra">${r.address}</div>
+      <div class="rn">${r.name}　<span class="rs">${S.salute}</span></div>
+    </div>
+  </div>`;
 }
 
-function renderPreview() {
-  const container = document.getElementById('preview-sheets');
-  if (recipients.length === 0) {
-    container.innerHTML = '<div class="card no-data">尚無收件人資料，請先匯入名單</div>';
-    document.getElementById('print-info').textContent = '';
-    return;
+/* ── PREVIEW ── */
+function renderPreview(){
+  const addrOnly=document.getElementById('toggle-addr-only').checked;
+  const container=document.getElementById('preview-sheets');
+  if(!recipients.length){
+    container.innerHTML='<div class="card no-data">尚無收件人，請先匯入名單</div>';
+    document.getElementById('print-info').innerHTML='';return;
   }
-  const PER_PAGE = 8;
-  const pages = Math.ceil(recipients.length / PER_PAGE);
-  document.getElementById('print-info').textContent = `共 ${recipients.length} 筆 ／ ${pages} 頁`;
-
-  let html = '';
-  for (let p = 0; p < pages; p++) {
-    html += `<div style="margin-bottom:24px">
-      <div style="font-size:12px;color:var(--ink-faint);margin-bottom:8px;text-align:center">第 ${p+1} 頁（共 ${pages} 頁）</div>
-      <div class="a4-sheet-preview">`;
-    for (let i = 0; i < PER_PAGE; i++) {
-      const idx = p * PER_PAGE + i;
-      if (idx < recipients.length) {
-        html += buildLabelHTML(recipients[idx], settings);
-      } else {
-        html += `<div class="label-empty"></div>`;
-      }
+  const PER=8, pages=Math.ceil(recipients.length/PER);
+  const badge=addrOnly?`<span class="mode-badge mode-addr">僅收件人模式</span>`:`<span class="mode-badge mode-full">完整標籤模式</span>`;
+  document.getElementById('print-info').innerHTML=`${badge}共 ${recipients.length} 筆 ／ ${pages} 頁`;
+  let html='';
+  for(let p=0;p<pages;p++){
+    html+=`<div style="margin-bottom:20px"><div style="font-size:12px;color:var(--ink-faint);margin-bottom:5px;text-align:center">第 ${p+1} 頁</div><div class="a4-sheet">`;
+    for(let i=0;i<PER;i++){
+      const idx=p*PER+i;
+      html+=idx<recipients.length?buildLabel(recipients[idx],addrOnly):'<div class="label-empty"></div>';
     }
-    html += `</div></div>`;
+    html+='</div></div>';
   }
-  container.innerHTML = html;
+  container.innerHTML=html;
 }
 
-function doPrint() {
-  if (recipients.length === 0) { toast('⚠️ 名單為空'); return; }
-  printLabels(recipients);
+function doPrint(){
+  if(!recipients.length){toast('⚠️ 名單為空');return;}
+  printLabels(recipients,document.getElementById('toggle-addr-only').checked);
 }
 
-function printLabels(list) {
-  const PER_PAGE = 8;
-  const pages = Math.ceil(list.length / PER_PAGE);
-  let html = `
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Noto Sans TC', sans-serif; }
-      @page { size: A4; margin: 10mm; }
-      .sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; page-break-after: always; }
-      .sheet:last-child { page-break-after: auto; }
-      .lc {
-        border: 1px dashed #aaa;
-        padding: 7mm 8mm;
-        min-height: 62mm;
-        display: flex; flex-direction: column; justify-content: space-between;
-      }
-      .le { border: 1px dashed #ddd; min-height: 62mm; }
-      .ls { font-size: 9pt; line-height: 1.7; font-family: 'Noto Serif TC', serif; }
-      .ls .sn { font-weight: 700; font-size: 10pt; }
-      .lr { text-align: right; font-family: 'Noto Serif TC', serif; line-height: 1.9; margin-top: 8px; }
-      .rz { font-size: 14pt; font-weight: 700; letter-spacing: 0.15em; color: #8b3a2a; }
-      .ra { font-size: 10pt; }
-      .rn { font-size: 15pt; font-weight: 700; margin-top: 2px; }
-      .rs { font-size: 10pt; color: #777; }
-    </style>
-  `;
-  for (let p = 0; p < pages; p++) {
-    html += `<div class="sheet">`;
-    for (let i = 0; i < PER_PAGE; i++) {
-      const idx = p * PER_PAGE + i;
-      if (idx < list.length) {
-        const r = list[idx];
-        let sHTML = `<div class="sn">寄件人：${settings.name}${settings.dept ? '　' + settings.dept : ''}</div>`;
-        if (settings.zip) sHTML += `<div>${settings.zip}</div>`;
-        sHTML += `<div>${settings.address}</div>`;
-        html += `<div class="lc">
-          <div class="ls">${sHTML}</div>
-          <div class="lr">
-            <div class="rz">${r.zip || ''}</div>
-            <div class="ra">${r.address}</div>
-            <div class="rn">${r.name}　<span class="rs">${settings.salute}</span></div>
-          </div>
-        </div>`;
-      } else {
-        html += `<div class="le"></div>`;
-      }
+/* ── PRINT ── */
+function printLabels(list, addrOnly){
+  const PER=8,pages=Math.ceil(list.length/PER);
+  let html=`<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Noto Serif TC',serif;}
+    @page{size:A4;margin:10mm;}
+    .sh{display:grid;grid-template-columns:1fr 1fr;gap:4mm;page-break-after:always;}
+    .sh:last-child{page-break-after:auto;}
+    .lc{border:1px dashed #aaa;padding:5.5mm 6.5mm;min-height:56mm;display:flex;flex-direction:column;justify-content:space-between;}
+    .le{border:1px dashed #ddd;min-height:56mm;}
+    .lt{display:flex;justify-content:space-between;align-items:flex-start;}
+    .ls{font-size:8.5pt;line-height:1.75;color:#444;}
+    .ls .sn{font-weight:700;font-size:9.5pt;color:#222;}
+    .stmp{border:1px solid #aaa;width:21mm;height:16mm;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#aaa;flex-shrink:0;margin-left:3mm;}
+    .lr{padding-left:${addrOnly?'0':'16mm'};padding-right:3mm;${addrOnly?'display:flex;flex-direction:column;justify-content:center;flex:1':''}}
+    .rz{font-size:13.5pt;font-weight:700;letter-spacing:.2em;color:#8b3a2a;margin-bottom:1mm;}
+    .ra{font-size:10pt;line-height:1.6;}
+    .rn{font-size:13.5pt;font-weight:700;margin-top:2mm;}
+    .rs{font-size:10pt;color:#666;margin-left:2mm;}
+  </style>`;
+  for(let p=0;p<pages;p++){
+    html+=`<div class="sh">`;
+    for(let i=0;i<PER;i++){
+      const idx=p*PER+i;
+      if(idx<list.length){
+        const r=list[idx];
+        let top='';
+        if(!addrOnly){
+          let sh=`<div class="ls"><div class="sn">${S.name}${S.dept?'　'+S.dept:''}</div>`;
+          if(S.zip) sh+=`<div>${S.zip}</div>`;
+          sh+=`<div>${S.address}</div></div>`;
+          top=`<div class="lt">${sh}<div class="stmp">貼郵票處</div></div>`;
+        }
+        html+=`<div class="lc">${top}<div class="lr">
+          <div class="rz">${r.zip||''}</div>
+          <div class="ra">${r.address}</div>
+          <div class="rn">${r.name}　<span class="rs">${S.salute}</span></div>
+        </div></div>`;
+      } else html+=`<div class="le"></div>`;
     }
-    html += `</div>`;
+    html+=`</div>`;
   }
-
-  const w = window.open('', '_blank', 'width=900,height=700');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>郵件標籤列印</title></head><body>${html}</body></html>`);
-  w.document.close();
-  w.focus();
-  setTimeout(() => { w.print(); }, 800);
+  const w=window.open('','_blank','width=920,height=720');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>列印</title></head><body>${html}</body></html>`);
+  w.document.close();w.focus();
+  setTimeout(()=>w.print(),900);
 }
 
-// ══════════════════════════════════
-// REPRINT
-// ══════════════════════════════════
-function renderReprint() {
-  const q = document.getElementById('reprint-search').value.trim().toLowerCase();
-  const container = document.getElementById('reprint-results');
-  if (!q) { container.innerHTML = ''; return; }
-
-  const matches = recipients.map((r, i) => ({ ...r, _i: i }))
-    .filter(r => r.name.toLowerCase().includes(q) || r.address.toLowerCase().includes(q) || r.zip.includes(q));
-
-  if (matches.length === 0) {
-    container.innerHTML = `<div class="card no-data">找不到「${q}」相關收件人</div>`;
-    return;
-  }
-
-  container.innerHTML = matches.map(r => `
-    <div class="card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div style="flex:1;min-width:200px">
-        <div style="font-size:13px;color:var(--ink-faint);margin-bottom:4px">#${r._i + 1}</div>
+/* ── REPRINT ── */
+function renderReprint(){
+  const q=document.getElementById('reprint-search').value.trim().toLowerCase();
+  const con=document.getElementById('reprint-results');
+  if(!q){con.innerHTML='';return;}
+  const m=recipients.map((r,i)=>({...r,_i:i}))
+    .filter(r=>r.name.toLowerCase().includes(q)||r.address.toLowerCase().includes(q)||(r.zip||'').includes(q));
+  if(!m.length){con.innerHTML=`<div class="card no-data">找不到「${q}」</div>`;return;}
+  con.innerHTML=m.map(r=>`
+    <div class="card" style="display:flex;align-items:center;gap:13px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:12px;color:var(--ink-faint)">#${r._i+1}</div>
         <div style="font-size:15px;font-weight:700;font-family:'Noto Serif TC',serif">${r.name}</div>
         <div style="font-size:13px;color:var(--ink-light);margin-top:2px">
-          ${r.zip ? `<span class="tag tag-zip">${r.zip}</span>　` : ''}${r.address}
+          ${r.zip?`<span class="tag tag-zip">${r.zip}</span>　`:`<span class="tag tag-nozip">！無郵遞區號</span>　`}${r.address}
         </div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-secondary btn-sm" onclick="openEditModal(${r._i});showPageDirect('list')">✏️ 編輯</button>
-        <button class="btn btn-primary btn-sm" onclick="printLabels([recipients[${r._i}]])">🖨 補印</button>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="openEditModal(${r._i})">✏️ 編輯</button>
+        <button class="btn btn-primary btn-sm" onclick="printLabels([recipients[${r._i}]],false)">🖨 完整補印</button>
+        <button class="btn btn-secondary btn-sm" onclick="printLabels([recipients[${r._i}]],true)">📋 僅地址</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function showPageDirect(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  // highlight matching tab
-  document.querySelectorAll('.nav-tab').forEach(t => {
-    if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + name + "'")) t.classList.add('active');
-  });
-  if (name === 'list') renderList();
-}
-
-// ── Start ──
 init();
-updatePreviewSender();
 </script>
 </body>
 </html>
