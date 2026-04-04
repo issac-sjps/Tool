@@ -128,6 +128,30 @@
   .mode-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600;margin-right:6px;}
   .mode-full{background:var(--blue-pale);color:var(--blue);}
   .mode-addr{background:var(--green-pale);color:var(--green);}
+
+  /* PRINT CONFIG */
+  .font-adjuster{display:flex;align-items:center;gap:10px;padding:10px 0;}
+  .font-adjuster label{flex:0 0 80px;font-size:13px;color:var(--ink-light);}
+  .font-adjuster .val{font-size:14px;font-weight:700;color:var(--accent);min-width:36px;text-align:center;}
+  .adj-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--paper-border);background:var(--paper-warm);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--ink);transition:all .15s;}
+  .adj-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .adj-unit{font-size:11px;color:var(--ink-faint);}
+
+  .layout-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:4px;}
+  .layout-opt{border:2px solid var(--paper-border);border-radius:8px;padding:10px 8px;cursor:pointer;text-align:center;transition:all .2s;background:#fff;}
+  .layout-opt:hover{border-color:var(--accent-light);}
+  .layout-opt.selected{border-color:var(--accent);background:var(--accent-pale);}
+  .layout-preview{display:grid;gap:2px;margin:0 auto 6px;width:60px;height:44px;}
+  .layout-preview .lp-cell{background:var(--paper-border);border-radius:2px;}
+  .layout-opt.selected .lp-cell{background:var(--accent-light);}
+  .layout-name{font-size:12px;font-weight:600;color:var(--ink);}
+  .layout-desc{font-size:11px;color:var(--ink-faint);}
+
+  .cfg-preview-box{background:var(--paper-warm);border:1px solid var(--paper-border);border-radius:8px;padding:16px;margin-top:4px;}
+  .cfg-preview-label{display:flex;flex-direction:column;border:1px dashed #b0a898;padding:8px 10px;background:#fff;font-family:'Noto Serif TC',serif;border-radius:4px;max-width:260px;}
+  .cfg-preview-label .pz{font-weight:700;color:var(--accent);}
+  .cfg-preview-label .pn{font-weight:700;}
+  .cfg-preview-label .ps{color:#888;font-size:.85em;margin-left:4px;}
 </style>
 </head>
 <body>
@@ -138,8 +162,9 @@
     <button class="nav-tab active" onclick="showPage('import',this)">① 匯入名單</button>
     <button class="nav-tab" onclick="showPage('list',this)">② 名單管理 <span class="badge" id="badge-count">0</span></button>
     <button class="nav-tab" onclick="showPage('settings',this)">③ 寄件人設定</button>
-    <button class="nav-tab" onclick="showPage('preview',this)">④ 預覽列印</button>
-    <button class="nav-tab" onclick="showPage('reprint',this)">⑤ 補印</button>
+    <button class="nav-tab" onclick="showPage('printcfg',this)">④ 列印前設定</button>
+    <button class="nav-tab" onclick="showPage('preview',this)">⑤ 預覽列印</button>
+    <button class="nav-tab" onclick="showPage('reprint',this)">⑥ 補印</button>
   </div>
 </nav>
 
@@ -317,6 +342,70 @@
   <div id="preview-sheets"></div>
 </div>
 
+<!-- PAGE 4b 列印前設定 -->
+<div class="page" id="page-printcfg">
+  <div class="page-header">
+    <div class="page-title">列印前設定</div>
+    <div class="page-subtitle">設定版面與字體大小，完成後到「⑤ 預覽列印」套用</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📐 每頁版面（欄 × 列）</div>
+    <div class="layout-grid" id="layout-grid"></div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:12px">格子越少每格越大，地址較長時建議選 1×4 或 1×2</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔤 字體大小</div>
+    <div class="font-adjuster">
+      <label>郵遞區號</label>
+      <button class="adj-btn" onclick="adjFont('zip',-0.5)">－</button>
+      <span class="val" id="fval-zip">13.5</span><span class="adj-unit">pt</span>
+      <button class="adj-btn" onclick="adjFont('zip',+0.5)">＋</button>
+    </div>
+    <div class="font-adjuster">
+      <label>地址</label>
+      <button class="adj-btn" onclick="adjFont('addr',-0.5)">－</button>
+      <span class="val" id="fval-addr">10</span><span class="adj-unit">pt</span>
+      <button class="adj-btn" onclick="adjFont('addr',+0.5)">＋</button>
+    </div>
+    <div class="font-adjuster">
+      <label>收件人姓名</label>
+      <button class="adj-btn" onclick="adjFont('name',-0.5)">－</button>
+      <span class="val" id="fval-name">13.5</span><span class="adj-unit">pt</span>
+      <button class="adj-btn" onclick="adjFont('name',+0.5)">＋</button>
+    </div>
+    <div class="font-adjuster">
+      <label>敬語</label>
+      <button class="adj-btn" onclick="adjFont('salute',-0.5)">－</button>
+      <span class="val" id="fval-salute">10</span><span class="adj-unit">pt</span>
+      <button class="adj-btn" onclick="adjFont('salute',+0.5)">＋</button>
+    </div>
+    <div class="font-adjuster">
+      <label>寄件人</label>
+      <button class="adj-btn" onclick="adjFont('sender',-0.5)">－</button>
+      <span class="val" id="fval-sender">8.5</span><span class="adj-unit">pt</span>
+      <button class="adj-btn" onclick="adjFont('sender',+0.5)">＋</button>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--paper-border);margin:14px 0">
+    <div class="card-title" style="margin-bottom:10px">👁 即時預覽</div>
+    <div class="cfg-preview-box">
+      <div class="cfg-preview-label" id="cfg-label-preview">
+        <div id="cfg-prev-sender" style="margin-bottom:5px;color:#444"></div>
+        <div id="cfg-prev-zip" style="font-weight:700;color:#8b3a2a;letter-spacing:.15em">813023</div>
+        <div id="cfg-prev-addr">高雄市左營區自由三路一號</div>
+        <div style="margin-top:3px"><span id="cfg-prev-name" style="font-weight:700">王大明</span><span id="cfg-prev-salute" style="color:#888;margin-left:6px">敬啟</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-green" onclick="savePrintCfg()">💾 儲存設定</button>
+    <button class="btn btn-secondary" onclick="resetPrintCfg()">↩ 恢復預設</button>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="goPreview()">→ 前往預覽列印</button>
+  </div>
+</div>
+
 <!-- PAGE 5 補印 -->
 <div class="page" id="page-reprint">
   <div class="page-header">
@@ -351,10 +440,28 @@ let recipients=[], editIndex=-1;
 const DEF={name:'左營區新莊國小',dept:'',zip:'813023',address:'高雄市左營區自由三路一號',salute:'敬啟'};
 let S={...DEF};
 
+const DEF_CFG={
+  cols:2, rows:4,
+  fzip:13.5, faddr:10, fname:13.5, fsalute:10, fsender:8.5
+};
+let PC={...DEF_CFG}; // print config
+
+const LAYOUTS=[
+  {cols:1,rows:1,name:'1×1',desc:'超大格'},
+  {cols:1,rows:2,name:'1×2',desc:'半頁大格'},
+  {cols:1,rows:4,name:'1×4',desc:'單欄 4 格'},
+  {cols:2,rows:2,name:'2×2',desc:'4 格'},
+  {cols:2,rows:3,name:'2×3',desc:'6 格'},
+  {cols:2,rows:4,name:'2×4',desc:'8 格（預設）'},
+  {cols:3,rows:4,name:'3×4',desc:'12 格'},
+  {cols:3,rows:5,name:'3×5',desc:'15 格'},
+];
+
 function init(){
   const r=localStorage.getItem('mls_r'); if(r) recipients=JSON.parse(r);
   const s=localStorage.getItem('mls_s'); if(s) S={...DEF,...JSON.parse(s)};
-  loadSUI(); updateBadge();
+  const pc=localStorage.getItem('mls_pc'); if(pc) PC={...DEF_CFG,...JSON.parse(pc)};
+  loadSUI(); updateBadge(); buildLayoutGrid(); updatePrintCfgUI();
 }
 function saveR(){localStorage.setItem('mls_r',JSON.stringify(recipients)); updateBadge();}
 function updateBadge(){document.getElementById('badge-count').textContent=recipients.length;}
@@ -368,6 +475,7 @@ function showPage(n,btn){
   if(n==='preview') renderPreview();
   if(n==='reprint') renderReprint();
   if(n==='settings') updatePrvSender();
+  if(n==='printcfg'){ buildLayoutGrid(); updatePrintCfgUI(); }
 }
 
 function toast(msg,dur=2500){
@@ -578,24 +686,31 @@ function buildSHTML(s){
 }
 
 /* ── LABEL ── */
-function buildLabel(r, addrOnly){
+function buildLabel(r, addrOnly, fs, minH){
+  // fs = {zip,addr,name,salute,sender} in px for preview; minH = min-height
+  const fz=fs?`font-size:${fs.zip}`:'';
+  const fa=fs?`font-size:${fs.addr}`:'';
+  const fn=fs?`font-size:${fs.name}`:'';
+  const fsl=fs?`font-size:${fs.salute}`:'';
+  const fsd=fs?`font-size:${fs.sender}`:'';
+  const mh=minH?`min-height:${minH}`:'';
   if(addrOnly){
-    return `<div class="label-cell" style="justify-content:center;align-items:center">
+    return `<div class="label-cell" style="justify-content:center;align-items:center;${mh}">
       <div class="label-recv" style="padding-left:0;text-align:left">
-        <div class="rz">${r.zip||''}</div>
-        <div class="ra">${r.address}</div>
-        <div class="rn">${r.name}　<span class="rs">${S.salute}</span></div>
+        <div class="rz" style="${fz}">${r.zip||''}</div>
+        <div class="ra" style="${fa}">${r.address}</div>
+        <div class="rn" style="${fn}">${r.name}　<span class="rs" style="${fsl}">${S.salute}</span></div>
       </div>
     </div>`;
   }
-  return `<div class="label-cell">
+  return `<div class="label-cell" style="${mh}">
     <div class="label-top">
-      <div class="label-sender-block">${buildSHTML(S)}</div>
+      <div class="label-sender-block" style="${fsd}">${buildSHTML(S)}</div>
     </div>
     <div class="label-recv">
-      <div class="rz">${r.zip||''}</div>
-      <div class="ra">${r.address}</div>
-      <div class="rn">${r.name}　<span class="rs">${S.salute}</span></div>
+      <div class="rz" style="${fz}">${r.zip||''}</div>
+      <div class="ra" style="${fa}">${r.address}</div>
+      <div class="rn" style="${fn}">${r.name}　<span class="rs" style="${fsl}">${S.salute}</span></div>
     </div>
   </div>`;
 }
@@ -608,15 +723,30 @@ function renderPreview(){
     container.innerHTML='<div class="card no-data">尚無收件人，請先匯入名單</div>';
     document.getElementById('print-info').innerHTML='';return;
   }
-  const PER=8, pages=Math.ceil(recipients.length/PER);
+  const PER=PC.cols*PC.rows, pages=Math.ceil(recipients.length/PER);
   const badge=addrOnly?`<span class="mode-badge mode-addr">僅收件人模式</span>`:`<span class="mode-badge mode-full">完整標籤模式</span>`;
-  document.getElementById('print-info').innerHTML=`${badge}共 ${recipients.length} 筆 ／ ${pages} 頁`;
+  const layoutBadge=`<span class="mode-badge" style="background:var(--paper-warm);color:var(--ink-light);border:1px solid var(--paper-border)">${PC.cols}×${PC.rows}</span>`;
+  document.getElementById('print-info').innerHTML=`${badge}${layoutBadge}共 ${recipients.length} 筆 ／ ${pages} 頁`;
+
+  // 計算預覽用像素字體（pt→px 約 1.333）
+  const fs={
+    zip: PC.fzip*1.333+'px', addr: PC.faddr*1.333+'px',
+    name: PC.fname*1.333+'px', salute: PC.fsalute*1.333+'px', sender: PC.fsender*1.333+'px'
+  };
+  const minH=Math.round(210/PC.rows)+'mm';
+
   let html='';
   for(let p=0;p<pages;p++){
-    html+=`<div style="margin-bottom:20px"><div style="font-size:12px;color:var(--ink-faint);margin-bottom:5px;text-align:center">第 ${p+1} 頁</div><div class="a4-sheet">`;
+    html+=`<div style="margin-bottom:20px">
+      <div style="font-size:12px;color:var(--ink-faint);margin-bottom:5px;text-align:center">第 ${p+1} 頁</div>
+      <div class="a4-sheet" style="grid-template-columns:repeat(${PC.cols},1fr)">`;
     for(let i=0;i<PER;i++){
       const idx=p*PER+i;
-      html+=idx<recipients.length?buildLabel(recipients[idx],addrOnly):'<div class="label-empty"></div>';
+      if(idx<recipients.length){
+        html+=buildLabel(recipients[idx],addrOnly,fs,minH);
+      } else {
+        html+=`<div class="label-empty" style="min-height:${minH}"></div>`;
+      }
     }
     html+='</div></div>';
   }
@@ -630,25 +760,27 @@ function doPrint(){
 
 /* ── PRINT ── */
 function printLabels(list, addrOnly){
-  const PER=8,pages=Math.ceil(list.length/PER);
+  const cols=PC.cols, rows=PC.rows;
+  const PER=cols*rows, pages=Math.ceil(list.length/PER);
+  const minH=Math.floor(267/rows); // A4 297mm - 20mm margin - ~10mm header / rows, approx in mm
   let html=`<style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Noto Serif TC',serif;}
     @page{size:A4;margin:10mm;}
-    .sh{display:grid;grid-template-columns:1fr 1fr;gap:4mm;page-break-after:always;}
+    .sh{display:grid;grid-template-columns:repeat(${cols},1fr);gap:3mm;page-break-after:always;}
     .sh:last-child{page-break-after:auto;}
-    .lc{border:1px dashed #aaa;padding:5.5mm 6.5mm;min-height:56mm;display:flex;flex-direction:column;justify-content:${addrOnly?'center':'space-between'};align-items:${addrOnly?'flex-start':'stretch'};}
-    .le{border:1px dashed #ddd;min-height:56mm;}
+    .lc{border:1px dashed #aaa;padding:5mm 6mm;min-height:${minH}mm;display:flex;flex-direction:column;justify-content:${addrOnly?'center':'space-between'};align-items:${addrOnly?'flex-start':'stretch'};}
+    .le{border:1px dashed #ddd;min-height:${minH}mm;}
     .lt{display:flex;justify-content:space-between;align-items:flex-start;}
-    .ls{font-size:8.5pt;line-height:1.75;color:#444;}
-    .ls .sn{font-weight:700;font-size:9.5pt;color:#222;}
+    .ls{font-size:${PC.fsender}pt;line-height:1.75;color:#444;}
+    .ls .sn{font-weight:700;font-size:${PC.fsender+1}pt;color:#222;}
     .stmp{display:none;}
-    .lr{padding-left:${addrOnly?'0':'16mm'};padding-right:3mm;${addrOnly?'display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;flex:1':''}}
-    .rz{font-size:13.5pt;font-weight:700;letter-spacing:.2em;color:#8b3a2a;margin-bottom:1mm;}
-    .ra{font-size:10pt;line-height:1.6;}
-    .rn{font-size:13.5pt;font-weight:700;margin-top:2mm;}
-    .rs{font-size:10pt;color:#666;margin-left:2mm;}
+    .lr{padding-left:${addrOnly?'0':'14mm'};padding-right:3mm;${addrOnly?'display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-align:left;flex:1':''}}
+    .rz{font-size:${PC.fzip}pt;font-weight:700;letter-spacing:.2em;color:#8b3a2a;margin-bottom:1mm;}
+    .ra{font-size:${PC.faddr}pt;line-height:1.6;}
+    .rn{font-size:${PC.fname}pt;font-weight:700;margin-top:2mm;}
+    .rs{font-size:${PC.fsalute}pt;color:#666;margin-left:2mm;}
   </style>`;
   for(let p=0;p<pages;p++){
     html+=`<div class="sh">`;
@@ -701,6 +833,80 @@ function renderReprint(){
         <button class="btn btn-secondary btn-sm" onclick="printLabels([recipients[${r._i}]],true)">📋 僅地址</button>
       </div>
     </div>`).join('');
+}
+
+/* ── PRINT CONFIG ── */
+function buildLayoutGrid(){
+  const grid=document.getElementById('layout-grid');
+  if(!grid) return;
+  grid.innerHTML=LAYOUTS.map(l=>{
+    const sel=(l.cols===PC.cols&&l.rows===PC.rows)?'selected':'';
+    // mini preview grid
+    let cells='';
+    const maxCells=l.cols*Math.min(l.rows,4);
+    for(let i=0;i<maxCells;i++) cells+=`<div class="lp-cell"></div>`;
+    return `<div class="layout-opt ${sel}" onclick="selectLayout(${l.cols},${l.rows},this)">
+      <div class="layout-preview" style="grid-template-columns:repeat(${l.cols},1fr);grid-template-rows:repeat(${Math.min(l.rows,4)},1fr)">${cells}</div>
+      <div class="layout-name">${l.name}</div>
+      <div class="layout-desc">${l.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectLayout(cols,rows,el){
+  PC.cols=cols; PC.rows=rows;
+  document.querySelectorAll('.layout-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function adjFont(key, delta){
+  const map={zip:'fzip',addr:'faddr',name:'fname',salute:'fsalute',sender:'fsender'};
+  const k=map[key];
+  PC[k]=Math.round((PC[k]+delta)*2)/2; // 0.5pt 步進
+  PC[k]=Math.max(6,Math.min(24,PC[k])); // 6~24pt 範圍
+  updatePrintCfgUI();
+}
+
+function updatePrintCfgUI(){
+  const map={zip:'fzip',addr:'faddr',name:'fname',salute:'fsalute',sender:'fsender'};
+  Object.entries(map).forEach(([k,v])=>{
+    const el=document.getElementById('fval-'+k);
+    if(el) el.textContent=PC[v];
+  });
+  // 即時預覽字體
+  const pz=document.getElementById('cfg-prev-zip');
+  const pa=document.getElementById('cfg-prev-addr');
+  const pn=document.getElementById('cfg-prev-name');
+  const ps=document.getElementById('cfg-prev-salute');
+  const psd=document.getElementById('cfg-prev-sender');
+  if(pz) pz.style.fontSize=PC.fzip+'pt';
+  if(pa) pa.style.fontSize=PC.faddr+'pt';
+  if(pn) pn.style.fontSize=PC.fname+'pt';
+  if(ps) ps.style.fontSize=PC.fsalute+'pt';
+  if(psd){
+    psd.style.fontSize=PC.fsender+'pt';
+    psd.innerHTML=buildSHTML(S);
+  }
+}
+
+function savePrintCfg(){
+  localStorage.setItem('mls_pc',JSON.stringify(PC));
+  toast('✅ 列印設定已儲存');
+}
+
+function resetPrintCfg(){
+  PC={...DEF_CFG};
+  localStorage.removeItem('mls_pc');
+  buildLayoutGrid(); updatePrintCfgUI();
+  toast('已恢復預設設定');
+}
+
+function goPreview(){
+  savePrintCfg();
+  const tabs=document.querySelectorAll('.nav-tab');
+  let previewTab=null;
+  tabs.forEach(t=>{ if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'preview'")) previewTab=t; });
+  showPage('preview', previewTab);
 }
 
 // Tab 鍵在 textarea 中插入 \t 而非跳焦點
