@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教學現場：一鍵雙螢幕同步防呆指南</title>
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --secondary-color: #2b6cb0;
+            --warning-color: #c53030;
+            --bg-color: #f7fafc;
+            --text-color: #2d3748;
+        }
+        body {
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        header p {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--secondary-color);
+        }
+        .card h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .step-box {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #ebf8ff;
+            border-radius: 6px;
+        }
+        .step-number {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .step-content h3 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+        }
+        .step-content p {
+            margin: 0;
+        }
+        .code-block {
+            background-color: #1a202c;
+            color: #a0aec0;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: "Consolas", monospace;
+            overflow-x: auto;
+            position: relative;
+            margin: 15px 0;
+        }
+        .code-block pre {
+            margin: 0;
+        }
+        .warning-box {
+            background-color: #fff5f5;
+            border-left: 5px solid var(--warning-color);
+            padding: 15px 20px;
+            margin-top: 20px;
+        }
+        .warning-box h4 {
+            color: var(--warning-color);
+            margin-top: 0;
+        }
+        .highlight {
+            background-color: #fefcbf;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        button.copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button.copy-btn:hover {
+            background-color: #2c5282;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>教室雙螢幕完美同步指南</h1>
+    <p>拒絕無效操作，用最現實的邏輯解決教學現場的技術痛點</p>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>▍為什麼我們需要這個工具？</h2>
+        <p>在教學現場，時間就是一切。我們沒有時間在講台上摸索 Windows 的設定、按右鍵找「顯示設定」，然後在延伸、複製之間猶豫不決。這不僅消耗老師的心力，也浪費學生的時間。</p>
+        <p>這份指南將引導您建立一個<strong>「一鍵執行檔」</strong>。只要點擊兩下，系統就會強制將教師機畫面與投影布幕（或大螢幕）完美同步（Clone Mode）。這是一個零容錯、防呆到極致的解決方案。</p>
+    </div>
+
+    <div class="card">
+        <h2>▍十分鐘部署：傻瓜式製作步驟</h2>
+        <p>請老師們依照以下四個步驟執行，做過一次之後，您就可以將這個檔案複製到任何教室的電腦上使用。</p>
+
+        <div class="step-box">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h3>顯示電腦的副檔名（極度重要）</h3>
+                <p>Windows 預設會隱藏檔案的副檔名，這會導致我們無法正確建立執行檔。請打開任意資料夾，點擊上方的<span class="highlight">「檢視」</span>標籤，並將<span class="highlight">「副檔名」</span>的選項打勾。</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h3>在桌面上建立文字檔</h3>
+                <p>回到桌面，在空白處點擊滑鼠<span class="highlight">右鍵</span> ➜ 選擇<span class="highlight">「新增」</span> ➜ 選擇<span class="highlight">「文字文件」</span>。您可以先隨便命名，例如「螢幕同步」。</p>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h3>複製並貼上核心程式碼</h3>
+                <p>打開剛剛新增的文字文件，將下方黑框內的程式碼<strong>全部複製</strong>並貼上到文字檔中，然後點擊「檔案」➜「儲存檔案」。</p>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode()">點此複製程式碼</button>
+                    <pre id="scriptCode">
+@echo off
+:: ==========================================
+:: 腳本名稱: 教學現場雙螢幕強制同步
+:: 執行方式: 直接連點兩下執行
+:: 核心邏輯: 呼叫 Windows 內建 DisplaySwitch
+:: ==========================================
+
+echo 正在強制將顯示器設定為「同步(複製)」模式...
+echo 請稍候一秒鐘，螢幕可能會閃爍，這是正常現象。
+
+%windir%\System32\DisplaySwitch.exe /clone
+
+echo 執行完畢，您可以開始上課了。
+exit
+                    </pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="step-box">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h3>更改副檔名為 .bat（賦予執行能力）</h3>
+                <p>關閉文字檔。在桌面上的該檔案點擊右鍵，選擇<span class="highlight">「重新命名」</span>。將檔案名稱改為 <span class="highlight">一鍵同步螢幕.bat</span>。系統會跳出警告問您是否確定要變更，請毫不猶豫地點選<strong>「是」</strong>。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>▍如何使用與驗收</h2>
+        <p>設定已經完成。現在，您的桌面上應該有一個名為「一鍵同步螢幕.bat」的檔案（圖示會變成帶有齒輪的視窗）。</p>
+        <p><strong>實際使用方式：</strong>上課前，接上投影機線材，直接對著這個檔案<strong>連點兩下滑鼠左鍵</strong>。螢幕會短暫黑屏 1 到 2 秒，接著您的電腦畫面與投影布幕就會完全一模一樣。完美通關。</p>
+
+        <div class="warning-box">
+            <h4>⚠️ 硬核除錯邏輯 (Troubleshooting)</h4>
+            <p>如果您點了檔案卻沒有反應，請用最現實的角度檢查以下事項，不要懷疑程式碼，請懷疑硬體：</p>
+            <ul>
+                <li><strong>線材真的有插好嗎？</strong> 請重新拔插 HDMI 或 VGA 線，並確保投影機已經開機且切換到正確的訊號源。</li>
+                <li><strong>系統有抓到第二個螢幕嗎？</strong> 如果電腦根本沒偵測到投影機，程式下達同步指令也無效。</li>
+                <li><strong>副檔名改對了嗎？</strong> 確認檔案名稱結尾是 <code>.bat</code>，而不是 <code>.bat.txt</code>（這就是為什麼步驟 1 極度重要）。</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyCode() {
+        const codeText = document.getElementById('scriptCode').innerText;
+        navigator.clipboard.writeText(codeText).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerText = '已複製！';
+            btn.style.backgroundColor = '#48bb78';
+            setTimeout(() => {
+                btn.innerText = '點此複製程式碼';
+                btn.style.backgroundColor = '#2b6cb0';
+            }, 2000);
+        }).catch(err => {
+            alert('複製失敗，請手動框選複製。');
+        });
+    }
+</script>
+
+</body>
+</html>
