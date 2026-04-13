@@ -218,6 +218,7 @@ table.lst tr:hover td{background:var(--paper2);}
         </div>
         <div class="fg"><label>地點／教室</label><input type="text" id="n-place" value="電腦教室2"></div>
         <div class="fg"><label>活動目的</label><input type="text" id="n-purpose" value="電腦繪圖比賽練習"></div>
+        <div class="fg"><label>比賽時間</label><input type="text" id="n-contest" value="4月23日（四）8:00 – 9:30"></div>
         <div class="fg"><label>補充說明（選填）</label><textarea id="n-extra" rows="2" placeholder="如：請準時出席，有問題請聯絡老師。"></textarea></div>
       </div>
       <button class="btn grn" onclick="saveSettings()">💾 儲存設定</button>
@@ -301,6 +302,7 @@ const DEF_S = {
   actdate:'4月14日（星期二）、4月21日（星期二）',
   t1:'12:40', t2:'13:20',
   place:'電腦教室2', purpose:'電腦繪圖比賽練習',
+  contest:'4月23日（四）8:00 – 9:30',
   extra:''
 };
 
@@ -496,7 +498,7 @@ document.getElementById('edit-modal').addEventListener('click', function(e){ if(
 
 /* ══════ 通知設定 ══════ */
 function getN() {
-  const keys = ['school','dept','contact','title','salute','date','actdate','t1','t2','place','purpose','extra'];
+  const keys = ['school','dept','contact','title','salute','date','actdate','t1','t2','place','purpose','contest','extra'];
   const obj = {};
   keys.forEach(k => { const el=document.getElementById('n-'+k); if(el) obj[k]=el.value; });
   return obj;
@@ -507,7 +509,7 @@ function saveSettings() {
   toast('✅ 設定已儲存');
 }
 function addLiveListeners() {
-  ['school','dept','contact','title','salute','date','actdate','t1','t2','place','purpose','extra'].forEach(k=>{
+  ['school','dept','contact','title','salute','date','actdate','t1','t2','place','purpose','contest','extra'].forEach(k=>{
     const el = document.getElementById('n-'+k);
     if (el) { el.addEventListener('input', updateLive); el.addEventListener('change', updateLive); }
   });
@@ -581,15 +583,18 @@ function buildCard(r, n, forPrint) {
   const fc = fontCSS();
   const u = forPrint ? 'pt' : 'px';
   const fs = k => `font-size:${L[k]}${u}`;
-  const pad = forPrint ? '5mm 6mm' : '8px 10px';
-  const gap = forPrint ? '1.8mm' : '4px';
+  const pad = forPrint ? '2mm 3mm' : '7px 9px';
+  const gap = forPrint ? '1.5mm' : '3px';
   const dept = n.dept ? `${n.school}　${n.dept}` : n.school;
+  const tdBase = `border:0.3mm solid #bbb;padding:${forPrint?'1.2mm 2.5mm':'2px 5px'};`;
+  const tdLabel = tdBase + `color:#555;white-space:nowrap;background:#f5f3f0;width:${forPrint?'16mm':'52px'}`;
+  const tdVal = tdBase;
 
   const classLine = p.cls
     ? `<span style="${fs('fClass')};font-weight:600;color:#555;margin-right:4px;">${p.cls}　${p.seat}</span>`
     : '';
 
-  return `<div style="font-family:${fc};border:1px dashed #aaa;padding:${pad};display:flex;flex-direction:column;gap:${gap};background:#fff;height:100%;">
+  return `<div style="font-family:${fc};border:0.3mm solid #888;padding:${pad};display:flex;flex-direction:column;gap:${gap};background:#fff;height:100%;">
     <div style="${fs('fTitle')};font-weight:700;text-align:center;letter-spacing:.15em;">${n.title}</div>
     <div style="${fs('fSign')};color:#777;text-align:center;">${dept}</div>
     <div style="${fs('fBody')};line-height:1.9;">
@@ -600,20 +605,24 @@ function buildCard(r, n, forPrint) {
     </div>
     <table style="width:100%;border-collapse:collapse;${fs('fTable')};">
       <tr>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;width:${forPrint?'14mm':'46px'}">日期</td>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.actdate}</td>
+        <td style="${tdLabel}">練習日期</td>
+        <td style="${tdVal}">${n.actdate}</td>
       </tr>
       <tr>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;">時間</td>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.t1} – ${n.t2}</td>
+        <td style="${tdLabel}">練習時間</td>
+        <td style="${tdVal}">${n.t1} – ${n.t2}</td>
       </tr>
       <tr>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;">地點</td>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.place}</td>
+        <td style="${tdLabel}">練習地點</td>
+        <td style="${tdVal}">${n.place}</td>
       </tr>
+      ${n.contest ? `<tr>
+        <td style="${tdLabel}">比賽時間</td>
+        <td style="${tdVal}">${n.contest}</td>
+      </tr>` : ''}
       ${n.extra ? `<tr>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;">備註</td>
-        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.extra}</td>
+        <td style="${tdLabel}">備註</td>
+        <td style="${tdVal}">${n.extra}</td>
       </tr>` : ''}
     </table>
     <div style="${fs('fSign')};text-align:right;color:#666;line-height:1.9;margin-top:auto;">
@@ -666,7 +675,7 @@ function doPrint() {
   const n = getN();
   const PER = L.cols * L.rows;
   const pages = Math.ceil(R.length / PER);
-  const slotH = Math.floor(257 / L.rows);
+  const slotH = Math.floor(287 / L.rows);
   const fc = fontCSS();
   const fontImport = L.font === 'sans'
     ? `@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');`
@@ -692,7 +701,7 @@ function doPrint() {
 ${fontImport}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:${fc};}
-@page{size:A4;margin:10mm;}
+@page{size:A4;margin:5mm;}
 div[style*="page-break-after"]:last-child{page-break-after:auto;}
 </style>
 </head><body>${body}</body></html>`);
