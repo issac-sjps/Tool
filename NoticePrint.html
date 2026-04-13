@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>通知書套印系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#1c1612;--ink2:#4a3f35;--ink3:#8a7a6e;
+  --paper:#faf8f4;--paper2:#f3ede3;--border:#ddd5c8;
+  --accent:#8b3a2a;--accent2:#c4614d;--accent-bg:#f5e8e5;
+  --green:#1e6b47;--green-bg:#e5f2eb;
+  --shadow:rgba(26,20,16,0.07);
+}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
+
+nav{background:var(--ink);display:flex;align-items:center;padding:0 0 0 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.nav-brand{font-family:'Noto Serif TC',serif;font-size:14px;color:#e8dfd0;letter-spacing:.08em;padding:13px 18px 13px 0;border-right:1px solid #3a3028;margin-right:4px;white-space:nowrap;}
+.nav-tabs{display:flex;overflow-x:auto;}
+.nav-tab{background:none;border:none;color:#a09080;font-family:'Noto Sans TC',sans-serif;font-size:13px;padding:13px 16px;cursor:pointer;white-space:nowrap;transition:color .15s;}
+.nav-tab:hover{color:#e8dfd0;}
+.nav-tab.active{color:#fff;background:var(--accent);}
+.ct{display:inline-block;background:var(--accent2);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;vertical-align:middle;}
+.nav-tab.active .ct{background:rgba(255,255,255,.3);}
+
+.page{display:none;padding:24px 20px;max-width:1060px;margin:0 auto;}
+.page.active{display:block;}
+.ph{margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--border);}
+.ph h1{font-family:'Noto Serif TC',serif;font-size:19px;font-weight:700;}
+.ph p{font-size:12px;color:var(--ink3);margin-top:3px;}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:14px;box-shadow:0 1px 3px var(--shadow);}
+.card-title{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+
+.fg{margin-bottom:11px;}
+label{font-size:13px;color:var(--ink2);display:block;margin-bottom:4px;}
+input[type=text],input[type=time],textarea,select{font-family:'Noto Sans TC',sans-serif;font-size:13px;border:1px solid var(--border);border-radius:6px;padding:7px 11px;background:#fff;color:var(--ink);width:100%;transition:border-color .2s;}
+input[type=text]:focus,input[type=time]:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);}
+textarea{resize:vertical;line-height:1.8;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+@media(max-width:560px){.row2,.row3{grid-template-columns:1fr;}}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:6px;font-size:13px;font-family:'Noto Sans TC',sans-serif;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--paper2);color:var(--ink);transition:all .15s;}
+.btn:hover{background:var(--border);}
+.btn.pri{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.pri:hover{background:var(--accent2);border-color:var(--accent2);}
+.btn.grn{background:var(--green);color:#fff;border-color:var(--green);}
+.btn.grn:hover{opacity:.85;}
+.btn.sm{padding:5px 10px;font-size:12px;}
+.btn.danger{color:#c0392b;border-color:#f5c6c2;}
+.btn.danger:hover{background:#fdecea;}
+
+.paste-area{width:100%;height:140px;font-size:14px;line-height:2.1;font-family:'Courier New',monospace;}
+.tip{background:var(--accent-bg);border:1px solid #eeccca;border-radius:6px;padding:9px 13px;font-size:12px;color:#7a2a1a;line-height:1.8;margin-bottom:12px;}
+.ok-msg{background:var(--green-bg);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--green);margin-top:9px;display:none;}
+.err-msg{background:#fdecea;border-radius:6px;padding:8px 12px;font-size:13px;color:#c0392b;margin-top:9px;display:none;}
+
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.stat{font-size:13px;color:var(--ink2);background:var(--paper2);padding:5px 12px;border-radius:6px;border:1px solid var(--border);}
+.stat strong{color:var(--accent);font-size:16px;margin-right:2px;}
+table.lst{width:100%;border-collapse:collapse;font-size:13px;}
+table.lst thead tr{background:var(--paper2);}
+table.lst th{padding:8px 12px;text-align:left;font-weight:600;color:var(--ink3);font-size:11px;letter-spacing:.06em;border-bottom:2px solid var(--border);}
+table.lst td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+table.lst tr:hover td{background:var(--paper2);}
+.no-data{text-align:center;color:var(--ink3);padding:30px;font-size:13px;}
+
+/* 版面選擇 */
+.layout-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+.lo{border:2px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;text-align:center;transition:all .2s;background:#fff;min-width:80px;}
+.lo:hover{border-color:var(--accent2);}
+.lo.sel{border-color:var(--accent);background:var(--accent-bg);}
+.lo-preview{display:grid;gap:2px;width:48px;height:36px;margin:0 auto 5px;}
+.lo-preview .c{background:var(--border);border-radius:2px;}
+.lo.sel .lo-preview .c{background:var(--accent2);}
+.lo-name{font-size:12px;font-weight:600;color:var(--ink);}
+.lo-desc{font-size:10px;color:var(--ink3);}
+
+/* 字體調整 */
+.font-cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:560px){.font-cfg-grid{grid-template-columns:1fr;}}
+.fa-row{display:flex;align-items:center;gap:8px;background:var(--paper2);border-radius:6px;padding:7px 10px;border:1px solid var(--border);}
+.fa-label{font-size:12px;color:var(--ink2);flex:1;}
+.fa-val{font-size:14px;font-weight:700;color:var(--accent);min-width:32px;text-align:center;}
+.fa-unit{font-size:10px;color:var(--ink3);}
+.adj{width:28px;height:28px;border-radius:5px;border:1px solid var(--border);background:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--ink);transition:all .15s;}
+.adj:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+.font-sel{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px;}
+.font-opt{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--ink2);transition:all .15s;}
+.font-opt:hover{border-color:var(--accent2);}
+.font-opt.sel{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:600;}
+
+/* 設定分欄 */
+.cfg-layout{display:grid;grid-template-columns:1fr 360px;gap:14px;align-items:start;}
+@media(max-width:800px){.cfg-layout{grid-template-columns:1fr;}}
+.live-wrap{position:sticky;top:64px;}
+
+/* 預覽 */
+.a4-sheet{background:#fff;border:1px solid var(--border);box-shadow:0 3px 14px var(--shadow);width:210mm;max-width:100%;margin:0 auto 20px;padding:9mm;display:grid;gap:3mm;}
+.print-toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.print-info{font-size:12px;color:var(--ink3);margin-left:auto;}
+.empty-slot{border:1px dashed #ddd;background:repeating-linear-gradient(45deg,transparent,transparent 7px,#f8f5f0 7px,#f8f5f0 8px);}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:10px;padding:22px 26px;width:400px;max-width:92vw;box-shadow:0 8px 30px rgba(0,0,0,.18);}
+.modal-title{font-family:'Noto Serif TC',serif;font-size:16px;margin-bottom:14px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:#fff;padding:7px 18px;border-radius:20px;font-size:12px;opacity:0;transition:all .25s;z-index:999;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">📋 通知書套印</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('paste',this)">① 貼上名單</button>
+    <button class="nav-tab" onclick="showPage('list',this)">② 名單管理 <span class="ct" id="badge">0</span></button>
+    <button class="nav-tab" onclick="showPage('cfg',this)">③ 通知內容</button>
+    <button class="nav-tab" onclick="showPage('layout',this)">④ 版面字體</button>
+    <button class="nav-tab" onclick="showPage('preview',this)">⑤ 預覽列印</button>
+  </div>
+</nav>
+
+<!-- ① 貼上名單 -->
+<div class="page active" id="page-paste">
+  <div class="ph"><h1>貼上名單</h1><p>格式：班級座號 姓名，每行一筆</p></div>
+  <div class="card">
+    <div class="tip">
+      格式：<code>班級座號 姓名</code>（班級座號共 5 碼：年級1碼＋班次2碼＋座號2碼）<br>
+      例：<code>40102 王大玲</code> → 401班 02號　｜　<code>40303 謝文文</code> → 403班 03號<br>
+      也可只貼姓名（不含班級座號），或直接從 Excel 複製一欄貼上。
+    </div>
+    <div class="fg">
+      <label>學生名單</label>
+      <textarea class="paste-area" id="paste-input" placeholder="40102 王大玲
+40303 謝文文
+李小明"></textarea>
+    </div>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;margin-bottom:11px;">
+      <input type="checkbox" id="opt-replace" style="width:auto"> 取代現有名單（不勾選則追加）
+    </label>
+    <div style="display:flex;gap:8px;">
+      <button class="btn pri" onclick="doPaste()">✅ 匯入</button>
+      <button class="btn" onclick="document.getElementById('paste-input').value=''">清空</button>
+    </div>
+    <div class="ok-msg" id="paste-ok"></div>
+    <div class="err-msg" id="paste-err"></div>
+  </div>
+</div>
+
+<!-- ② 名單管理 -->
+<div class="page" id="page-list">
+  <div class="ph"><h1>名單管理</h1><p>新增、編輯、刪除學生</p></div>
+  <div class="toolbar">
+    <button class="btn sm pri" onclick="openAdd()">＋ 新增</button>
+    <button class="btn sm danger" onclick="clearAll()">🗑 清空全部</button>
+    <button class="btn sm" onclick="doExport()">⬇ 匯出 CSV</button>
+  </div>
+  <div class="stat-row" id="list-stats"></div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table class="lst">
+      <thead><tr>
+        <th style="width:44px">#</th>
+        <th style="width:76px">班級</th>
+        <th style="width:56px">座號</th>
+        <th>姓名</th>
+        <th style="width:120px">操作</th>
+      </tr></thead>
+      <tbody id="list-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ③ 通知內容 -->
+<div class="page" id="page-cfg">
+  <div class="ph"><h1>通知內容設定</h1><p>設定後儲存於本機瀏覽器</p></div>
+  <div class="cfg-layout">
+    <div>
+      <div class="card">
+        <div class="card-title">發件資訊</div>
+        <div class="fg"><label>學校名稱</label><input type="text" id="n-school" value="左營區新莊國小"></div>
+        <div class="fg"><label>發件單位</label><input type="text" id="n-dept" value="電腦老師"></div>
+        <div class="fg"><label>聯絡電話</label><input type="text" id="n-contact" value="電話：3411373#112"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">通知標題與稱謂</div>
+        <div class="fg"><label>通知標題</label><input type="text" id="n-title" value="電腦繪圖比賽練習通知"></div>
+        <div class="row2">
+          <div class="fg"><label>稱謂</label>
+            <select id="n-salute">
+              <option value="同學" selected>同學</option>
+              <option value="小朋友">小朋友</option>
+              <option value="同仁">同仁</option>
+            </select>
+          </div>
+          <div class="fg"><label>通知日期</label><input type="text" id="n-date" placeholder="如：114年4月14日"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">時間與地點</div>
+        <div class="fg">
+          <label>活動日期（可填多個日期）</label>
+          <input type="text" id="n-actdate" value="4月14日（星期二）、4月21日（星期二）">
+        </div>
+        <div class="row2">
+          <div class="fg"><label>開始時間</label><input type="time" id="n-t1" value="12:40"></div>
+          <div class="fg"><label>結束時間</label><input type="time" id="n-t2" value="13:20"></div>
+        </div>
+        <div class="fg"><label>地點／教室</label><input type="text" id="n-place" value="電腦教室2"></div>
+        <div class="fg"><label>活動目的</label><input type="text" id="n-purpose" value="電腦繪圖比賽練習"></div>
+        <div class="fg"><label>補充說明（選填）</label><textarea id="n-extra" rows="2" placeholder="如：請準時出席，有問題請聯絡老師。"></textarea></div>
+      </div>
+      <button class="btn grn" onclick="saveSettings()">💾 儲存設定</button>
+    </div>
+    <div class="live-wrap">
+      <div class="card">
+        <div class="card-title">即時預覽（示意）</div>
+        <div style="overflow:hidden;border-radius:4px;">
+          <div id="live-nc-wrap" style="transform:scale(.68);transform-origin:top left;width:147%;margin-bottom:-35%;pointer-events:none;"></div>
+        </div>
+        <p style="font-size:11px;color:var(--ink3);margin-top:8px">收件人將依名單逐一套印</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ④ 版面字體 -->
+<div class="page" id="page-layout">
+  <div class="ph"><h1>版面與字體設定</h1><p>設定後儲存於本機瀏覽器</p></div>
+
+  <div class="card">
+    <div class="card-title">每頁版面（欄 × 列）</div>
+    <div class="layout-grid" id="layout-grid"></div>
+    <p style="font-size:12px;color:var(--ink3);margin-top:10px">格子越少每格越大，內容較多時建議選 1×3 或 2×3</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">字體選擇</div>
+    <div class="font-sel" id="font-sel"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">各區塊字體大小（pt）</div>
+    <div class="font-cfg-grid" id="font-cfg-grid"></div>
+  </div>
+
+  <div style="display:flex;gap:9px;flex-wrap:wrap;">
+    <button class="btn grn" onclick="saveLayout()">💾 儲存版面設定</button>
+    <button class="btn" onclick="resetLayout()">↩ 恢復預設</button>
+    <button class="btn pri" style="margin-left:auto" onclick="gotoPreview()">→ 前往預覽列印</button>
+  </div>
+</div>
+
+<!-- ⑤ 預覽列印 -->
+<div class="page" id="page-preview">
+  <div class="ph"><h1>預覽列印</h1><p>確認無誤後按「列印全部」</p></div>
+  <div class="print-toolbar">
+    <button class="btn grn" onclick="doPrint()">🖨 列印全部</button>
+    <button class="btn" onclick="renderPreview()">🔄 重新整理</button>
+    <span class="print-info" id="print-info"></span>
+  </div>
+  <div id="preview-area"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">編輯學生</div>
+    <div class="fg">
+      <label>班級座號（5碼，如 40102）或留空</label>
+      <input type="text" id="m-code" placeholder="40102" maxlength="5">
+    </div>
+    <div class="fg"><label>學生姓名 *</label><input type="text" id="m-name" placeholder="王大玲"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn pri" onclick="saveModal()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════ 資料 ══════ */
+let R = [], editI = -1;
+
+const DEF_S = {
+  school:'左營區新莊國小', dept:'電腦老師', contact:'電話：3411373#112',
+  title:'電腦繪圖比賽練習通知',
+  salute:'同學', date:'',
+  actdate:'4月14日（星期二）、4月21日（星期二）',
+  t1:'12:40', t2:'13:20',
+  place:'電腦教室2', purpose:'電腦繪圖比賽練習',
+  extra:''
+};
+
+const LAYOUTS = [
+  {cols:1,rows:2,name:'1×2',desc:'2格'},
+  {cols:1,rows:3,name:'1×3',desc:'3格'},
+  {cols:2,rows:2,name:'2×2',desc:'4格'},
+  {cols:2,rows:3,name:'2×3',desc:'6格'},
+  {cols:2,rows:4,name:'2×4',desc:'8格'},
+  {cols:3,rows:4,name:'3×4',desc:'12格'},
+];
+
+const FONTS = [
+  {id:'serif', label:'明體／標楷體', css:"'Noto Serif TC','標楷體','BiauKai',serif"},
+  {id:'sans',  label:'黑體／正黑體', css:"'Noto Sans TC','微軟正黑體','PingFang TC',sans-serif"},
+];
+
+const FONT_KEYS = [
+  {k:'fTitle',  label:'通知標題'},
+  {k:'fClass',  label:'班級座號'},
+  {k:'fName',   label:'學生姓名'},
+  {k:'fBody',   label:'內文'},
+  {k:'fTable',  label:'資訊表格'},
+  {k:'fSign',   label:'落款'},
+];
+
+const DEF_L = {cols:2, rows:3, font:'serif', fTitle:13, fClass:9, fName:13, fBody:9, fTable:9, fSign:8};
+
+let S = {...DEF_S};
+let L = {...DEF_L};
+
+/* ══════ 初始化 ══════ */
+function init() {
+  const r = localStorage.getItem('nps_r'); if (r) R = JSON.parse(r);
+  const s = localStorage.getItem('nps_s'); if (s) S = {...DEF_S, ...JSON.parse(s)};
+  const l = localStorage.getItem('nps_l'); if (l) L = {...DEF_L, ...JSON.parse(l)};
+  loadSettingsUI();
+  setToday();
+  updateBadge();
+  addLiveListeners();
+}
+
+function setToday() {
+  const el = document.getElementById('n-date');
+  if (el && !el.value) {
+    const d = new Date();
+    el.value = `${d.getFullYear()-1911}年${d.getMonth()+1}月${d.getDate()}日`;
+  }
+}
+
+function loadSettingsUI() {
+  Object.keys(DEF_S).forEach(k => {
+    const el = document.getElementById('n-'+k);
+    if (el) el.value = S[k] !== undefined ? S[k] : DEF_S[k];
+  });
+}
+
+function saveR() { localStorage.setItem('nps_r', JSON.stringify(R)); updateBadge(); }
+function updateBadge() { document.getElementById('badge').textContent = R.length; }
+
+/* ══════ 導覽 ══════ */
+function showPage(n, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (n==='list') renderList();
+  if (n==='preview') renderPreview();
+  if (n==='cfg') updateLive();
+  if (n==='layout') { buildLayoutGrid(); buildFontSel(); buildFontCfg(); }
+}
+
+function gotoPreview() {
+  saveLayout();
+  const tab = [...document.querySelectorAll('.nav-tab')].find(t => (t.getAttribute('onclick')||'').includes("'preview'"));
+  showPage('preview', tab);
+}
+
+function toast(msg, dur=2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+
+/* ══════ 解析班級座號 ══════ */
+function parseCode(code) {
+  const s = (code||'').trim();
+  if (/^\d{5}$/.test(s)) return {cls: s.slice(0,3)+'班', seat: parseInt(s.slice(3),10)+'號'};
+  if (/^\d{4}$/.test(s)) return {cls: s.slice(0,3)+'班', seat: parseInt(s.slice(3),10)+'號'};
+  return {cls:'', seat:''};
+}
+
+/* ══════ 貼上 ══════ */
+function doPaste() {
+  const raw = document.getElementById('paste-input').value.trim();
+  if (!raw) { showMsg(false,'請先貼上名單'); return; }
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  const parsed = [];
+  for (const line of lines) {
+    let code='', name='';
+    if (line.includes('\t')) {
+      const p = line.split('\t').map(s=>s.trim());
+      if (/^\d{4,5}$/.test(p[0])) { code=p[0]; name=p[1]||''; }
+      else { name=p[0]; code=p[1]||''; }
+    } else {
+      const m = line.match(/^(\d{4,5})\s+(.+)$/);
+      if (m) { code=m[1]; name=m[2]; }
+      else name = line;
+    }
+    if (name.trim()) parsed.push({code:code.trim(), name:name.trim()});
+  }
+  if (!parsed.length) { showMsg(false,'無法解析，請確認格式'); return; }
+  if (document.getElementById('opt-replace').checked) R = parsed;
+  else R = [...R, ...parsed];
+  saveR();
+  showMsg(true, `✅ 匯入 ${parsed.length} 位學生`);
+  toast(`已匯入 ${parsed.length} 位`);
+}
+
+function showMsg(ok, msg) {
+  const o = document.getElementById('paste-ok'), e = document.getElementById('paste-err');
+  if (ok) { o.textContent=msg; o.style.display='block'; e.style.display='none'; }
+  else    { e.textContent=msg; e.style.display='block'; o.style.display='none'; }
+}
+
+/* ══════ 名單 ══════ */
+function renderList() {
+  const tb = document.getElementById('list-body');
+  if (!R.length) {
+    tb.innerHTML = '<tr><td colspan="5" class="no-data">尚無資料，請至「貼上名單」匯入</td></tr>';
+  } else {
+    tb.innerHTML = R.map((r,i) => {
+      const p = parseCode(r.code);
+      return `<tr>
+        <td style="color:var(--ink3)">${i+1}</td>
+        <td>${p.cls||'<span style="color:var(--ink3)">—</span>'}</td>
+        <td>${p.seat||'<span style="color:var(--ink3)">—</span>'}</td>
+        <td><strong>${r.name}</strong></td>
+        <td style="display:flex;gap:4px;">
+          <button class="btn sm" onclick="openEdit(${i})">✏️</button>
+          <button class="btn sm danger" onclick="del(${i})">刪除</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('list-stats').innerHTML =
+    `<div class="stat"><strong>${R.length}</strong> 位學生</div>`;
+}
+
+function del(i) {
+  if (!confirm(`確定刪除「${R[i].name}」？`)) return;
+  R.splice(i,1); saveR(); renderList(); toast('已刪除');
+}
+function clearAll() {
+  if (!confirm(`確定清空全部 ${R.length} 位？`)) return;
+  R=[]; saveR(); renderList(); toast('已清空');
+}
+function doExport() {
+  const rows = ['"序號","班級","座號","姓名"',
+    ...R.map((r,i)=>{ const p=parseCode(r.code); return `"${i+1}","${p.cls}","${p.seat}","${r.name}"`; })
+  ].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+rows],{type:'text/csv;charset=utf-8'}));
+  a.download = '學生名單.csv'; a.click();
+}
+
+/* ── Modal ── */
+function openAdd() {
+  editI=-1;
+  document.getElementById('modal-title').textContent='新增學生';
+  document.getElementById('m-code').value='';
+  document.getElementById('m-name').value='';
+  document.getElementById('edit-modal').classList.add('open');
+}
+function openEdit(i) {
+  editI=i;
+  document.getElementById('modal-title').textContent='編輯學生';
+  document.getElementById('m-code').value=R[i].code||'';
+  document.getElementById('m-name').value=R[i].name;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); }
+function saveModal() {
+  const name = document.getElementById('m-name').value.trim();
+  const code = document.getElementById('m-code').value.trim();
+  if (!name) { toast('⚠️ 請輸入姓名'); return; }
+  if (editI===-1) R.push({code,name});
+  else R[editI]={code,name};
+  saveR(); renderList(); closeModal();
+  toast(editI===-1?'已新增':'已更新');
+}
+document.getElementById('edit-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+/* ══════ 通知設定 ══════ */
+function getN() {
+  const keys = ['school','dept','contact','title','salute','date','actdate','t1','t2','place','purpose','extra'];
+  const obj = {};
+  keys.forEach(k => { const el=document.getElementById('n-'+k); if(el) obj[k]=el.value; });
+  return obj;
+}
+function saveSettings() {
+  S = getN();
+  localStorage.setItem('nps_s', JSON.stringify(S));
+  toast('✅ 設定已儲存');
+}
+function addLiveListeners() {
+  ['school','dept','contact','title','salute','date','actdate','t1','t2','place','purpose','extra'].forEach(k=>{
+    const el = document.getElementById('n-'+k);
+    if (el) { el.addEventListener('input', updateLive); el.addEventListener('change', updateLive); }
+  });
+  updateLive();
+}
+
+/* ══════ 版面字體 ══════ */
+function buildLayoutGrid() {
+  document.getElementById('layout-grid').innerHTML = LAYOUTS.map(lo => {
+    const sel = (lo.cols===L.cols && lo.rows===L.rows) ? 'sel' : '';
+    const cells = Array.from({length: lo.cols * Math.min(lo.rows,4)}).map(()=>'<div class="c"></div>').join('');
+    return `<div class="lo ${sel}" onclick="selLayout(${lo.cols},${lo.rows},this)">
+      <div class="lo-preview" style="grid-template-columns:repeat(${lo.cols},1fr);grid-template-rows:repeat(${Math.min(lo.rows,4)},1fr)">${cells}</div>
+      <div class="lo-name">${lo.name}</div>
+      <div class="lo-desc">${lo.desc}</div>
+    </div>`;
+  }).join('');
+}
+function selLayout(cols, rows, el) {
+  L.cols=cols; L.rows=rows;
+  document.querySelectorAll('.lo').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function buildFontSel() {
+  document.getElementById('font-sel').innerHTML = FONTS.map(f => {
+    const sel = L.font===f.id ? 'sel' : '';
+    return `<div class="font-opt ${sel}" style="font-family:${f.css}" onclick="selFont('${f.id}',this)">${f.label}</div>`;
+  }).join('');
+}
+function selFont(id, el) {
+  L.font=id;
+  document.querySelectorAll('.font-opt').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function buildFontCfg() {
+  document.getElementById('font-cfg-grid').innerHTML = FONT_KEYS.map(({k,label}) =>
+    `<div class="fa-row">
+      <span class="fa-label">${label}</span>
+      <button class="adj" onclick="adjFont('${k}',-0.5)">－</button>
+      <span class="fa-val" id="fv-${k}">${L[k]}</span>
+      <span class="fa-unit">pt</span>
+      <button class="adj" onclick="adjFont('${k}',+0.5)">＋</button>
+    </div>`
+  ).join('');
+}
+function adjFont(k, d) {
+  L[k] = Math.round((L[k]+d)*2)/2;
+  L[k] = Math.max(6, Math.min(22, L[k]));
+  const el = document.getElementById('fv-'+k);
+  if (el) el.textContent = L[k];
+}
+
+function saveLayout() { localStorage.setItem('nps_l', JSON.stringify(L)); toast('✅ 版面設定已儲存'); }
+function resetLayout() {
+  L = {...DEF_L};
+  localStorage.removeItem('nps_l');
+  buildLayoutGrid(); buildFontSel(); buildFontCfg();
+  toast('已恢復預設');
+}
+
+/* ══════ 通知書 HTML ══════ */
+function fontCSS() {
+  return (FONTS.find(f=>f.id===L.font)||FONTS[0]).css;
+}
+
+// forPrint=true: pt單位供列印視窗；false: px供預覽
+function buildCard(r, n, forPrint) {
+  const p = parseCode(r.code||'');
+  const fc = fontCSS();
+  const u = forPrint ? 'pt' : 'px';
+  const fs = k => `font-size:${L[k]}${u}`;
+  const pad = forPrint ? '5mm 6mm' : '8px 10px';
+  const gap = forPrint ? '1.8mm' : '4px';
+  const dept = n.dept ? `${n.school}　${n.dept}` : n.school;
+
+  const classLine = p.cls
+    ? `<span style="${fs('fClass')};font-weight:600;color:#555;margin-right:4px;">${p.cls}　${p.seat}</span>`
+    : '';
+
+  return `<div style="font-family:${fc};border:1px dashed #aaa;padding:${pad};display:flex;flex-direction:column;gap:${gap};background:#fff;height:100%;">
+    <div style="${fs('fTitle')};font-weight:700;text-align:center;letter-spacing:.15em;">${n.title}</div>
+    <div style="${fs('fSign')};color:#777;text-align:center;">${dept}</div>
+    <div style="${fs('fBody')};line-height:1.9;">
+      ${classLine}<span style="${fs('fName')};font-weight:700;">${r.name}</span>　<span style="color:#555;">${n.salute}，您好：</span>
+    </div>
+    <div style="${fs('fBody')};line-height:1.9;text-indent:1.5em;">
+      敬請您於下列時間至<strong>${n.place}</strong>參加<strong>「${n.purpose}」</strong>活動，請準時出席，謝謝。
+    </div>
+    <table style="width:100%;border-collapse:collapse;${fs('fTable')};">
+      <tr>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;width:${forPrint?'14mm':'46px'}">日期</td>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.actdate}</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;">時間</td>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.t1} – ${n.t2}</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;">地點</td>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.place}</td>
+      </tr>
+      ${n.extra ? `<tr>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};color:#666;white-space:nowrap;background:#f9f7f4;">備註</td>
+        <td style="border:1px solid #ddd;padding:${forPrint?'1.5mm 2.5mm':'2px 5px'};">${n.extra}</td>
+      </tr>` : ''}
+    </table>
+    <div style="${fs('fSign')};text-align:right;color:#666;line-height:1.9;margin-top:auto;">
+      ${dept}${n.contact ? '　'+n.contact : ''}<br>${n.date}
+    </div>
+  </div>`;
+}
+
+function updateLive() {
+  const n = getN();
+  const dummy = {code:'40102', name:'王大玲'};
+  document.getElementById('live-nc-wrap').innerHTML = buildCard(dummy, n, false);
+}
+
+/* ══════ 預覽 ══════ */
+function renderPreview() {
+  const n = getN();
+  const con = document.getElementById('preview-area');
+  if (!R.length) {
+    con.innerHTML = '<div class="card no-data">尚無學生資料，請先至「貼上名單」匯入</div>';
+    document.getElementById('print-info').textContent = '';
+    return;
+  }
+  const PER = L.cols * L.rows;
+  const pages = Math.ceil(R.length / PER);
+  document.getElementById('print-info').textContent = `版面 ${L.cols}×${L.rows}　共 ${R.length} 位 ／ ${pages} 頁`;
+
+  const slotH = Math.floor(257 / L.rows);
+  let html = '';
+  for (let p=0; p<pages; p++) {
+    html += `<div style="text-align:center;font-size:11px;color:var(--ink3);margin-bottom:5px">第 ${p+1} 頁</div>
+    <div class="a4-sheet" style="grid-template-columns:repeat(${L.cols},1fr);">`;
+    for (let i=0; i<PER; i++) {
+      const idx = p*PER+i;
+      if (idx < R.length) {
+        html += `<div style="min-height:${slotH}mm;">${buildCard(R[idx], n, false)}</div>`;
+      } else {
+        html += `<div class="empty-slot" style="min-height:${slotH}mm;"></div>`;
+      }
+    }
+    html += '</div>';
+  }
+  con.innerHTML = html;
+}
+
+/* ══════ 列印 ══════ */
+function doPrint() {
+  if (!R.length) { toast('⚠️ 尚無學生名單'); return; }
+  saveSettings(); saveLayout();
+  const n = getN();
+  const PER = L.cols * L.rows;
+  const pages = Math.ceil(R.length / PER);
+  const slotH = Math.floor(257 / L.rows);
+  const fc = fontCSS();
+  const fontImport = L.font === 'sans'
+    ? `@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');`
+    : `@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');`;
+
+  let body = '';
+  for (let p=0; p<pages; p++) {
+    body += `<div style="display:grid;grid-template-columns:repeat(${L.cols},1fr);gap:3mm;page-break-after:always;">`;
+    for (let i=0; i<PER; i++) {
+      const idx = p*PER+i;
+      if (idx < R.length) {
+        body += `<div style="min-height:${slotH}mm;">${buildCard(R[idx], n, true)}</div>`;
+      } else {
+        body += `<div style="min-height:${slotH}mm;border:1px dashed #eee;"></div>`;
+      }
+    }
+    body += `</div>`;
+  }
+
+  const w = window.open('','_blank','width=860,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>通知書列印</title>
+<style>
+${fontImport}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:${fc};}
+@page{size:A4;margin:10mm;}
+div[style*="page-break-after"]:last-child{page-break-after:auto;}
+</style>
+</head><body>${body}</body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(() => w.print(), 900);
+}
+
+init();
+</script>
+</body>
+</html>
