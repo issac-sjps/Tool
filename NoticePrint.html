@@ -594,7 +594,7 @@ function buildCard(r, n, forPrint) {
     ? `<span style="${fs('fClass')};font-weight:600;color:#555;margin-right:4px;">${p.cls}　${p.seat}</span>`
     : '';
 
-  return `<div style="font-family:${fc};border:0.3mm solid #888;padding:${pad};display:flex;flex-direction:column;gap:${gap};background:#fff;height:100%;">
+  return `<div style="font-family:${fc};border:0.3mm solid #888;padding:${pad};display:flex;flex-direction:column;gap:${gap};background:#fff;height:100%;overflow:hidden;box-sizing:border-box;">
     <div style="${fs('fTitle')};font-weight:700;text-align:center;letter-spacing:.15em;">${n.title}</div>
     <div style="${fs('fSign')};color:#777;text-align:center;">${dept}</div>
     <div style="${fs('fBody')};line-height:1.9;">
@@ -682,14 +682,18 @@ function doPrint() {
     : `@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');`;
 
   let body = '';
+  // A4 height=297mm, margin=5mm top+bottom=10mm, gap between rows=(rows-1)*3mm
+  // usable = 287mm - (rows-1)*3mm, each slot = usable/rows
+  const usable = 287 - (L.rows - 1) * 3;
+  const slotH = Math.floor(usable / L.rows);
   for (let p=0; p<pages; p++) {
-    body += `<div style="display:grid;grid-template-columns:repeat(${L.cols},1fr);gap:3mm;page-break-after:always;">`;
+    body += `<div style="display:grid;grid-template-columns:repeat(${L.cols},1fr);grid-template-rows:repeat(${L.rows},${slotH}mm);gap:3mm;height:${287}mm;page-break-after:always;">`;
     for (let i=0; i<PER; i++) {
       const idx = p*PER+i;
       if (idx < R.length) {
-        body += `<div style="min-height:${slotH}mm;">${buildCard(R[idx], n, true)}</div>`;
+        body += `<div style="height:${slotH}mm;overflow:hidden;">${buildCard(R[idx], n, true)}</div>`;
       } else {
-        body += `<div style="min-height:${slotH}mm;border:1px dashed #eee;"></div>`;
+        body += `<div style="height:${slotH}mm;border:0.3mm dashed #eee;"></div>`;
       }
     }
     body += `</div>`;
@@ -700,9 +704,9 @@ function doPrint() {
 <style>
 ${fontImport}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:${fc};}
 @page{size:A4;margin:5mm;}
-div[style*="page-break-after"]:last-child{page-break-after:auto;}
+body{font-family:${fc};margin:0;padding:0;}
+*{box-sizing:border-box;}
 </style>
 </head><body>${body}</body></html>`);
   w.document.close(); w.focus();
