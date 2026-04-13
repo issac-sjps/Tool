@@ -675,7 +675,6 @@ function doPrint() {
   const n = getN();
   const PER = L.cols * L.rows;
   const pages = Math.ceil(R.length / PER);
-  const slotH = Math.floor(287 / L.rows);
   const fc = fontCSS();
   const fontImport = L.font === 'sans'
     ? `@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');`
