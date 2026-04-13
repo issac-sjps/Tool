@@ -584,7 +584,7 @@ function buildCard(r, n, forPrint) {
   const u = forPrint ? 'pt' : 'px';
   const fs = k => `font-size:${L[k]}${u}`;
   const pad = forPrint ? '2mm 3mm' : '7px 9px';
-  const gap = forPrint ? '1.5mm' : '3px';
+  const gap = forPrint ? '0.8mm' : '2px';
   const dept = n.dept ? `${n.school}　${n.dept}` : n.school;
   const tdBase = `border:0.3mm solid #bbb;padding:${forPrint?'1.2mm 2.5mm':'2px 5px'};`;
   const tdLabel = tdBase + `color:#555;white-space:nowrap;background:#f5f3f0;width:${forPrint?'16mm':'52px'}`;
@@ -596,11 +596,10 @@ function buildCard(r, n, forPrint) {
 
   return `<div style="font-family:${fc};border:0.3mm solid #888;padding:${pad};display:flex;flex-direction:column;gap:${gap};background:#fff;height:100%;overflow:hidden;box-sizing:border-box;">
     <div style="${fs('fTitle')};font-weight:700;text-align:center;letter-spacing:.15em;">${n.title}</div>
-    <div style="${fs('fSign')};color:#777;text-align:center;">${dept}</div>
-    <div style="${fs('fBody')};line-height:1.9;">
+    <div style="${fs('fBody')};line-height:1.7;">
       ${classLine}<span style="${fs('fName')};font-weight:700;">${r.name}</span>　<span style="color:#555;">${n.salute}，您好：</span>
     </div>
-    <div style="${fs('fBody')};line-height:1.9;text-indent:1.5em;">
+    <div style="${fs('fBody')};line-height:1.7;text-indent:1.5em;">
       敬請您於下列時間至<strong>${n.place}</strong>參加<strong>「${n.purpose}」</strong>活動，請準時出席，謝謝。
     </div>
     <table style="width:100%;border-collapse:collapse;${fs('fTable')};">
@@ -625,8 +624,8 @@ function buildCard(r, n, forPrint) {
         <td style="${tdVal}">${n.extra}</td>
       </tr>` : ''}
     </table>
-    <div style="${fs('fSign')};text-align:right;color:#666;line-height:1.9;margin-top:auto;">
-      ${dept}${n.contact ? '　'+n.contact : ''}<br>${n.date}
+    <div style="${fs('fSign')};text-align:right;color:#666;line-height:1.6;margin-top:auto;">
+      ${dept}${n.contact ? '　'+n.contact : ''}　${n.date}
     </div>
   </div>`;
 }
