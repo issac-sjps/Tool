@@ -24,8 +24,7 @@
   --lh:26px;       /* line height — single source of truth */
   --fs:14px;
   --gutter:52px;
-  --stripe-a:#ffffff;
-  --stripe-b:#eef3ff;  /* every-5-line alternate */
+  --stripe-b:#ddeaff;  /* only line 5,10,15... */
   --sidebar-w:290px;
 }
 
@@ -73,6 +72,25 @@ header{
 
 .dot-unsaved{width:7px;height:7px;border-radius:50%;background:var(--warning);opacity:0;transition:opacity .2s;flex-shrink:0}
 .dot-unsaved.show{opacity:1}
+
+/* goto bar */
+.goto-bar{
+  padding:6px 18px 6px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--bg);
+}
+.goto-bar label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap}
+.goto-bar input{
+  width:72px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);
+  background:var(--surface);outline:none;transition:border-color .15s;
+}
+.goto-bar input:focus{border-color:var(--accent)}
+.goto-bar button{
+  padding:4px 10px;border:1px solid var(--border);border-radius:5px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);
+  background:var(--surface);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.goto-bar button:hover{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.05)}
 
 /* ── EDITOR ZONE ── */
 .editor-zone{
@@ -244,6 +262,12 @@ header{
     <div class="filename-row">
       <input type="text" id="fileNameInput" value="untitled.txt" spellcheck="false">
       <div class="dot-unsaved" id="dotUnsaved" title="未存檔"></div>
+    </div>
+
+    <div class="goto-bar">
+      <label>跳到第</label>
+      <input type="number" id="gotoInput" min="1" placeholder="行號" onkeydown="if(event.key==='Enter')gotoLine()">
+      <button onclick="gotoLine()">↵ 前往</button>
     </div>
 
     <div class="editor-zone" id="editorZone">
@@ -640,7 +664,7 @@ function refresh(){
   // --- gutter ---
   let gHTML='';
   for(let i=1;i<=total;i++){
-    const stripe=Math.floor((i-1)/5)%2===1;
+    const stripe = i % 5 === 0;
     gHTML+=`<div class="gutter-line${i===curLine?' active':''}${stripe?' stripe':''}">${i}</div>`;
   }
   document.getElementById('gutterInner').innerHTML=gHTML;
@@ -648,7 +672,7 @@ function refresh(){
   // --- highlight layer ---
   let hlHTML='';
   for(let i=0;i<lines.length;i++){
-    const stripe=Math.floor(i/5)%2===1;
+    const stripe = (i+1) % 5 === 0;
     const hled=hlText(lines[i],currentLang);
     hlHTML+=`<div class="hl-line${stripe?' stripe':''}">${hled||' '}</div>`;
   }
@@ -669,8 +693,27 @@ function syncScroll(){
 }
 
 /* ──────────────────────────────
-   CHANGE HANDLER
+   GOTO LINE
 ────────────────────────────── */
+function gotoLine(){
+  const ta=ed();
+  const n=parseInt(document.getElementById('gotoInput').value,10);
+  if(!n||n<1)return;
+  const lines=ta.value.split('\n');
+  const target=Math.min(n,lines.length);
+  // calculate char offset to start of target line
+  let pos=0;
+  for(let i=0;i<target-1;i++) pos+=lines[i].length+1;
+  ta.focus();
+  ta.selectionStart=ta.selectionEnd=pos;
+  // scroll so target line is vertically centred
+  const lineH=LH;
+  const visibleH=ta.clientHeight;
+  ta.scrollTop=Math.max(0,(target-1)*lineH - visibleH/2);
+  refresh();
+}
+
+
 function onChange(){
   refresh();
   const t=activeTab();
