@@ -3,308 +3,226 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TXT.online — 文字編輯器</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
-
-<!-- CodeMirror 6 from CDN (ESM bundle via esm.sh) -->
-<script type="importmap">
-{
-  "imports": {
-    "codemirror":              "https://esm.sh/codemirror@6.0.1",
-    "@codemirror/state":       "https://esm.sh/@codemirror/state@6.4.1",
-    "@codemirror/view":        "https://esm.sh/@codemirror/view@6.26.3",
-    "@codemirror/language":    "https://esm.sh/@codemirror/language@6.10.1",
-    "@codemirror/commands":    "https://esm.sh/@codemirror/commands@6.3.3",
-    "@codemirror/lang-html":   "https://esm.sh/@codemirror/lang-html@6.4.9",
-    "@codemirror/lang-javascript": "https://esm.sh/@codemirror/lang-javascript@6.2.2",
-    "@codemirror/lang-css":    "https://esm.sh/@codemirror/lang-css@6.2.9",
-    "@codemirror/lang-python": "https://esm.sh/@codemirror/lang-python@6.1.6",
-    "@codemirror/lang-json":   "https://esm.sh/@codemirror/lang-json@6.0.1",
-    "@codemirror/lang-markdown":"https://esm.sh/@codemirror/lang-markdown@6.2.5",
-    "@codemirror/lang-sql":    "https://esm.sh/@codemirror/lang-sql@6.7.0",
-    "@codemirror/lang-cpp":    "https://esm.sh/@codemirror/lang-cpp@6.0.2",
-    "@lezer/highlight":        "https://esm.sh/@lezer/highlight@1.2.0"
-  }
-}
-</script>
-
+<title>TXT.online</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-:root {
-  --bg:       #f5f2ee;
-  --surface:  #ffffff;
-  --border:   #ddd8d0;
-  --border2:  #c8c0b4;
-  --accent:   #2563eb;
-  --accent2:  #059669;
-  --danger:   #dc2626;
-  --warning:  #d97706;
-  --purple:   #7c3aed;
-  --text:     #1a1714;
-  --text2:    #6b6560;
-  --text3:    #b0a89e;
-  --sidebar-w: 290px;
-  --stripe:   rgba(37,99,235,0.04);  /* every-5-line tint */
+:root{
+  --bg:#f5f2ee;
+  --surface:#ffffff;
+  --border:#ddd8d0;
+  --border2:#c8c0b4;
+  --accent:#2563eb;
+  --accent2:#059669;
+  --danger:#dc2626;
+  --warning:#d97706;
+  --purple:#7c3aed;
+  --text:#1a1714;
+  --text2:#6b6560;
+  --text3:#b0a89e;
+  --lh:26px;       /* line height — single source of truth */
+  --fs:14px;
+  --gutter:52px;
+  --stripe-a:#ffffff;
+  --stripe-b:#eef3ff;  /* every-5-line alternate */
+  --sidebar-w:290px;
 }
 
-html, body { height: 100%; overflow: hidden; }
-body {
-  background: var(--bg); color: var(--text);
-  font-family: 'Noto Sans TC', sans-serif;
-  display: flex; flex-direction: column;
-}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;display:flex;flex-direction:column}
 
 /* ── HEADER ── */
-header {
-  height: 50px; background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 0 14px; gap: 10px;
-  flex-shrink: 0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+header{
+  height:50px;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 14px;gap:10px;
+  flex-shrink:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)
 }
-.logo {
-  font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
-  letter-spacing: 0.1em; color: var(--accent); text-transform: uppercase;
-  flex-shrink: 0; padding-right: 10px; border-right: 1px solid var(--border);
-}
-.logo span { color: var(--text3); font-weight: 400; }
+.logo{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;flex-shrink:0;padding-right:10px;border-right:1px solid var(--border)}
+.logo span{color:var(--text3);font-weight:400}
 
-.tab-bar { display: flex; gap: 2px; align-items: center; flex: 1; overflow-x: auto; scrollbar-width: none; }
-.tab-bar::-webkit-scrollbar { display: none; }
-.tab {
-  display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px;
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2);
-  cursor: pointer; white-space: nowrap; transition: all 0.15s;
-  border: 1px solid transparent; max-width: 180px; flex-shrink: 0;
-}
-.tab:hover { background: var(--bg); color: var(--text); }
-.tab.active { background: var(--bg); border-color: var(--border); color: var(--text); }
-.tab .tab-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
-.tab .close-tab { opacity: 0; color: var(--text3); font-size: 14px; line-height: 1; padding: 0 1px; flex-shrink: 0; transition: opacity 0.15s, color 0.15s; }
-.tab:hover .close-tab, .tab.active .close-tab { opacity: 1; }
-.tab .close-tab:hover { color: var(--danger); }
+.tab-bar{display:flex;gap:2px;align-items:center;flex:1;overflow-x:auto;scrollbar-width:none}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s;border:1px solid transparent;max-width:180px;flex-shrink:0}
+.tab:hover{background:var(--bg);color:var(--text)}
+.tab.active{background:var(--bg);border-color:var(--border);color:var(--text)}
+.tab .tab-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px}
+.tab .close-tab{opacity:0;color:var(--text3);font-size:14px;line-height:1;padding:0 1px;flex-shrink:0;transition:opacity .15s,color .15s}
+.tab:hover .close-tab,.tab.active .close-tab{opacity:1}
+.tab .close-tab:hover{color:var(--danger)}
 
-.btn-new-tab {
-  width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
-  background: transparent; color: var(--text3); font-size: 18px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; line-height: 1;
-}
-.btn-new-tab:hover { background: var(--bg); color: var(--text); border-color: var(--border2); }
+.btn-new-tab{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;line-height:1}
+.btn-new-tab:hover{background:var(--bg);color:var(--text);border-color:var(--border2)}
 
-.header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-left: 8px; border-left: 1px solid var(--border); }
-.hbtn {
-  display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px;
-  border: 1px solid var(--border); background: transparent; color: var(--text2);
-  font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
-}
-.hbtn:hover { background: var(--bg); border-color: var(--border2); color: var(--text); }
-.hbtn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-.hbtn svg { width: 13px; height: 13px; }
-
-/* lang badge */
-.lang-badge {
-  font-family: 'JetBrains Mono', monospace; font-size: 10px;
-  padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border);
-  background: var(--bg); color: var(--text2); cursor: pointer;
-  transition: all 0.15s; white-space: nowrap;
-}
-.lang-badge:hover { border-color: var(--border2); color: var(--text); }
+.header-right{display:flex;align-items:center;gap:6px;flex-shrink:0;padding-left:8px;border-left:1px solid var(--border)}
+.hbtn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.hbtn:hover{background:var(--bg);border-color:var(--border2);color:var(--text)}
+.hbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.hbtn svg{width:13px;height:13px}
 
 /* ── MAIN ── */
-.main { flex: 1; display: flex; overflow: hidden; position: relative; }
+.main{flex:1;display:flex;overflow:hidden;position:relative}
 
 /* ── EDITOR PANEL ── */
-.editor-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--surface); }
+.editor-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
 
-.filename-row {
-  padding: 8px 18px 7px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px; flex-shrink: 0; background: var(--surface);
-}
-#fileNameInput {
-  background: transparent; border: 1px solid transparent; outline: none;
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2);
-  width: 220px; padding: 3px 7px; border-radius: 5px; transition: all 0.15s;
-}
-#fileNameInput:hover { background: var(--bg); color: var(--text); border-color: var(--border); }
-#fileNameInput:focus { background: var(--bg); color: var(--text); border-color: var(--border2); }
+.filename-row{padding:8px 18px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--surface)}
+#fileNameInput{background:transparent;border:1px solid transparent;outline:none;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);width:220px;padding:3px 7px;border-radius:5px;transition:all .15s}
+#fileNameInput:hover{background:var(--bg);color:var(--text);border-color:var(--border)}
+#fileNameInput:focus{background:var(--bg);color:var(--text);border-color:var(--border2)}
 
-.dot-unsaved { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); opacity: 0; transition: opacity 0.2s; flex-shrink: 0; }
-.dot-unsaved.show { opacity: 1; }
+.dot-unsaved{width:7px;height:7px;border-radius:50%;background:var(--warning);opacity:0;transition:opacity .2s;flex-shrink:0}
+.dot-unsaved.show{opacity:1}
 
-/* ── CODEMIRROR CONTAINER ── */
-#editor-wrap {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
+/* ── EDITOR ZONE ── */
+.editor-zone{
+  flex:1;display:flex;overflow:hidden;position:relative;
+  background:var(--surface);
 }
 
-/* CodeMirror 6 overrides */
-.cm-editor {
-  height: 100%;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 14px;
-  background: var(--surface) !important;
+/* Gutter */
+.gutter{
+  width:var(--gutter);flex-shrink:0;
+  background:var(--bg);border-right:1px solid var(--border);
+  overflow:hidden;user-select:none;-webkit-user-select:none;pointer-events:none;
+  position:relative;
 }
-.cm-editor.cm-focused { outline: none !important; }
-.cm-scroller { overflow: auto !important; }
-
-/* Gutter (line numbers area) */
-.cm-gutters {
-  background: var(--bg) !important;
-  border-right: 1px solid var(--border) !important;
-  color: var(--text3) !important;
-  font-family: 'JetBrains Mono', monospace !important;
-  font-size: 12px !important;
-  user-select: none !important;
-  min-width: 48px;
+.gutter-inner{
+  position:absolute;top:0;left:0;right:0;
+  padding-top:14px; /* matches textarea padding-top */
 }
-.cm-lineNumbers .cm-gutterElement { padding: 0 10px 0 6px !important; }
-.cm-activeLineGutter { background: rgba(37,99,235,0.07) !important; color: var(--text2) !important; }
+.gutter-line{
+  height:var(--lh);line-height:var(--lh);
+  text-align:right;padding-right:10px;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--text3);
+}
+.gutter-line.active{color:var(--accent);font-weight:600}
+.gutter-line.stripe{background:var(--stripe-b)}
 
-/* Active line highlight */
-.cm-activeLine { background: rgba(37,99,235,0.04) !important; }
+/* Highlight layer — sits behind textarea */
+.highlight-layer{
+  position:absolute;
+  left:var(--gutter);right:0;top:0;bottom:0;
+  overflow:hidden;pointer-events:none;
+  font-family:'JetBrains Mono',monospace;font-size:var(--fs);line-height:var(--lh);
+  white-space:pre-wrap;word-break:break-all;
+  padding:14px 20px 14px 14px;
+  color:transparent; /* text invisible, only spans show */
+  z-index:1;
+}
+.highlight-layer .hl-line{
+  display:block;min-height:var(--lh);
+}
+.highlight-layer .hl-line.stripe{background:var(--stripe-b)}
 
-/* Every-5-line stripe — applied via decoration in JS */
-.cm-stripe5 { background: rgba(37,99,235,0.055) !important; }
-.cm-stripe5-gutter { background: rgba(37,99,235,0.07) !important; color: var(--text2) !important; }
-
-/* Selection */
-.cm-selectionBackground { background: rgba(37,99,235,0.18) !important; }
-.cm-focused .cm-selectionBackground { background: rgba(37,99,235,0.22) !important; }
-
-/* Cursor */
-.cm-cursor { border-left-color: var(--accent) !important; }
-
-/* Syntax colours — light theme */
-.tok-keyword    { color: #9333ea; font-weight: 600; }
-.tok-comment    { color: #94a3b8; font-style: italic; }
-.tok-string     { color: #16a34a; }
-.tok-number     { color: #ea580c; }
-.tok-operator   { color: #0369a1; }
-.tok-typeName   { color: #0891b2; }
-.tok-className  { color: #b45309; }
-.tok-function   { color: #1d4ed8; }
-.tok-variableName { color: #374151; }
-.tok-propertyName { color: #0f766e; }
-.tok-tagName    { color: #dc2626; }
-.tok-attributeName { color: #d97706; }
-.tok-attributeValue { color: #16a34a; }
-.tok-angleBracket { color: #6b7280; }
-.tok-punctuation { color: #6b7280; }
-.tok-bool       { color: #9333ea; }
-.tok-null       { color: #9333ea; }
-.tok-heading    { color: #1d4ed8; font-weight: 700; }
-.tok-emphasis   { font-style: italic; }
-.tok-strong     { font-weight: 700; }
-.tok-link       { color: var(--accent); text-decoration: underline; }
-.tok-meta       { color: #6b7280; }
-.tok-regexp     { color: #b91c1c; }
+/* The actual textarea — transparent bg, sits on top */
+#editor{
+  position:absolute;
+  left:var(--gutter);right:0;top:0;bottom:0;
+  background:transparent;
+  border:none;outline:none;resize:none;
+  font-family:'JetBrains Mono',monospace;font-size:var(--fs);line-height:var(--lh);
+  color:var(--text);
+  padding:14px 20px 14px 14px;
+  caret-color:var(--accent);
+  tab-size:2;
+  overflow-y:auto;
+  z-index:2;
+  /* make selection visible */
+}
+#editor::placeholder{color:var(--text3)}
+#editor::selection{background:rgba(37,99,235,.18)}
+#editor::-webkit-scrollbar{width:6px}
+#editor::-webkit-scrollbar-track{background:transparent}
+#editor::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#editor::-webkit-scrollbar-thumb:hover{background:var(--border2)}
 
 /* ── TOOLBAR ── */
-.toolbar {
-  border-top: 1px solid var(--border); padding: 10px 16px;
-  display: flex; gap: 7px; align-items: center; flex-shrink: 0; background: var(--surface);
-}
-.btn {
-  display: flex; align-items: center; gap: 6px; padding: 7px 13px;
-  border: 1px solid var(--border); border-radius: 7px; background: var(--bg); color: var(--text2);
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
-  cursor: pointer; transition: all 0.15s; letter-spacing: 0.01em; user-select: none; white-space: nowrap;
-}
-.btn:hover { border-color: var(--border2); color: var(--text); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
-.btn:active { transform: translateY(0); box-shadow: none; }
-.btn svg { width: 13px; height: 13px; flex-shrink: 0; }
-.btn.copy:hover     { border-color: var(--accent);  color: var(--accent);  background: rgba(37,99,235,0.06); }
-.btn.paste:hover    { border-color: var(--accent2); color: var(--accent2); background: rgba(5,150,105,0.06); }
-.btn.download:hover { border-color: var(--purple);  color: var(--purple);  background: rgba(124,58,237,0.06); }
-.btn.save:hover     { border-color: var(--accent2); color: var(--accent2); background: rgba(5,150,105,0.06); }
-.btn.clear:hover    { border-color: var(--danger);  color: var(--danger);  background: rgba(220,38,38,0.06); }
-.toolbar-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; margin: 0 2px; }
-.spacer { flex: 1; }
-.stat { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.toolbar{border-top:1px solid var(--border);padding:10px 16px;display:flex;gap:7px;align-items:center;flex-shrink:0;background:var(--surface)}
+.btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:.01em;user-select:none;white-space:nowrap}
+.btn:hover{border-color:var(--border2);color:var(--text);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.btn:active{transform:translateY(0);box-shadow:none}
+.btn svg{width:13px;height:13px;flex-shrink:0}
+.btn.copy:hover    {border-color:var(--accent); color:var(--accent); background:rgba(37,99,235,.06)}
+.btn.paste:hover   {border-color:var(--accent2);color:var(--accent2);background:rgba(5,150,105,.06)}
+.btn.download:hover{border-color:var(--purple); color:var(--purple); background:rgba(124,58,237,.06)}
+.btn.save:hover    {border-color:var(--accent2);color:var(--accent2);background:rgba(5,150,105,.06)}
+.btn.clear:hover   {border-color:var(--danger); color:var(--danger); background:rgba(220,38,38,.06)}
+.toolbar-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px}
+.spacer{flex:1}
+.stat{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);flex-shrink:0}
 
-/* lang selector dropdown */
-.lang-dropdown {
-  position: absolute; bottom: calc(100% + 6px); left: 0;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; padding: 6px; min-width: 160px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  display: none; flex-direction: column; gap: 2px;
-  z-index: 50;
-}
-.lang-dropdown.open { display: flex; }
-.lang-opt {
-  padding: 6px 10px; border-radius: 5px; font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; color: var(--text2); cursor: pointer; transition: all 0.12s;
-}
-.lang-opt:hover { background: var(--bg); color: var(--text); }
-.lang-opt.active { background: rgba(37,99,235,0.08); color: var(--accent); }
-.lang-wrap { position: relative; }
+/* lang selector */
+.lang-wrap{position:relative}
+.lang-badge{font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.lang-badge:hover{border-color:var(--border2);color:var(--text)}
+.lang-dropdown{position:absolute;bottom:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;box-shadow:0 4px 16px rgba(0,0,0,.1);display:none;flex-direction:column;gap:2px;z-index:100}
+.lang-dropdown.open{display:flex}
+.lang-opt{padding:6px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;transition:all .12s}
+.lang-opt:hover{background:var(--bg);color:var(--text)}
+.lang-opt.cur{background:rgba(37,99,235,.08);color:var(--accent)}
 
 /* ── SIDEBAR ── */
-.sidebar {
-  width: var(--sidebar-w); display: flex; flex-direction: column;
-  overflow: hidden; background: var(--bg); flex-shrink: 0;
-  transform: translateX(100%); position: absolute; right: 0; top: 0; bottom: 0;
-  transition: transform 0.25s ease; z-index: 5;
-  border-left: 1px solid var(--border); box-shadow: -4px 0 16px rgba(0,0,0,0.06);
-}
-.sidebar.open { transform: translateX(0); }
-.sidebar-header {
-  padding: 12px 14px 10px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0; background: var(--surface);
-}
-.sidebar-title { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--text2); text-transform: uppercase; }
-.btn-clear-history { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; transition: color 0.15s; padding: 2px 4px; }
-.btn-clear-history:hover { color: var(--danger); }
-.history-list { flex: 1; overflow-y: auto; padding: 10px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
-.history-list::-webkit-scrollbar { width: 4px; }
-.history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-.history-empty { padding: 32px 16px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); line-height: 2; }
-.history-item { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; background: var(--surface); }
-.history-item:hover { border-color: var(--border2); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.history-item:hover .hist-restore { opacity: 1; }
-.hist-top { padding: 8px 10px 5px; display: flex; align-items: center; justify-content: space-between; }
-.hist-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); }
-.hist-restore { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); opacity: 0; transition: opacity 0.15s; }
-.hist-preview { padding: 0 10px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; word-break: break-all; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.hist-footer { padding: 6px 10px; border-top: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; background: var(--bg); }
-.hist-footer-btns { display: flex; gap: 6px; align-items: center; }
-.hist-action { color: var(--text3); background: none; border: none; cursor: pointer; font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 2px 5px; border-radius: 4px; transition: all 0.15s; }
-.hist-action:hover { color: var(--danger); background: rgba(220,38,38,0.08); }
-.hist-dl { color: var(--text3); background: none; border: none; cursor: pointer; font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 2px 5px; border-radius: 4px; transition: all 0.15s; }
-.hist-dl:hover { color: var(--purple); background: rgba(124,58,237,0.08); }
+.sidebar{width:var(--sidebar-w);display:flex;flex-direction:column;overflow:hidden;background:var(--bg);flex-shrink:0;transform:translateX(100%);position:absolute;right:0;top:0;bottom:0;transition:transform .25s ease;z-index:5;border-left:1px solid var(--border);box-shadow:-4px 0 16px rgba(0,0,0,.06)}
+.sidebar.open{transform:translateX(0)}
+.sidebar-header{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.sidebar-title{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--text2);text-transform:uppercase}
+.btn-clr-hist{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;transition:color .15s;padding:2px 4px}
+.btn-clr-hist:hover{color:var(--danger)}
+.history-list{flex:1;overflow-y:auto;padding:10px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.history-list::-webkit-scrollbar{width:4px}
+.history-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.history-empty{padding:32px 16px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);line-height:2}
+.history-item{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s;background:var(--surface)}
+.history-item:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.history-item:hover .hist-restore{opacity:1}
+.hist-top{padding:8px 10px 5px;display:flex;align-items:center;justify-content:space-between}
+.hist-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3)}
+.hist-restore{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);opacity:0;transition:opacity .15s}
+.hist-preview{padding:0 10px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);line-height:1.6;white-space:pre-wrap;word-break:break-all;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hist-footer{padding:6px 10px;border-top:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);display:flex;justify-content:space-between;align-items:center;background:var(--bg)}
+.hist-fbtns{display:flex;gap:6px;align-items:center}
+.hist-act,.hist-dl{color:var(--text3);background:none;border:none;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;padding:2px 5px;border-radius:4px;transition:all .15s}
+.hist-act:hover{color:var(--danger);background:rgba(220,38,38,.08)}
+.hist-dl:hover{color:var(--purple);background:rgba(124,58,237,.08)}
 
 /* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 68px; left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; padding: 9px 16px;
-  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text);
-  opacity: 0; transition: all 0.2s; pointer-events: none; white-space: nowrap; z-index: 999;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.blue   { border-color: var(--accent);  color: var(--accent); }
-.toast.green  { border-color: var(--accent2); color: var(--accent2); }
-.toast.red    { border-color: var(--danger);  color: var(--danger); }
-.toast.purple { border-color: var(--purple);  color: var(--purple); }
+.toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.blue  {border-color:var(--accent); color:var(--accent)}
+.toast.green {border-color:var(--accent2);color:var(--accent2)}
+.toast.red   {border-color:var(--danger); color:var(--danger)}
+.toast.purple{border-color:var(--purple); color:var(--purple)}
 
 /* ── MODAL ── */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; max-width: 340px; width: 90%; transform: scale(0.95); transition: transform 0.2s; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
-.modal-overlay.open .modal { transform: scale(1); }
-.modal h3 { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
-.modal p { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
-.modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
-.modal-btn { padding: 7px 16px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); color: var(--text2); font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-.modal-btn:hover { border-color: var(--border2); color: var(--text); }
-.modal-btn.danger { border-color: #fca5a5; color: var(--danger); background: rgba(220,38,38,0.04); }
-.modal-btn.danger:hover { background: rgba(220,38,38,0.1); border-color: var(--danger); }
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;max-width:340px;width:90%;transform:scale(.95);transition:transform .2s;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal h3{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)}
+.modal p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal-btn{padding:7px 16px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:all .15s}
+.modal-btn:hover{border-color:var(--border2);color:var(--text)}
+.modal-btn.danger{border-color:#fca5a5;color:var(--danger);background:rgba(220,38,38,.04)}
+.modal-btn.danger:hover{background:rgba(220,38,38,.1);border-color:var(--danger)}
+
+/* ── SYNTAX COLOURS ── */
+.t-kw  {color:#9333ea;font-weight:600}
+.t-cm  {color:#94a3b8;font-style:italic}
+.t-str {color:#16a34a}
+.t-num {color:#ea580c}
+.t-tag {color:#dc2626;font-weight:500}
+.t-atn {color:#d97706}
+.t-atv {color:#16a34a}
+.t-ang {color:#9ca3af}
+.t-pun {color:#9ca3af}
+.t-fn  {color:#1d4ed8}
+.t-prop{color:#0f766e}
+.t-rx  {color:#b91c1c}
+.t-hd  {color:#1d4ed8;font-weight:700}
+.t-lnk {color:#2563eb;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -312,70 +230,65 @@ header {
 <header>
   <div class="logo">TXT<span>.online</span></div>
   <div class="tab-bar" id="tabBar"></div>
-  <button class="btn-new-tab" id="btnNewTab" title="新增文件 (Ctrl+T)">+</button>
+  <button class="btn-new-tab" id="btnNewTab" title="新增 (Ctrl+T)">+</button>
   <div class="header-right">
-    <button class="hbtn" id="btnToggleHistory" title="貼上紀錄 (Ctrl+Shift+H)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>紀錄
+    <button class="hbtn" id="btnToggleHistory" title="紀錄 (Ctrl+Shift+H)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      紀錄
     </button>
   </div>
 </header>
 
 <div class="main">
-  <div class="editor-panel" id="editorPanel">
+  <div class="editor-panel">
     <div class="filename-row">
       <input type="text" id="fileNameInput" value="untitled.txt" spellcheck="false">
       <div class="dot-unsaved" id="dotUnsaved" title="未存檔"></div>
     </div>
-    <div id="editor-wrap"></div>
+
+    <div class="editor-zone" id="editorZone">
+      <div class="gutter" id="gutter">
+        <div class="gutter-inner" id="gutterInner"></div>
+      </div>
+      <div class="highlight-layer" id="hlLayer"></div>
+      <textarea id="editor" placeholder="在這裡輸入或貼上文字…" spellcheck="false"></textarea>
+    </div>
+
     <div class="toolbar">
       <button class="btn copy"     onclick="doCopy()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-        </svg>複製
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        複製
       </button>
       <button class="btn paste" onclick="doPaste()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-          <rect x="8" y="2" width="8" height="4" rx="1"/>
-        </svg>貼上
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+        貼上
       </button>
       <button class="btn download" onclick="doDownload()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>下載 .txt
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        下載 .txt
       </button>
       <div class="toolbar-sep"></div>
       <div class="lang-wrap">
-        <button class="lang-badge" id="langBadge" onclick="toggleLangMenu()">📄 純文字</button>
-        <div class="lang-dropdown" id="langDropdown">
-          <div class="lang-opt active" data-lang="text">📄 純文字</div>
+        <button class="lang-badge" id="langBadge" onclick="toggleLang()">📄 純文字</button>
+        <div class="lang-dropdown" id="langDD">
+          <div class="lang-opt cur" data-lang="text">📄 純文字</div>
           <div class="lang-opt" data-lang="html">🌐 HTML</div>
-          <div class="lang-opt" data-lang="javascript">✨ JavaScript</div>
+          <div class="lang-opt" data-lang="js">✨ JavaScript</div>
           <div class="lang-opt" data-lang="css">🎨 CSS</div>
           <div class="lang-opt" data-lang="python">🐍 Python</div>
           <div class="lang-opt" data-lang="json">📦 JSON</div>
-          <div class="lang-opt" data-lang="markdown">📝 Markdown</div>
+          <div class="lang-opt" data-lang="md">📝 Markdown</div>
           <div class="lang-opt" data-lang="sql">🗄️ SQL</div>
-          <div class="lang-opt" data-lang="cpp">⚙️ C/C++</div>
         </div>
       </div>
       <div class="toolbar-sep"></div>
       <button class="btn save"  onclick="doSave()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-          <polyline points="17 21 17 13 7 13 7 21"/>
-          <polyline points="7 3 7 8 15 8"/>
-        </svg>存檔
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        存檔
       </button>
       <button class="btn clear" onclick="confirmClear()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-          <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-        </svg>清空
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        清空
       </button>
       <div class="spacer"></div>
       <div class="stat" id="statBox">0 字 · 0 行</div>
@@ -385,7 +298,7 @@ header {
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <span class="sidebar-title">📋 貼上紀錄</span>
-      <button class="btn-clear-history" onclick="clearAllHistory()">清除全部</button>
+      <button class="btn-clr-hist" onclick="clearAllHistory()">清除全部</button>
     </div>
     <div class="history-list" id="historyList"></div>
   </div>
@@ -394,446 +307,442 @@ header {
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">確認清空</h3>
-    <p id="modalMsg">目前內容將存入紀錄，確定要清空嗎？</p>
+    <p id="modalMsg"></p>
     <div class="modal-btns">
       <button class="modal-btn" onclick="closeModal()">取消</button>
-      <button class="modal-btn danger" id="modalConfirmBtn">確定清空</button>
+      <button class="modal-btn danger" id="modalConfirmBtn">確定</button>
     </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { EditorState, StateEffect, StateField, RangeSetBuilder } from '@codemirror/state';
-import {
-  EditorView, lineNumbers, highlightActiveLine, highlightActiveLineGutter,
-  keymap, Decoration
-} from '@codemirror/view';
-import { defaultKeymap, historyKeymap, history, indentWithTab } from '@codemirror/commands';
-import { syntaxHighlighting, HighlightStyle, LanguageSupport } from '@codemirror/language';
-import { tags } from '@lezer/highlight';
-import { html }       from '@codemirror/lang-html';
-import { javascript } from '@codemirror/lang-javascript';
-import { css }        from '@codemirror/lang-css';
-import { python }     from '@codemirror/lang-python';
-import { json }       from '@codemirror/lang-json';
-import { markdown }   from '@codemirror/lang-markdown';
-import { sql }        from '@codemirror/lang-sql';
-import { cpp }        from '@codemirror/lang-cpp';
+<script>
+/* ──────────────────────────────
+   CONSTANTS
+────────────────────────────── */
+const SK = 'txtonline_v3';
+const LH = 26;   // px — must match --lh
+const LANG_LABELS = {text:'📄 純文字',html:'🌐 HTML',js:'✨ JavaScript',css:'🎨 CSS',python:'🐍 Python',json:'📦 JSON',md:'📝 Markdown',sql:'🗄️ SQL'};
 
-// ── STORAGE ──
-const STORAGE_KEY = 'txtonline_light_v2';
-let state = { tabs: [], activeTab: null, history: [], sidebarOpen: false };
-let toastTimer = null;
-let cmView = null;
+/* ──────────────────────────────
+   STATE
+────────────────────────────── */
+let S = {tabs:[],activeTab:null,history:[],sidebarOpen:false};
 let currentLang = 'text';
+let toastTimer = null;
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) { const s = JSON.parse(raw); if (s.tabs?.length) { state = s; return; } }
-  } catch(e) {}
-  const id = uid();
-  state = { tabs: [{ id, name: 'untitled.txt', content: '', lang: 'text' }], activeTab: id, history: [], sidebarOpen: false };
+function loadState(){
+  try{
+    const r = localStorage.getItem(SK);
+    if(r){ const s=JSON.parse(r); if(s.tabs?.length){S=s;return;} }
+  }catch(e){}
+  const id=uid();
+  S={tabs:[{id,name:'untitled.txt',content:'',lang:'text'}],activeTab:id,history:[],sidebarOpen:false};
 }
 
-function saveState() {
-  const tab = getActiveTab();
-  if (tab) { tab.content = getEditorContent(); tab.lang = currentLang; }
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  catch(e) { showToast('localStorage 已滿', 'red'); }
+function saveState(){
+  const t=activeTab(); if(t){t.content=ed().value;t.lang=currentLang;}
+  try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){toast('localStorage 已滿','red');}
 }
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function getActiveTab() { return state.tabs.find(t => t.id === state.activeTab); }
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function formatTime(ts) { const d = new Date(ts), p = n => String(n).padStart(2,'0'); return `${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+/* ──────────────────────────────
+   UTILS
+────────────────────────────── */
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function ed(){ return document.getElementById('editor'); }
+function activeTab(){ return S.tabs.find(t=>t.id===S.activeTab); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtTime(ts){ const d=new Date(ts),p=n=>String(n).padStart(2,'0'); return `${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
 
-// ── CODEMIRROR SETUP ──
-
-// Syntax highlight style mapped to CSS classes
-const myHighlight = HighlightStyle.define([
-  { tag: tags.keyword,           class: 'tok-keyword' },
-  { tag: tags.comment,           class: 'tok-comment' },
-  { tag: tags.string,            class: 'tok-string' },
-  { tag: tags.number,            class: 'tok-number' },
-  { tag: tags.operator,          class: 'tok-operator' },
-  { tag: tags.typeName,          class: 'tok-typeName' },
-  { tag: tags.className,         class: 'tok-className' },
-  { tag: tags.function(tags.variableName), class: 'tok-function' },
-  { tag: tags.variableName,      class: 'tok-variableName' },
-  { tag: tags.propertyName,      class: 'tok-propertyName' },
-  { tag: tags.tagName,           class: 'tok-tagName' },
-  { tag: tags.attributeName,     class: 'tok-attributeName' },
-  { tag: tags.attributeValue,    class: 'tok-attributeValue' },
-  { tag: tags.angleBracket,      class: 'tok-angleBracket' },
-  { tag: tags.punctuation,       class: 'tok-punctuation' },
-  { tag: tags.bool,              class: 'tok-bool' },
-  { tag: tags.null,              class: 'tok-null' },
-  { tag: tags.heading,           class: 'tok-heading' },
-  { tag: tags.emphasis,          class: 'tok-emphasis' },
-  { tag: tags.strong,            class: 'tok-strong' },
-  { tag: tags.link,              class: 'tok-link' },
-  { tag: tags.meta,              class: 'tok-meta' },
-  { tag: tags.regexp,            class: 'tok-regexp' },
-  { tag: tags.self,              class: 'tok-keyword' },
-  { tag: tags.definitionKeyword, class: 'tok-keyword' },
-  { tag: tags.moduleKeyword,     class: 'tok-keyword' },
-  { tag: tags.controlKeyword,    class: 'tok-keyword' },
-]);
-
-// Every-5-line stripe decoration
-const stripe5Deco = Decoration.line({ class: 'cm-stripe5' });
-
-const stripeField = StateField.define({
-  create(state) { return buildStripes(state); },
-  update(val, tr) { return tr.docChanged ? buildStripes(tr.state) : val; },
-  provide: f => EditorView.decorations.from(f),
-});
-
-function buildStripes(state) {
-  const b = new RangeSetBuilder();
-  for (let i = 1; i <= state.doc.lines; i++) {
-    // stripe rows 5,6 | 11,12 | 16,17 ... i.e. every block of 5, shade 2 rows
-    const mod = i % 5;
-    if (mod === 0 || mod === 1) { // lines 5,6 / 10,11 / 15,16 ...  wait, let's do every multiple of 5 ± 0
-      // simpler: shade every 5th group's first line only (clean stripe)
-    }
-    // Actually: shade lines where Math.floor((i-1)/5) is odd → alternating blocks of 5
-    if (Math.floor((i - 1) / 5) % 2 === 1) {
-      const line = state.doc.line(i);
-      b.add(line.from, line.from, stripe5Deco);
-    }
-  }
-  return b.finish();
-}
-
-// Lang → extension
-function getLangExt(lang) {
-  switch(lang) {
-    case 'html':       return html();
-    case 'javascript': return javascript();
-    case 'css':        return css();
-    case 'python':     return python();
-    case 'json':       return json();
-    case 'markdown':   return markdown();
-    case 'sql':        return sql();
-    case 'cpp':        return cpp();
-    default:           return [];
-  }
-}
-
-const setLangEffect = StateEffect.define();
-
-function buildExtensions(lang) {
-  return [
-    history(),
-    lineNumbers(),
-    highlightActiveLine(),
-    highlightActiveLineGutter(),
-    stripeField,
-    syntaxHighlighting(myHighlight),
-    getLangExt(lang),
-    keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
-    EditorView.lineWrapping,
-    EditorView.theme({
-      '&': { height: '100%', background: 'var(--surface)' },
-      '.cm-content': { padding: '20px 20px 20px 8px', minHeight: '100%', caretColor: 'var(--accent)' },
-      '.cm-line': { lineHeight: '1.85', fontFamily: "'JetBrains Mono', monospace", fontSize: '14px', color: 'var(--text)' },
-    }),
-    EditorView.updateListener.of(update => {
-      if (update.docChanged || update.selectionSet) onEditorChange(update);
-    }),
-  ];
-}
-
-function createEditor(content, lang) {
-  if (cmView) cmView.destroy();
-  currentLang = lang || 'text';
-  const startState = EditorState.create({
-    doc: content || '',
-    extensions: buildExtensions(currentLang),
-  });
-  cmView = new EditorView({
-    state: startState,
-    parent: document.getElementById('editor-wrap'),
-  });
-}
-
-function getEditorContent() {
-  return cmView ? cmView.state.doc.toString() : '';
-}
-
-function setEditorContent(text) {
-  if (!cmView) return;
-  cmView.dispatch({ changes: { from: 0, to: cmView.state.doc.length, insert: text } });
-}
-
-function setEditorLang(lang) {
-  if (!cmView) return;
-  currentLang = lang;
-  const content = getEditorContent();
-  createEditor(content, lang);
-  updateLangBadge(lang);
-}
-
-function updateLangBadge(lang) {
-  const labels = { text:'📄 純文字', html:'🌐 HTML', javascript:'✨ JavaScript', css:'🎨 CSS', python:'🐍 Python', json:'📦 JSON', markdown:'📝 Markdown', sql:'🗄️ SQL', cpp:'⚙️ C/C++' };
-  document.getElementById('langBadge').textContent = labels[lang] || '📄 純文字';
-  document.querySelectorAll('.lang-opt').forEach(el => el.classList.toggle('active', el.dataset.lang === lang));
-}
-
-// ── LANG MENU ──
-window.toggleLangMenu = function() {
-  document.getElementById('langDropdown').classList.toggle('open');
-};
-document.addEventListener('click', e => {
-  const dd = document.getElementById('langDropdown');
-  if (!dd.contains(e.target) && e.target.id !== 'langBadge') dd.classList.remove('open');
-});
-document.querySelectorAll('.lang-opt').forEach(el => {
-  el.addEventListener('click', () => {
-    const tab = getActiveTab();
-    if (tab) tab.lang = el.dataset.lang;
-    setEditorLang(el.dataset.lang);
-    document.getElementById('langDropdown').classList.remove('open');
-    saveState();
-  });
-});
-
-// ── TABS ──
-function renderTabs() {
-  const bar = document.getElementById('tabBar');
-  bar.innerHTML = '';
-  state.tabs.forEach(tab => {
-    const el = document.createElement('div');
-    el.className = 'tab' + (tab.id === state.activeTab ? ' active' : '');
-    el.innerHTML = `<span class="tab-name" title="${escHtml(tab.name)}">${escHtml(tab.name)}</span><span class="close-tab" data-id="${tab.id}">×</span>`;
-    el.addEventListener('click', e => {
-      if (e.target.classList.contains('close-tab')) closeTab(e.target.dataset.id);
+/* ──────────────────────────────
+   TABS
+────────────────────────────── */
+function renderTabs(){
+  const bar=document.getElementById('tabBar');
+  bar.innerHTML='';
+  S.tabs.forEach(tab=>{
+    const el=document.createElement('div');
+    el.className='tab'+(tab.id===S.activeTab?' active':'');
+    el.innerHTML=`<span class="tab-name" title="${esc(tab.name)}">${esc(tab.name)}</span><span class="close-tab" data-id="${tab.id}">×</span>`;
+    el.addEventListener('click',e=>{
+      if(e.target.classList.contains('close-tab')) closeTab(e.target.dataset.id);
       else switchTab(tab.id);
     });
     bar.appendChild(el);
   });
 }
 
-function switchTab(id) {
-  const cur = getActiveTab();
-  if (cur) { cur.content = getEditorContent(); cur.lang = currentLang; }
-  state.activeTab = id;
-  const tab = getActiveTab();
-  createEditor(tab.content, tab.lang || 'text');
-  document.getElementById('fileNameInput').value = tab.name;
+function switchTab(id){
+  const cur=activeTab(); if(cur){cur.content=ed().value;cur.lang=currentLang;}
+  S.activeTab=id;
+  const t=activeTab();
+  ed().value=t.content;
+  document.getElementById('fileNameInput').value=t.name;
+  currentLang=t.lang||'text';
   document.getElementById('dotUnsaved').classList.remove('show');
-  updateLangBadge(tab.lang || 'text');
-  updateStat();
+  updateLangBadge();
+  refresh();
   renderTabs();
   saveState();
 }
 
-function newTab(name, content, lang) {
-  const cur = getActiveTab();
-  if (cur) { cur.content = getEditorContent(); cur.lang = currentLang; }
-  const id = uid();
-  state.tabs.push({ id, name: name || 'untitled.txt', content: content || '', lang: lang || 'text' });
+function newTab(name,content,lang){
+  const cur=activeTab(); if(cur){cur.content=ed().value;cur.lang=currentLang;}
+  const id=uid();
+  S.tabs.push({id,name:name||'untitled.txt',content:content||'',lang:lang||'text'});
   switchTab(id);
 }
 
-function closeTab(id) {
-  if (state.tabs.length === 1) { confirmClear(); return; }
-  const idx = state.tabs.findIndex(t => t.id === id);
-  const tab = state.tabs[idx];
-  if (tab.content.trim()) pushHistory(tab.content, tab.name);
-  state.tabs.splice(idx, 1);
-  if (state.activeTab === id) switchTab(state.tabs[Math.min(idx, state.tabs.length-1)].id);
-  else { renderTabs(); saveState(); }
+function closeTab(id){
+  if(S.tabs.length===1){confirmClear();return;}
+  const idx=S.tabs.findIndex(t=>t.id===id);
+  const t=S.tabs[idx];
+  if(t.content.trim()) pushHistory(t.content,t.name);
+  S.tabs.splice(idx,1);
+  if(S.activeTab===id) switchTab(S.tabs[Math.min(idx,S.tabs.length-1)].id);
+  else{renderTabs();saveState();}
 }
 
-// ── HISTORY ──
-function pushHistory(text, tabName) {
-  if (!text?.trim()) return;
-  state.history.unshift({ id: uid(), content: text, preview: text.trim().slice(0,200), chars: text.length, lines: text.split('\n').length, timestamp: Date.now(), tabName: tabName || 'untitled.txt' });
-  if (state.history.length > 50) state.history = state.history.slice(0,50);
+/* ──────────────────────────────
+   HISTORY
+────────────────────────────── */
+function pushHistory(text,name){
+  if(!text?.trim())return;
+  S.history.unshift({id:uid(),content:text,preview:text.trim().slice(0,200),chars:text.length,lines:text.split('\n').length,timestamp:Date.now(),tabName:name||'untitled.txt'});
+  if(S.history.length>50)S.history=S.history.slice(0,50);
 }
 
-function renderHistory() {
-  const list = document.getElementById('historyList');
-  if (!state.history.length) { list.innerHTML = '<div class="history-empty">尚無紀錄<br>每次清空或關閉標籤<br>內容會自動存入這裡</div>'; return; }
-  list.innerHTML = '';
-  state.history.forEach(item => {
-    const el = document.createElement('div');
-    el.className = 'history-item';
-    el.innerHTML = `
-      <div class="hist-top">
-        <span class="hist-meta">${escHtml(item.tabName)} · ${formatTime(item.timestamp)}</span>
-        <span class="hist-restore">↩ 還原到新標籤</span>
-      </div>
-      <div class="hist-preview">${escHtml(item.preview)}</div>
-      <div class="hist-footer">
-        <span>${item.chars} 字 · ${item.lines} 行</span>
-        <div class="hist-footer-btns">
-          <button class="hist-dl"     data-id="${item.id}">↓ 下載</button>
-          <button class="hist-action" data-id="${item.id}">✕ 刪除</button>
-        </div>
+function renderHistory(){
+  const list=document.getElementById('historyList');
+  if(!S.history.length){list.innerHTML='<div class="history-empty">尚無紀錄<br>每次清空或關閉標籤<br>內容會自動存入這裡</div>';return;}
+  list.innerHTML='';
+  S.history.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='history-item';
+    el.innerHTML=`
+      <div class="hist-top"><span class="hist-meta">${esc(item.tabName)} · ${fmtTime(item.timestamp)}</span><span class="hist-restore">↩ 還原到新標籤</span></div>
+      <div class="hist-preview">${esc(item.preview)}</div>
+      <div class="hist-footer"><span>${item.chars} 字 · ${item.lines} 行</span>
+        <div class="hist-fbtns"><button class="hist-dl" data-id="${item.id}">↓ 下載</button><button class="hist-act" data-id="${item.id}">✕ 刪除</button></div>
       </div>`;
-    el.addEventListener('click', e => {
-      const id2 = e.target.dataset.id;
-      if (e.target.classList.contains('hist-action')) { deleteHistoryItem(id2); return; }
-      if (e.target.classList.contains('hist-dl')) { downloadText(item.content, item.tabName); return; }
+    el.addEventListener('click',e=>{
+      const id2=e.target.dataset.id;
+      if(e.target.classList.contains('hist-act')){delHistory(id2);return;}
+      if(e.target.classList.contains('hist-dl')){dlText(item.content,item.tabName);return;}
       restoreHistory(item.id);
     });
     list.appendChild(el);
   });
 }
 
-function restoreHistory(id) {
-  const item = state.history.find(h => h.id === id);
-  if (!item) return;
-  const cur = getActiveTab();
-  if (cur?.content?.trim()) pushHistory(cur.content, cur.name);
-  newTab(item.tabName, item.content);
-  showToast('✓ 已還原到新標籤', 'blue');
+function restoreHistory(id){
+  const item=S.history.find(h=>h.id===id); if(!item)return;
+  const cur=activeTab(); if(cur?.content?.trim()) pushHistory(cur.content,cur.name);
+  newTab(item.tabName,item.content);
+  toast('✓ 已還原到新標籤','blue');
   renderHistory(); saveState();
 }
 
-function deleteHistoryItem(id) { state.history = state.history.filter(h => h.id !== id); renderHistory(); saveState(); }
-window.clearAllHistory = function() { state.history = []; renderHistory(); saveState(); showToast('紀錄已清空', 'red'); };
+function delHistory(id){ S.history=S.history.filter(h=>h.id!==id); renderHistory(); saveState(); }
+function clearAllHistory(){ S.history=[]; renderHistory(); saveState(); toast('紀錄已清空','red'); }
 
-// ── EDITOR ACTIONS ──
-window.doCopy = async function() {
-  const text = getEditorContent();
-  if (!text) { showToast('沒有內容可複製', 'red'); return; }
-  try { await navigator.clipboard.writeText(text); } catch(e) {}
-  showToast('✓ 已複製到剪貼簿', 'blue');
-};
-
-window.doPaste = async function() {
-  try {
-    const text = await navigator.clipboard.readText();
-    if (!text) { showToast('剪貼簿是空的', 'red'); return; }
-    if (!cmView) return;
-    const { from, to } = cmView.state.selection.main;
-    cmView.dispatch({ changes: { from, to, insert: text }, selection: { anchor: from + text.length } });
-    showToast('✓ 已貼上', 'green');
-  } catch { showToast('請直接按 Ctrl+V 貼上', 'red'); }
-};
-
-function downloadText(content, filename) {
-  let name = filename || 'untitled.txt';
-  if (!name.endsWith('.txt')) name = name.replace(/\.[^.]+$/, '') + '.txt';
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
-  showToast('✓ 已下載 ' + name, 'purple');
+/* ──────────────────────────────
+   EDITOR ACTIONS
+────────────────────────────── */
+async function doCopy(){
+  const text=ed().value; if(!text){toast('沒有內容可複製','red');return;}
+  try{await navigator.clipboard.writeText(text);}catch(e){ed().select();document.execCommand('copy');}
+  toast('✓ 已複製到剪貼簿','blue');
 }
 
-window.doDownload = function() {
-  const text = getEditorContent();
-  if (!text) { showToast('沒有內容可下載', 'red'); return; }
-  downloadText(text, document.getElementById('fileNameInput').value || 'untitled.txt');
-};
+async function doPaste(){
+  try{
+    const text=await navigator.clipboard.readText();
+    if(!text){toast('剪貼簿是空的','red');return;}
+    const ta=ed(),s=ta.selectionStart,e2=ta.selectionEnd;
+    ta.value=ta.value.slice(0,s)+text+ta.value.slice(e2);
+    ta.selectionStart=ta.selectionEnd=s+text.length;
+    onChange(); toast('✓ 已貼上','green');
+  }catch{toast('請直接按 Ctrl+V 貼上','red');}
+}
 
-window.doSave = function() {
-  const tab = getActiveTab();
-  if (tab) { tab.content = getEditorContent(); tab.lang = currentLang; }
-  saveState();
-  document.getElementById('dotUnsaved').classList.remove('show');
-  showToast('✓ 已存檔', 'green');
-};
+function dlText(content,filename){
+  let name=filename||'untitled.txt';
+  if(!name.endsWith('.txt'))name=name.replace(/\.[^.]+$/,'')+'.txt';
+  const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name; a.click();
+  URL.revokeObjectURL(url);
+  toast('✓ 已下載 '+name,'purple');
+}
 
-window.confirmClear = function() {
-  const text = getEditorContent();
-  if (!text.trim()) {
-    openModal('開新文件', '目前是空的，要開一個新的標籤嗎？', () => { newTab(); showToast('✓ 已開新文件', 'green'); }, '開新標籤');
+function doDownload(){
+  const text=ed().value; if(!text){toast('沒有內容可下載','red');return;}
+  dlText(text,document.getElementById('fileNameInput').value||'untitled.txt');
+}
+
+function doSave(){
+  const t=activeTab(); if(t){t.content=ed().value;t.lang=currentLang;}
+  saveState(); document.getElementById('dotUnsaved').classList.remove('show');
+  toast('✓ 已存檔','green');
+}
+
+function confirmClear(){
+  const text=ed().value;
+  if(!text.trim()){
+    openModal('開新文件','目前是空的，要開一個新的標籤嗎？',()=>{newTab();toast('✓ 已開新文件','green');},'開新標籤');
     return;
   }
-  openModal('確認清空', '目前內容將存入紀錄，確定要清空嗎？', () => {
-    pushHistory(getEditorContent(), getActiveTab()?.name);
-    setEditorContent('');
-    renderHistory(); saveState();
-    showToast('已清空，內容已存入紀錄', 'red');
-  }, '確定清空');
-};
+  openModal('確認清空','目前內容將存入紀錄，確定要清空嗎？',()=>{
+    pushHistory(ed().value,activeTab()?.name);
+    ed().value=''; onChange(); renderHistory(); saveState();
+    toast('已清空，內容已存入紀錄','red');
+  },'確定清空');
+}
 
-// ── MODAL ──
-function openModal(title, msg, onConfirm, label) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalMsg').textContent = msg;
-  const btn = document.getElementById('modalConfirmBtn');
-  btn.textContent = label || '確定';
-  btn.onclick = () => { onConfirm(); closeModal(); };
+/* ──────────────────────────────
+   MODAL
+────────────────────────────── */
+function openModal(title,msg,onOk,label){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalMsg').textContent=msg;
+  const btn=document.getElementById('modalConfirmBtn');
+  btn.textContent=label||'確定'; btn.onclick=()=>{onOk();closeModal();};
   document.getElementById('modalOverlay').classList.add('open');
 }
-window.closeModal = function() { document.getElementById('modalOverlay').classList.remove('open'); };
-document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target===e.currentTarget) window.closeModal(); });
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 
-// ── SIDEBAR ──
-function toggleSidebar() {
-  state.sidebarOpen = !state.sidebarOpen;
-  document.getElementById('sidebar').classList.toggle('open', state.sidebarOpen);
-  document.getElementById('btnToggleHistory').classList.toggle('active', state.sidebarOpen);
-  if (state.sidebarOpen) renderHistory();
+/* ──────────────────────────────
+   SIDEBAR
+────────────────────────────── */
+function toggleSidebar(){
+  S.sidebarOpen=!S.sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('open',S.sidebarOpen);
+  document.getElementById('btnToggleHistory').classList.toggle('active',S.sidebarOpen);
+  if(S.sidebarOpen)renderHistory();
   saveState();
 }
 
-// ── STAT + CHANGE ──
-function updateStat() {
-  const val = getEditorContent();
-  document.getElementById('statBox').textContent = `${val.length} 字 · ${val===''?0:val.split('\n').length} 行`;
+/* ──────────────────────────────
+   LANG MENU
+────────────────────────────── */
+function toggleLang(){ document.getElementById('langDD').classList.toggle('open'); }
+document.addEventListener('click',e=>{
+  const dd=document.getElementById('langDD');
+  if(!dd.contains(e.target)&&e.target.id!=='langBadge') dd.classList.remove('open');
+});
+document.querySelectorAll('.lang-opt').forEach(el=>{
+  el.addEventListener('click',()=>{
+    currentLang=el.dataset.lang;
+    const t=activeTab(); if(t) t.lang=currentLang;
+    updateLangBadge(); rehighlight();
+    document.getElementById('langDD').classList.remove('open');
+    saveState();
+  });
+});
+
+function updateLangBadge(){
+  document.getElementById('langBadge').textContent=LANG_LABELS[currentLang]||'📄 純文字';
+  document.querySelectorAll('.lang-opt').forEach(el=>el.classList.toggle('cur',el.dataset.lang===currentLang));
 }
 
-function onEditorChange(update) {
+/* ──────────────────────────────
+   STAT
+────────────────────────────── */
+function updateStat(){
+  const v=ed().value;
+  document.getElementById('statBox').textContent=`${v.length} 字 · ${v===''?0:v.split('\n').length} 行`;
+}
+
+/* ──────────────────────────────
+   SYNTAX HIGHLIGHT
+   — pure regex, no deps
+────────────────────────────── */
+function hlText(raw,lang){
+  // escape first
+  let s=esc(raw);
+  if(lang==='text') return s;
+
+  if(lang==='html'){
+    // comments
+    s=s.replace(/(&lt;!--[\s\S]*?--&gt;)/g,'<span class="t-cm">$1</span>');
+    // tags
+    s=s.replace(/(&lt;\/?)([\w-]+)([\s\S]*?)(\/?&gt;)/g,(m,open,tag,attrs,close)=>{
+      const aHL=attrs.replace(/([\w-:]+)(=)(&quot;[^&]*&quot;|'[^']*'|\S+)/g,
+        '<span class="t-atn">$1</span><span class="t-pun">$2</span><span class="t-atv">$3</span>');
+      return `<span class="t-ang">${open}</span><span class="t-tag">${tag}</span>${aHL}<span class="t-ang">${close}</span>`;
+    });
+    return s;
+  }
+
+  if(lang==='js'||lang==='css'||lang==='sql'){
+    // strings
+    s=s.replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;|&#039;(?:[^&]|&(?!#039;))*?&#039;|`[^`]*`)/g,'<span class="t-str">$1</span>');
+    // comments
+    s=s.replace(/(\/\/[^\n]*)/g,'<span class="t-cm">$1</span>');
+    s=s.replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="t-cm">$1</span>');
+    // numbers
+    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="t-num">$1</span>');
+    if(lang==='js'){
+      s=s.replace(/\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|class|extends|import|export|default|from|async|await|try|catch|finally|throw|of|in|this|super|static|get|set|null|undefined|true|false|void|yield)\b/g,'<span class="t-kw">$1</span>');
+      s=s.replace(/\b([A-Z][A-Za-z0-9_]*)/g,'<span class="t-fn">$1</span>');
+    }
+    if(lang==='css'){
+      s=s.replace(/([.#]?[\w-]+)\s*(?=\{)/g,'<span class="t-tag">$1</span>');
+      s=s.replace(/\b(color|background|margin|padding|font|border|display|position|width|height|flex|grid|transform|transition|animation|overflow|opacity|cursor|content|top|left|right|bottom|z-index|align|justify|gap|radius)\b/g,'<span class="t-prop">$1</span>');
+    }
+    if(lang==='sql'){
+      s=s.replace(/\b(SELECT|FROM|WHERE|INSERT|INTO|UPDATE|SET|DELETE|CREATE|TABLE|DROP|ALTER|INDEX|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AS|AND|OR|NOT|NULL|IS|IN|LIKE|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|DISTINCT|COUNT|SUM|AVG|MAX|MIN|UNION|ALL|WITH|VALUES|PRIMARY|KEY|FOREIGN|REFERENCES|DEFAULT|CONSTRAINT)\b/gi,'<span class="t-kw">$1</span>');
+    }
+    return s;
+  }
+
+  if(lang==='python'){
+    s=s.replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;|&#039;(?:[^&]|&(?!#039;))*?&#039;)/g,'<span class="t-str">$1</span>');
+    s=s.replace(/(#[^\n]*)/g,'<span class="t-cm">$1</span>');
+    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="t-num">$1</span>');
+    s=s.replace(/\b(def|class|return|if|elif|else|for|while|in|not|and|or|import|from|as|pass|break|continue|raise|try|except|finally|with|lambda|yield|global|nonlocal|del|assert|True|False|None|self|super)\b/g,'<span class="t-kw">$1</span>');
+    s=s.replace(/\b([A-Z][A-Za-z0-9_]*)\b/g,'<span class="t-fn">$1</span>');
+    return s;
+  }
+
+  if(lang==='json'){
+    s=s.replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;)\s*:/g,'<span class="t-prop">$1</span>:');
+    s=s.replace(/:\s*(&quot;(?:[^&]|&(?!quot;))*?&quot;)/g,': <span class="t-str">$1</span>');
+    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="t-num">$1</span>');
+    s=s.replace(/\b(true|false|null)\b/g,'<span class="t-kw">$1</span>');
+    return s;
+  }
+
+  if(lang==='md'){
+    s=s.replace(/^(#{1,6} .+)$/gm,'<span class="t-hd">$1</span>');
+    s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    s=s.replace(/\*(.+?)\*/g,'<em>$1</em>');
+    s=s.replace(/`([^`]+)`/g,'<span class="t-str">$1</span>');
+    s=s.replace(/\[([^\]]+)\]\([^\)]+\)/g,'<span class="t-lnk">$&</span>');
+    s=s.replace(/^(\s*[-*+] )/gm,'<span class="t-kw">$1</span>');
+    return s;
+  }
+
+  return s;
+}
+
+/* ──────────────────────────────
+   RENDER — gutter + highlight
+────────────────────────────── */
+function refresh(){
+  const ta=ed();
+  const lines=ta.value===''?['']: ta.value.split('\n');
+  const curLine=ta.value.slice(0,ta.selectionStart).split('\n').length;
+  const total=lines.length;
+
+  // --- gutter ---
+  let gHTML='';
+  for(let i=1;i<=total;i++){
+    const stripe=Math.floor((i-1)/5)%2===1;
+    gHTML+=`<div class="gutter-line${i===curLine?' active':''}${stripe?' stripe':''}">${i}</div>`;
+  }
+  document.getElementById('gutterInner').innerHTML=gHTML;
+
+  // --- highlight layer ---
+  let hlHTML='';
+  for(let i=0;i<lines.length;i++){
+    const stripe=Math.floor(i/5)%2===1;
+    const hled=hlText(lines[i],currentLang);
+    hlHTML+=`<div class="hl-line${stripe?' stripe':''}">${hled||' '}</div>`;
+  }
+  document.getElementById('hlLayer').innerHTML=hlHTML;
+
+  // sync scroll
+  syncScroll();
   updateStat();
-  const tab = getActiveTab();
-  if (tab) document.getElementById('dotUnsaved').classList.toggle('show', tab.content !== getEditorContent());
+}
+
+function rehighlight(){ refresh(); }
+
+function syncScroll(){
+  const ta=ed();
+  document.getElementById('gutterInner').style.top=(-ta.scrollTop+14)+'px';
+  document.getElementById('hlLayer').scrollTop=ta.scrollTop;
+  document.getElementById('hlLayer').scrollLeft=ta.scrollLeft;
+}
+
+/* ──────────────────────────────
+   CHANGE HANDLER
+────────────────────────────── */
+function onChange(){
+  refresh();
+  const t=activeTab();
+  if(t) document.getElementById('dotUnsaved').classList.toggle('show',t.content!==ed().value);
   clearTimeout(window._st);
-  window._st = setTimeout(() => { const t=getActiveTab(); if(t){t.content=getEditorContent();t.lang=currentLang;} saveState(); }, 800);
+  window._st=setTimeout(()=>{const tt=activeTab();if(tt){tt.content=ed().value;tt.lang=currentLang;}saveState();},800);
 }
 
-// ── FILENAME ──
-document.getElementById('fileNameInput').addEventListener('change', () => {
-  const tab = getActiveTab();
-  if (tab) { tab.name = document.getElementById('fileNameInput').value||'untitled.txt'; renderTabs(); saveState(); }
-});
-
-// ── TOAST ──
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show ' + type;
+/* ──────────────────────────────
+   TOAST
+────────────────────────────── */
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show '+type;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.className = 'toast'; }, 2200);
+  toastTimer=setTimeout(()=>{el.className='toast';},2200);
 }
-window.showToast = showToast;
 
-// ── KEYBOARD ──
-document.addEventListener('keydown', e => {
-  const mod = e.ctrlKey || e.metaKey;
-  if (mod && e.key==='t')                              { e.preventDefault(); newTab(); }
-  if (mod && e.key==='s')                              { e.preventDefault(); window.doSave(); }
-  if (mod && e.key==='d')                              { e.preventDefault(); window.doDownload(); }
-  if (mod && e.shiftKey && e.key.toLowerCase()==='h') { e.preventDefault(); toggleSidebar(); }
-  if (e.key==='Escape') { window.closeModal(); document.getElementById('langDropdown').classList.remove('open'); }
+/* ──────────────────────────────
+   EVENTS
+────────────────────────────── */
+const ta=ed();
+ta.addEventListener('input',onChange);
+ta.addEventListener('scroll',syncScroll);
+ta.addEventListener('click',refresh);
+ta.addEventListener('keyup',refresh);
+ta.addEventListener('keydown',e=>{
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const s=ta.selectionStart,e2=ta.selectionEnd;
+    ta.value=ta.value.slice(0,s)+'  '+ta.value.slice(e2);
+    ta.selectionStart=ta.selectionEnd=s+2;
+    onChange();
+  }
 });
 
-// ── INIT ──
+document.getElementById('fileNameInput').addEventListener('change',()=>{
+  const t=activeTab();
+  if(t){t.name=document.getElementById('fileNameInput').value||'untitled.txt';renderTabs();saveState();}
+});
+
+document.getElementById('btnNewTab').addEventListener('click',()=>newTab());
+document.getElementById('btnToggleHistory').addEventListener('click',toggleSidebar);
+
+document.addEventListener('keydown',e=>{
+  const mod=e.ctrlKey||e.metaKey;
+  if(mod&&e.key==='t'){e.preventDefault();newTab();}
+  if(mod&&e.key==='s'){e.preventDefault();doSave();}
+  if(mod&&e.key==='d'){e.preventDefault();doDownload();}
+  if(mod&&e.shiftKey&&e.key.toLowerCase()==='h'){e.preventDefault();toggleSidebar();}
+  if(e.key==='Escape'){closeModal();document.getElementById('langDD').classList.remove('open');}
+});
+
+/* ──────────────────────────────
+   INIT
+────────────────────────────── */
 loadState();
 renderTabs();
-const initTab = getActiveTab();
-createEditor(initTab?.content || '', initTab?.lang || 'text');
-document.getElementById('fileNameInput').value = initTab?.name || 'untitled.txt';
-updateLangBadge(initTab?.lang || 'text');
-
-document.getElementById('btnNewTab').addEventListener('click', () => newTab());
-document.getElementById('btnToggleHistory').addEventListener('click', toggleSidebar);
-
-if (state.sidebarOpen) {
+const t0=activeTab();
+if(t0){
+  ed().value=t0.content;
+  document.getElementById('fileNameInput').value=t0.name;
+  currentLang=t0.lang||'text';
+}
+if(S.sidebarOpen){
   document.getElementById('sidebar').classList.add('open');
   document.getElementById('btnToggleHistory').classList.add('active');
   renderHistory();
 }
-updateStat();
+updateLangBadge();
+refresh();
+ed().focus();
 </script>
 </body>
 </html>
