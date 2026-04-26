@@ -152,12 +152,48 @@
   }
   .dot-unsaved.show { opacity: 1; }
 
+  /* EDITOR WRAP = line numbers + textarea side by side */
+  .editor-wrap {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .line-numbers {
+    width: 48px;
+    flex-shrink: 0;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    overflow: hidden;           /* hidden — scrolled by JS in sync */
+    user-select: none;          /* ← 行號不會被選取/複製 */
+    -webkit-user-select: none;
+    pointer-events: none;       /* 點擊穿透到 textarea */
+  }
+
+  .line-numbers span {
+    display: block;
+    height: calc(14px * 1.85); /* must match textarea font-size × line-height */
+    line-height: calc(14px * 1.85);
+    text-align: right;
+    padding-right: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text3);
+    transition: color 0.1s;
+  }
+  .line-numbers span.active { color: var(--text2); }
+
   textarea {
-    flex: 1; width: 100%; background: transparent; border: none;
+    flex: 1;
+    background: transparent; border: none;
     outline: none; resize: none;
     font-family: 'JetBrains Mono', monospace; font-size: 14px;
-    line-height: 1.85; color: var(--text); padding: 20px 24px;
+    line-height: 1.85; color: var(--text);
+    padding: 20px 24px 20px 16px;
     caret-color: var(--accent); tab-size: 2;
+    overflow-y: scroll;   /* always show scrollbar space for sync */
   }
   textarea::placeholder { color: var(--text3); }
   textarea::selection { background: rgba(37,99,235,0.15); }
@@ -342,7 +378,10 @@
       <input type="text" id="fileNameInput" value="untitled.txt" spellcheck="false">
       <div class="dot-unsaved" id="dotUnsaved" title="未存檔"></div>
     </div>
-    <textarea id="editor" placeholder="在這裡輸入或貼上文字…" spellcheck="false"></textarea>
+    <div class="editor-wrap">
+      <div class="line-numbers" id="lineNumbers"><span class="active">1</span></div>
+      <textarea id="editor" placeholder="在這裡輸入或貼上文字…" spellcheck="false"></textarea>
+    </div>
     <div class="toolbar">
       <button class="btn copy"     onclick="doCopy()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -463,7 +502,7 @@ function switchTab(id) {
   $ed().value = tab.content;
   document.getElementById('fileNameInput').value = tab.name;
   document.getElementById('dotUnsaved').classList.remove('show');
-  updateStat(); renderTabs(); saveState();
+  updateStat(); updateLineNumbers(); renderTabs(); saveState();
 }
 
 function newTab(name, content) {
@@ -629,8 +668,40 @@ function updateStat() {
   document.getElementById('statBox').textContent = `${val.length} 字 · ${val===''?0:val.split('\n').length} 行`;
 }
 
+// ── LINE NUMBERS ──
+const LINE_H = 14 * 1.85; // must match CSS font-size × line-height
+
+function updateLineNumbers() {
+  const ta = $ed();
+  const count = ta.value === '' ? 1 : ta.value.split('\n').length;
+  const ln = document.getElementById('lineNumbers');
+
+  // get current line from cursor
+  const curLine = ta.value.slice(0, ta.selectionStart).split('\n').length;
+
+  // rebuild only if count changed
+  if (ln.children.length !== count) {
+    ln.innerHTML = '';
+    for (let i = 1; i <= count; i++) {
+      const s = document.createElement('span');
+      s.textContent = i;
+      if (i === curLine) s.classList.add('active');
+      ln.appendChild(s);
+    }
+  } else {
+    // just update active class
+    Array.from(ln.children).forEach((s, i) => {
+      s.classList.toggle('active', i + 1 === curLine);
+    });
+  }
+
+  // sync scroll
+  ln.scrollTop = ta.scrollTop;
+}
+
 function onEditorChange() {
   updateStat();
+  updateLineNumbers();
   const tab = getActiveTab();
   if (tab) document.getElementById('dotUnsaved').classList.toggle('show', tab.content !== $ed().value);
   clearTimeout(window._st);
@@ -663,6 +734,21 @@ loadState(); renderTabs();
 const initTab = getActiveTab();
 if (initTab) { $ed().value = initTab.content; document.getElementById('fileNameInput').value = initTab.name; }
 $ed().addEventListener('input', onEditorChange);
+$ed().addEventListener('scroll', () => {
+  document.getElementById('lineNumbers').scrollTop = $ed().scrollTop;
+});
+$ed().addEventListener('click',   updateLineNumbers);
+$ed().addEventListener('keyup',   updateLineNumbers);
+$ed().addEventListener('keydown', e => {
+  // handle tab key inside editor
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ta = $ed(), s = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.slice(0,s) + '  ' + ta.value.slice(end);
+    ta.selectionStart = ta.selectionEnd = s + 2;
+    onEditorChange();
+  }
+});
 document.getElementById('btnNewTab').addEventListener('click', () => newTab());
 document.getElementById('btnToggleHistory').addEventListener('click', toggleSidebar);
 if (state.sidebarOpen) {
@@ -671,6 +757,7 @@ if (state.sidebarOpen) {
   renderHistory();
 }
 updateStat();
+updateLineNumbers();
 $ed().focus();
 </script>
 </body>
