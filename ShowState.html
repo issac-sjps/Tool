@@ -105,11 +105,23 @@
     .main-title {
       font-family: 'Noto Serif TC', serif;
       font-weight: 900;
-      font-size: clamp(5.5rem, 18vw, 10rem);
-      line-height: 1;
+      line-height: 1.05;
       letter-spacing: 0.05em;
       transition: opacity 0.3s ease, transform 0.3s ease, color 0.5s, text-shadow 0.5s;
+      display: grid;
+      justify-items: center;
     }
+    /* 3-char: single row */
+    .main-title.chars-3 {
+      grid-template-columns: repeat(3, 1fr);
+      font-size: clamp(5rem, 16vw, 9.5rem);
+    }
+    /* 4-char: 2×2 */
+    .main-title.chars-4 {
+      grid-template-columns: repeat(2, 1fr);
+      font-size: clamp(4.5rem, 14vw, 9rem);
+    }
+    .main-title span { display: block; }
     .main-title.fade-out { opacity: 0; transform: scale(0.88); }
 
     /* ── Buttons ── */
@@ -215,7 +227,9 @@
 
     function applyCard(idx) {
       const c = cards[idx];
-      titleEl.textContent  = c.text;
+      // Render each char as a span, set grid class by length
+      titleEl.innerHTML = [...c.text].map(ch => `<span>${ch}</span>`).join('');
+      titleEl.className = 'main-title chars-' + c.text.length;
       labelEl.textContent  = c.label;
       labelEl.style.color  = c.labelColor;
       dotEl.style.background = c.dotColor;
@@ -244,7 +258,7 @@
       titleEl.classList.add('fade-out');
       setTimeout(() => {
         applyCard(idx);
-        titleEl.classList.remove('fade-out');
+        // fade-out was removed inside applyCard via className reset, re-check
       }, 280);
     }
 
