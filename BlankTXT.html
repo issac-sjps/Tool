@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
 :root{
   --bg:#f5f2ee;
   --surface:#ffffff;
@@ -21,25 +20,19 @@
   --text:#1a1714;
   --text2:#6b6560;
   --text3:#b0a89e;
-  --lh:26px;       /* line height — single source of truth */
+  --lh:24px;
   --fs:14px;
   --gutter:52px;
-  --stripe-b:#ddeaff;  /* only line 5,10,15... */
+  --stripe:#ddeaff;
   --sidebar-w:290px;
 }
-
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;display:flex;flex-direction:column}
 
-/* ── HEADER ── */
-header{
-  height:50px;background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 14px;gap:10px;
-  flex-shrink:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)
-}
+/* HEADER */
+header{height:50px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .logo{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;flex-shrink:0;padding-right:10px;border-right:1px solid var(--border)}
 .logo span{color:var(--text3);font-weight:400}
-
 .tab-bar{display:flex;gap:2px;align-items:center;flex:1;overflow-x:auto;scrollbar-width:none}
 .tab-bar::-webkit-scrollbar{display:none}
 .tab{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s;border:1px solid transparent;max-width:180px;flex-shrink:0}
@@ -49,114 +42,73 @@ header{
 .tab .close-tab{opacity:0;color:var(--text3);font-size:14px;line-height:1;padding:0 1px;flex-shrink:0;transition:opacity .15s,color .15s}
 .tab:hover .close-tab,.tab.active .close-tab{opacity:1}
 .tab .close-tab:hover{color:var(--danger)}
-
 .btn-new-tab{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;line-height:1}
 .btn-new-tab:hover{background:var(--bg);color:var(--text);border-color:var(--border2)}
-
 .header-right{display:flex;align-items:center;gap:6px;flex-shrink:0;padding-left:8px;border-left:1px solid var(--border)}
 .hbtn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .hbtn:hover{background:var(--bg);border-color:var(--border2);color:var(--text)}
 .hbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .hbtn svg{width:13px;height:13px}
 
-/* ── MAIN ── */
+/* MAIN */
 .main{flex:1;display:flex;overflow:hidden;position:relative}
 
-/* ── EDITOR PANEL ── */
+/* EDITOR PANEL */
 .editor-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
 
 .filename-row{padding:8px 18px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--surface)}
 #fileNameInput{background:transparent;border:1px solid transparent;outline:none;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);width:220px;padding:3px 7px;border-radius:5px;transition:all .15s}
 #fileNameInput:hover{background:var(--bg);color:var(--text);border-color:var(--border)}
 #fileNameInput:focus{background:var(--bg);color:var(--text);border-color:var(--border2)}
-
 .dot-unsaved{width:7px;height:7px;border-radius:50%;background:var(--warning);opacity:0;transition:opacity .2s;flex-shrink:0}
 .dot-unsaved.show{opacity:1}
 
-/* goto bar */
-.goto-bar{
-  padding:6px 18px 6px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--bg);
-}
+/* GOTO BAR */
+.goto-bar{padding:5px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;background:var(--bg)}
 .goto-bar label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap}
-.goto-bar input{
-  width:72px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;
-  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);
-  background:var(--surface);outline:none;transition:border-color .15s;
-}
+.goto-bar input{width:72px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
 .goto-bar input:focus{border-color:var(--accent)}
-.goto-bar button{
-  padding:4px 10px;border:1px solid var(--border);border-radius:5px;
-  font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);
-  background:var(--surface);cursor:pointer;transition:all .15s;white-space:nowrap;
-}
+.goto-bar button{padding:3px 10px;border:1px solid var(--border);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);background:var(--surface);cursor:pointer;transition:all .15s;white-space:nowrap}
 .goto-bar button:hover{border-color:var(--accent);color:var(--accent);background:rgba(37,99,235,.05)}
 
-/* ── EDITOR ZONE ── */
-.editor-zone{
-  flex:1;display:flex;overflow:hidden;position:relative;
-  background:var(--surface);
-}
+/* EDITOR ZONE */
+.editor-zone{flex:1;display:flex;overflow:hidden}
 
-/* Gutter */
-.gutter{
-  width:var(--gutter);flex-shrink:0;
-  background:var(--bg);border-right:1px solid var(--border);
-  overflow:hidden;user-select:none;-webkit-user-select:none;pointer-events:none;
-  position:relative;
-}
-.gutter-inner{
-  position:absolute;top:0;left:0;right:0;
-  padding-top:14px; /* matches textarea padding-top */
-}
-.gutter-line{
-  height:var(--lh);line-height:var(--lh);
-  text-align:right;padding-right:10px;
-  font-family:'JetBrains Mono',monospace;font-size:12px;
-  color:var(--text3);
-}
-.gutter-line.active{color:var(--accent);font-weight:600}
-.gutter-line.stripe{background:var(--stripe-b)}
+/* GUTTER */
+.gutter{width:var(--gutter);flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);overflow:hidden;user-select:none;-webkit-user-select:none;position:relative}
+.gutter-inner{position:absolute;top:0;left:0;right:0;padding-top:12px}
+.gutter-line{height:var(--lh);line-height:var(--lh);text-align:right;padding-right:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3)}
+.gutter-line.active{color:var(--accent);font-weight:700}
+.gutter-line.stripe{background:var(--stripe)}
 
-/* Highlight layer — sits behind textarea */
-.highlight-layer{
-  position:absolute;
-  left:var(--gutter);right:0;top:0;bottom:0;
-  overflow:hidden;pointer-events:none;
-  font-family:'JetBrains Mono',monospace;font-size:var(--fs);line-height:var(--lh);
-  white-space:pre-wrap;word-break:break-all;
-  padding:14px 20px 14px 14px;
-  color:transparent; /* text invisible, only spans show */
-  z-index:1;
-}
-.highlight-layer .hl-line{
-  display:block;min-height:var(--lh);
-}
-.highlight-layer .hl-line.stripe{background:var(--stripe-b)}
+/* CODE EDITOR — contenteditable */
+.code-wrap{flex:1;overflow:auto;position:relative}
+.code-wrap::-webkit-scrollbar{width:6px;height:6px}
+.code-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.code-wrap::-webkit-scrollbar-thumb:hover{background:var(--border2)}
 
-/* The actual textarea — transparent bg, sits on top */
 #editor{
-  position:absolute;
-  left:var(--gutter);right:0;top:0;bottom:0;
-  background:transparent;
-  border:none;outline:none;resize:none;
-  font-family:'JetBrains Mono',monospace;font-size:var(--fs);line-height:var(--lh);
+  min-height:100%;
+  padding:12px 20px 12px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:var(--fs);
+  line-height:var(--lh);
   color:var(--text);
-  padding:14px 20px 14px 14px;
-  caret-color:var(--accent);
+  outline:none;
+  white-space:pre;
   tab-size:2;
-  overflow-y:auto;
-  z-index:2;
-  /* make selection visible */
+  cursor:text;
 }
-#editor::placeholder{color:var(--text3)}
-#editor::selection{background:rgba(37,99,235,.18)}
-#editor::-webkit-scrollbar{width:6px}
-#editor::-webkit-scrollbar-track{background:transparent}
-#editor::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-#editor::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+/* each line is a div */
+#editor .ln{
+  display:block;
+  min-height:var(--lh);
+  white-space:pre;
+}
+#editor .ln.stripe{background:var(--stripe)}
+#editor .ln.active-line{background:rgba(37,99,235,.05)}
 
-/* ── TOOLBAR ── */
+/* TOOLBAR */
 .toolbar{border-top:1px solid var(--border);padding:10px 16px;display:flex;gap:7px;align-items:center;flex-shrink:0;background:var(--surface)}
 .btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:.01em;user-select:none;white-space:nowrap}
 .btn:hover{border-color:var(--border2);color:var(--text);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.08)}
@@ -171,17 +123,17 @@ header{
 .spacer{flex:1}
 .stat{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);flex-shrink:0}
 
-/* lang selector */
+/* LANG SELECTOR */
 .lang-wrap{position:relative}
 .lang-badge{font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
 .lang-badge:hover{border-color:var(--border2);color:var(--text)}
-.lang-dropdown{position:absolute;bottom:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:160px;box-shadow:0 4px 16px rgba(0,0,0,.1);display:none;flex-direction:column;gap:2px;z-index:100}
+.lang-dropdown{position:absolute;bottom:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:165px;box-shadow:0 4px 16px rgba(0,0,0,.1);display:none;flex-direction:column;gap:2px;z-index:100}
 .lang-dropdown.open{display:flex}
 .lang-opt{padding:6px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;transition:all .12s}
 .lang-opt:hover{background:var(--bg);color:var(--text)}
 .lang-opt.cur{background:rgba(37,99,235,.08);color:var(--accent)}
 
-/* ── SIDEBAR ── */
+/* SIDEBAR */
 .sidebar{width:var(--sidebar-w);display:flex;flex-direction:column;overflow:hidden;background:var(--bg);flex-shrink:0;transform:translateX(100%);position:absolute;right:0;top:0;bottom:0;transition:transform .25s ease;z-index:5;border-left:1px solid var(--border);box-shadow:-4px 0 16px rgba(0,0,0,.06)}
 .sidebar.open{transform:translateX(0)}
 .sidebar-header{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
@@ -205,7 +157,7 @@ header{
 .hist-act:hover{color:var(--danger);background:rgba(220,38,38,.08)}
 .hist-dl:hover{color:var(--purple);background:rgba(124,58,237,.08)}
 
-/* ── TOAST ── */
+/* TOAST */
 .toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.1)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.blue  {border-color:var(--accent); color:var(--accent)}
@@ -213,7 +165,7 @@ header{
 .toast.red   {border-color:var(--danger); color:var(--danger)}
 .toast.purple{border-color:var(--purple); color:var(--purple)}
 
-/* ── MODAL ── */
+/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-overlay.open{opacity:1;pointer-events:all}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;max-width:340px;width:90%;transform:scale(.95);transition:transform .2s;box-shadow:0 8px 32px rgba(0,0,0,.12)}
@@ -226,21 +178,22 @@ header{
 .modal-btn.danger{border-color:#fca5a5;color:var(--danger);background:rgba(220,38,38,.04)}
 .modal-btn.danger:hover{background:rgba(220,38,38,.1);border-color:var(--danger)}
 
-/* ── SYNTAX COLOURS ── */
-.t-kw  {color:#9333ea;font-weight:600}
-.t-cm  {color:#94a3b8;font-style:italic}
-.t-str {color:#16a34a}
-.t-num {color:#ea580c}
-.t-tag {color:#dc2626;font-weight:500}
-.t-atn {color:#d97706}
-.t-atv {color:#16a34a}
-.t-ang {color:#9ca3af}
-.t-pun {color:#9ca3af}
-.t-fn  {color:#1d4ed8}
-.t-prop{color:#0f766e}
-.t-rx  {color:#b91c1c}
-.t-hd  {color:#1d4ed8;font-weight:700}
-.t-lnk {color:#2563eb;text-decoration:underline}
+/* ── SYNTAX TOKEN COLOURS ── */
+.tk{} /* base */
+.kw{color:#9333ea;font-weight:600}   /* keyword */
+.cm{color:#9ca3af;font-style:italic} /* comment */
+.st{color:#16a34a}                   /* string */
+.nm{color:#ea580c}                   /* number */
+.tg{color:#dc2626;font-weight:500}   /* tag */
+.at{color:#d97706}                   /* attr name */
+.av{color:#16a34a}                   /* attr value */
+.br{color:#9ca3af}                   /* bracket/angle */
+.fn{color:#2563eb}                   /* function/selector */
+.pp{color:#0f766e}                   /* property/key */
+.rx{color:#b91c1c}                   /* regex */
+.hd{color:#1d4ed8;font-weight:700}   /* heading */
+.lk{color:#2563eb;text-decoration:underline} /* link */
+.op{color:#374151}                   /* operator */
 </style>
 </head>
 <body>
@@ -250,7 +203,7 @@ header{
   <div class="tab-bar" id="tabBar"></div>
   <button class="btn-new-tab" id="btnNewTab" title="新增 (Ctrl+T)">+</button>
   <div class="header-right">
-    <button class="hbtn" id="btnToggleHistory" title="紀錄 (Ctrl+Shift+H)">
+    <button class="hbtn" id="btnToggleHistory" title="紀錄">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       紀錄
     </button>
@@ -263,59 +216,16 @@ header{
       <input type="text" id="fileNameInput" value="untitled.txt" spellcheck="false">
       <div class="dot-unsaved" id="dotUnsaved" title="未存檔"></div>
     </div>
-
     <div class="goto-bar">
       <label>跳到第</label>
       <input type="number" id="gotoInput" min="1" placeholder="行號" onkeydown="if(event.key==='Enter')gotoLine()">
       <button onclick="gotoLine()">↵ 前往</button>
     </div>
-
-    <div class="editor-zone" id="editorZone">
-      <div class="gutter" id="gutter">
-        <div class="gutter-inner" id="gutterInner"></div>
+    <div class="editor-zone">
+      <div class="gutter" id="gutter"><div class="gutter-inner" id="gutterInner"></div></div>
+      <div class="code-wrap" id="codeWrap">
+        <div id="editor" contenteditable="true" spellcheck="false" autocorrect="off" autocapitalize="off"></div>
       </div>
-      <div class="highlight-layer" id="hlLayer"></div>
-      <textarea id="editor" placeholder="在這裡輸入或貼上文字…" spellcheck="false"></textarea>
-    </div>
-
-    <div class="toolbar">
-      <button class="btn copy"     onclick="doCopy()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        複製
-      </button>
-      <button class="btn paste" onclick="doPaste()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
-        貼上
-      </button>
-      <button class="btn download" onclick="doDownload()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        下載 .txt
-      </button>
-      <div class="toolbar-sep"></div>
-      <div class="lang-wrap">
-        <button class="lang-badge" id="langBadge" onclick="toggleLang()">📄 純文字</button>
-        <div class="lang-dropdown" id="langDD">
-          <div class="lang-opt cur" data-lang="text">📄 純文字</div>
-          <div class="lang-opt" data-lang="html">🌐 HTML</div>
-          <div class="lang-opt" data-lang="js">✨ JavaScript</div>
-          <div class="lang-opt" data-lang="css">🎨 CSS</div>
-          <div class="lang-opt" data-lang="python">🐍 Python</div>
-          <div class="lang-opt" data-lang="json">📦 JSON</div>
-          <div class="lang-opt" data-lang="md">📝 Markdown</div>
-          <div class="lang-opt" data-lang="sql">🗄️ SQL</div>
-        </div>
-      </div>
-      <div class="toolbar-sep"></div>
-      <button class="btn save"  onclick="doSave()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        存檔
-      </button>
-      <button class="btn clear" onclick="confirmClear()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        清空
-      </button>
-      <div class="spacer"></div>
-      <div class="stat" id="statBox">0 字 · 0 行</div>
     </div>
   </div>
 
@@ -328,10 +238,49 @@ header{
   </div>
 </div>
 
+<div class="toolbar">
+  <button class="btn copy"     onclick="doCopy()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    複製
+  </button>
+  <button class="btn paste" onclick="doPaste()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+    貼上
+  </button>
+  <button class="btn download" onclick="doDownload()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    下載 .txt
+  </button>
+  <div class="toolbar-sep"></div>
+  <div class="lang-wrap">
+    <button class="lang-badge" id="langBadge" onclick="toggleLang()">📄 純文字</button>
+    <div class="lang-dropdown" id="langDD">
+      <div class="lang-opt cur" data-lang="text">📄 純文字</div>
+      <div class="lang-opt" data-lang="html">🌐 HTML</div>
+      <div class="lang-opt" data-lang="js">✨ JavaScript</div>
+      <div class="lang-opt" data-lang="css">🎨 CSS</div>
+      <div class="lang-opt" data-lang="python">🐍 Python</div>
+      <div class="lang-opt" data-lang="json">📦 JSON</div>
+      <div class="lang-opt" data-lang="md">📝 Markdown</div>
+      <div class="lang-opt" data-lang="sql">🗄️ SQL</div>
+    </div>
+  </div>
+  <div class="toolbar-sep"></div>
+  <button class="btn save"  onclick="doSave()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    存檔
+  </button>
+  <button class="btn clear" onclick="confirmClear()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    清空
+  </button>
+  <div class="spacer"></div>
+  <div class="stat" id="statBox">0 字 · 0 行</div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h3 id="modalTitle">確認清空</h3>
-    <p id="modalMsg"></p>
+    <h3 id="modalTitle"></h3><p id="modalMsg"></p>
     <div class="modal-btns">
       <button class="modal-btn" onclick="closeModal()">取消</button>
       <button class="modal-btn danger" id="modalConfirmBtn">確定</button>
@@ -341,46 +290,257 @@ header{
 <div class="toast" id="toast"></div>
 
 <script>
-/* ──────────────────────────────
-   CONSTANTS
-────────────────────────────── */
-const SK = 'txtonline_v3';
-const LH = 26;   // px — must match --lh
+/* ═══════════════════════════════
+   STORAGE & STATE
+═══════════════════════════════ */
+const SK = 'txtonline_v4';
 const LANG_LABELS = {text:'📄 純文字',html:'🌐 HTML',js:'✨ JavaScript',css:'🎨 CSS',python:'🐍 Python',json:'📦 JSON',md:'📝 Markdown',sql:'🗄️ SQL'};
 
-/* ──────────────────────────────
-   STATE
-────────────────────────────── */
 let S = {tabs:[],activeTab:null,history:[],sidebarOpen:false};
 let currentLang = 'text';
 let toastTimer = null;
+let suppressInput = false; // prevent re-render loop
 
 function loadState(){
-  try{
-    const r = localStorage.getItem(SK);
-    if(r){ const s=JSON.parse(r); if(s.tabs?.length){S=s;return;} }
-  }catch(e){}
+  try{ const r=localStorage.getItem(SK); if(r){const s=JSON.parse(r);if(s.tabs?.length){S=s;return;}} }catch(e){}
   const id=uid();
   S={tabs:[{id,name:'untitled.txt',content:'',lang:'text'}],activeTab:id,history:[],sidebarOpen:false};
 }
-
 function saveState(){
-  const t=activeTab(); if(t){t.content=ed().value;t.lang=currentLang;}
-  try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){toast('localStorage 已滿','red');}
+  const t=activeTab(); if(t){t.content=getContent();t.lang=currentLang;}
+  try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){showToast('localStorage 已滿','red');}
 }
-
-/* ──────────────────────────────
-   UTILS
-────────────────────────────── */
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-function ed(){ return document.getElementById('editor'); }
 function activeTab(){ return S.tabs.find(t=>t.id===S.activeTab); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtTime(ts){ const d=new Date(ts),p=n=>String(n).padStart(2,'0'); return `${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
 
-/* ──────────────────────────────
+/* ═══════════════════════════════
+   CONTENT GET/SET
+   Always work in plain text — strip HTML when reading
+═══════════════════════════════ */
+function getContent(){
+  // read plain text from the contenteditable line divs
+  const divs = document.getElementById('editor').querySelectorAll('.ln');
+  if(!divs.length) return document.getElementById('editor').innerText || '';
+  return Array.from(divs).map(d=>d.textContent).join('\n');
+}
+
+function setContent(text, lang){
+  currentLang = lang || 'text';
+  renderEditor(text);
+}
+
+/* ═══════════════════════════════
+   SYNTAX HIGHLIGHT  (pure regex)
+═══════════════════════════════ */
+function hlLine(raw, lang){
+  if(lang==='text') return esc(raw);
+
+  // we work on escaped text so < > are already &lt; &gt;
+  let s = esc(raw);
+
+  if(lang==='html'){
+    // comments
+    s=s.replace(/(&lt;!--.*?--&gt;)/g,'<span class="cm">$1</span>');
+    // doctype
+    s=s.replace(/(&lt;!DOCTYPE[^&]*&gt;)/gi,'<span class="cm">$1</span>');
+    // closing tags
+    s=s.replace(/(&lt;\/)([\w-]+)(&gt;)/g,'<span class="br">$1</span><span class="tg">$2</span><span class="br">$3</span>');
+    // opening tags with attrs
+    s=s.replace(/(&lt;)([\w-]+)((?:\s[^&]*)?)(\/?&gt;)/g,(m,open,tag,attrs,close)=>{
+      const a=attrs
+        .replace(/([\w:-]+)(\s*=\s*)(&quot;[^&quot;]*&quot;|'[^']*')/g,'<span class="at">$1</span><span class="op">$2</span><span class="av">$3</span>')
+        .replace(/(?<!=)\b([\w:-]+)(?!\s*=)/g,'<span class="at">$1</span>');
+      return `<span class="br">${open}</span><span class="tg">${tag}</span>${a}<span class="br">${close}</span>`;
+    });
+    return s;
+  }
+
+  if(lang==='js'){
+    // template literals (backtick) - do first
+    s=s.replace(/(&#96;[^&#]*&#96;|`[^`]*`)/g,'<span class="st">$1</span>');
+    // strings
+    s=s.replace(/(&quot;(?:\\.|[^&quot;\\])*&quot;|'(?:\\.|[^'\\])*')/g,'<span class="st">$1</span>');
+    // comments
+    s=s.replace(/(\/\/[^\n]*)/g,'<span class="cm">$1</span>');
+    s=s.replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="cm">$1</span>');
+    // regex (simple heuristic: /.../ not preceded by a word char)
+    s=s.replace(/(?<![a-zA-Z0-9_$])(\/(?:[^\\/\n]|\\.)+\/[gimsuy]*)/g,'<span class="rx">$1</span>');
+    // numbers
+    s=s.replace(/\b(0x[\da-fA-F]+|\d+\.?\d*(?:e[+-]?\d+)?)\b/g,'<span class="nm">$1</span>');
+    // keywords
+    s=s.replace(/\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|class|extends|import|export|default|from|async|await|try|catch|finally|throw|of|in|this|super|static|get|set|yield|void|null|undefined|true|false|NaN|Infinity)\b/g,'<span class="kw">$1</span>');
+    // function calls
+    s=s.replace(/\b([a-zA-Z_$][\w$]*)\s*(?=\()/g,'<span class="fn">$1</span>');
+    return s;
+  }
+
+  if(lang==='css'){
+    // comments
+    s=s.replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="cm">$1</span>');
+    // strings
+    s=s.replace(/(&quot;[^&quot;]*&quot;|'[^']*')/g,'<span class="st">$1</span>');
+    // at-rules
+    s=s.replace(/(@[\w-]+)/g,'<span class="kw">$1</span>');
+    // selectors (lines not containing colon or ending with {)
+    s=s.replace(/^([\s\S]*?)(\{)/,'<span class="fn">$1</span><span class="br">$2</span>');
+    // property names
+    s=s.replace(/([\w-]+)\s*(:)/g,'<span class="pp">$1</span><span class="op">$2</span>');
+    // values with colors
+    s=s.replace(/(#[0-9a-fA-F]{3,8})\b/g,'<span class="nm">$1</span>');
+    // numbers with units
+    s=s.replace(/\b(\d+\.?\d*)(px|em|rem|%|vh|vw|s|ms|deg|fr|ch|ex)?\b/g,'<span class="nm">$1$2</span>');
+    // important keywords
+    s=s.replace(/\b(important|inherit|initial|unset|auto|none|normal|bold|italic|solid|dashed|dotted|flex|grid|block|inline|absolute|relative|fixed|sticky)\b/g,'<span class="kw">$1</span>');
+    return s;
+  }
+
+  if(lang==='python'){
+    // strings (triple first)
+    s=s.replace(/(&quot;&quot;&quot;[\s\S]*?&quot;&quot;&quot;|'''[\s\S]*?''')/g,'<span class="st">$1</span>');
+    s=s.replace(/(&quot;(?:\\.|[^&quot;\\])*&quot;|'(?:\\.|[^'\\])*')/g,'<span class="st">$1</span>');
+    // comments
+    s=s.replace(/(#[^\n]*)/g,'<span class="cm">$1</span>');
+    // decorators
+    s=s.replace(/(@[\w.]+)/g,'<span class="at">$1</span>');
+    // numbers
+    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="nm">$1</span>');
+    // keywords
+    s=s.replace(/\b(def|class|return|if|elif|else|for|while|in|not|and|or|is|import|from|as|pass|break|continue|raise|try|except|finally|with|lambda|yield|global|nonlocal|del|assert|True|False|None|self|super|print|len|range|type|int|str|float|list|dict|tuple|set|bool)\b/g,'<span class="kw">$1</span>');
+    // function calls
+    s=s.replace(/\b([a-zA-Z_][\w]*)\s*(?=\()/g,'<span class="fn">$1</span>');
+    return s;
+  }
+
+  if(lang==='json'){
+    // string keys
+    s=s.replace(/(&quot;[^&quot;]*&quot;)\s*(?=:)/g,'<span class="pp">$1</span>');
+    // string values
+    s=s.replace(/:\s*(&quot;[^&quot;]*&quot;)/g,': <span class="st">$1</span>');
+    // numbers
+    s=s.replace(/\b(-?\d+\.?\d*(?:e[+-]?\d+)?)\b/g,'<span class="nm">$1</span>');
+    // booleans / null
+    s=s.replace(/\b(true|false|null)\b/g,'<span class="kw">$1</span>');
+    // brackets
+    s=s.replace(/([{}\[\]])/g,'<span class="br">$1</span>');
+    return s;
+  }
+
+  if(lang==='md'){
+    // headings
+    if(/^#{1,6} /.test(raw)) return '<span class="hd">'+s+'</span>';
+    // blockquote
+    if(/^&gt;/.test(s)) return '<span class="cm">'+s+'</span>';
+    // code fence
+    if(/^```/.test(raw)) return '<span class="st">'+s+'</span>';
+    // horizontal rule
+    if(/^(---|\*\*\*|___)/.test(raw)) return '<span class="br">'+s+'</span>';
+    // inline code
+    s=s.replace(/(`[^`]+`)/g,'<span class="st">$1</span>');
+    // bold
+    s=s.replace(/(\*\*[^*]+\*\*|__[^_]+__)/g,'<strong>$1</strong>');
+    // italic
+    s=s.replace(/(\*[^*]+\*|_[^_]+_)/g,'<em>$1</em>');
+    // links
+    s=s.replace(/(\[[^\]]*\]\([^)]*\))/g,'<span class="lk">$1</span>');
+    // list markers
+    s=s.replace(/^(\s*[-*+] )/,'<span class="kw">$1</span>');
+    s=s.replace(/^(\s*\d+\. )/,'<span class="nm">$1</span>');
+    return s;
+  }
+
+  if(lang==='sql'){
+    // strings
+    s=s.replace(/('(?:''|[^'])*')/g,'<span class="st">$1</span>');
+    // comments
+    s=s.replace(/(--[^\n]*)/g,'<span class="cm">$1</span>');
+    s=s.replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="cm">$1</span>');
+    // numbers
+    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="nm">$1</span>');
+    // keywords
+    s=s.replace(/\b(SELECT|FROM|WHERE|INSERT|INTO|UPDATE|SET|DELETE|CREATE|TABLE|DROP|ALTER|INDEX|JOIN|LEFT|RIGHT|INNER|OUTER|CROSS|FULL|ON|AS|AND|OR|NOT|NULL|IS|IN|LIKE|BETWEEN|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|DISTINCT|COUNT|SUM|AVG|MAX|MIN|UNION|ALL|WITH|VALUES|PRIMARY|KEY|FOREIGN|REFERENCES|DEFAULT|CONSTRAINT|IF|EXISTS|DATABASE|SCHEMA|VIEW|TRIGGER|PROCEDURE|FUNCTION|BEGIN|END|COMMIT|ROLLBACK|TRANSACTION|CASE|WHEN|THEN|ELSE|CAST|CONVERT|COALESCE|ISNULL|NULLIF|TOP|ROWNUM|ASC|DESC)\b/gi,
+      m=>'<span class="kw">'+m.toUpperCase()+'</span>');
+    // function calls
+    s=s.replace(/\b([A-Z_][A-Z0-9_]*)\s*(?=\()/gi,'<span class="fn">$1</span>');
+    return s;
+  }
+
+  return s;
+}
+
+/* ═══════════════════════════════
+   RENDER EDITOR
+   Rebuilds all .ln divs with highlighted HTML
+═══════════════════════════════ */
+function renderEditor(text){
+  suppressInput = true;
+  const ed = document.getElementById('editor');
+  const lines = text === '' ? [''] : text.split('\n');
+
+  // save scroll
+  const wrap = document.getElementById('codeWrap');
+  const scrollTop = wrap.scrollTop;
+
+  // build HTML
+  const html = lines.map((line, i) => {
+    const lineNum = i + 1;
+    const isStripe = lineNum % 5 === 0;
+    const highlighted = hlLine(line, currentLang);
+    return `<div class="ln${isStripe?' stripe':''}" data-line="${lineNum}">${highlighted}</div>`;
+  }).join('');
+
+  ed.innerHTML = html || '<div class="ln" data-line="1"></div>';
+
+  // restore scroll
+  wrap.scrollTop = scrollTop;
+
+  renderGutter(lines.length);
+  updateStat(text);
+  setTimeout(()=>{ suppressInput=false; }, 0);
+}
+
+/* ═══════════════════════════════
+   GUTTER
+═══════════════════════════════ */
+function renderGutter(count, activeLine){
+  let html = '';
+  for(let i=1;i<=count;i++){
+    const stripe = i%5===0;
+    const active = i===activeLine;
+    html += `<div class="gutter-line${stripe?' stripe':''}${active?' active':''}">${i}</div>`;
+  }
+  document.getElementById('gutterInner').innerHTML = html;
+}
+
+function updateGutterScroll(){
+  const wrap = document.getElementById('codeWrap');
+  document.getElementById('gutterInner').style.top = (12 - wrap.scrollTop) + 'px';
+}
+
+/* ═══════════════════════════════
+   STAT
+═══════════════════════════════ */
+function updateStat(text){
+  const v = text !== undefined ? text : getContent();
+  document.getElementById('statBox').textContent = `${v.length} 字 · ${v===''?0:v.split('\n').length} 行`;
+}
+
+/* ═══════════════════════════════
+   GET CURRENT LINE (caret)
+═══════════════════════════════ */
+function getCurrentLine(){
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return 1;
+  const node = sel.anchorNode;
+  const ln = node?.closest?.('.ln') || (node?.parentElement?.closest?.('.ln'));
+  if(ln) return parseInt(ln.dataset.line)||1;
+  return 1;
+}
+
+/* ═══════════════════════════════
    TABS
-────────────────────────────── */
+═══════════════════════════════ */
 function renderTabs(){
   const bar=document.getElementById('tabBar');
   bar.innerHTML='';
@@ -397,21 +557,20 @@ function renderTabs(){
 }
 
 function switchTab(id){
-  const cur=activeTab(); if(cur){cur.content=ed().value;cur.lang=currentLang;}
+  const cur=activeTab(); if(cur){cur.content=getContent();cur.lang=currentLang;}
   S.activeTab=id;
   const t=activeTab();
-  ed().value=t.content;
   document.getElementById('fileNameInput').value=t.name;
-  currentLang=t.lang||'text';
   document.getElementById('dotUnsaved').classList.remove('show');
+  currentLang=t.lang||'text';
   updateLangBadge();
-  refresh();
+  renderEditor(t.content||'');
   renderTabs();
   saveState();
 }
 
 function newTab(name,content,lang){
-  const cur=activeTab(); if(cur){cur.content=ed().value;cur.lang=currentLang;}
+  const cur=activeTab(); if(cur){cur.content=getContent();cur.lang=currentLang;}
   const id=uid();
   S.tabs.push({id,name:name||'untitled.txt',content:content||'',lang:lang||'text'});
   switchTab(id);
@@ -427,106 +586,152 @@ function closeTab(id){
   else{renderTabs();saveState();}
 }
 
-/* ──────────────────────────────
+/* ═══════════════════════════════
    HISTORY
-────────────────────────────── */
+═══════════════════════════════ */
 function pushHistory(text,name){
   if(!text?.trim())return;
   S.history.unshift({id:uid(),content:text,preview:text.trim().slice(0,200),chars:text.length,lines:text.split('\n').length,timestamp:Date.now(),tabName:name||'untitled.txt'});
   if(S.history.length>50)S.history=S.history.slice(0,50);
 }
-
 function renderHistory(){
   const list=document.getElementById('historyList');
   if(!S.history.length){list.innerHTML='<div class="history-empty">尚無紀錄<br>每次清空或關閉標籤<br>內容會自動存入這裡</div>';return;}
   list.innerHTML='';
   S.history.forEach(item=>{
-    const el=document.createElement('div');
-    el.className='history-item';
-    el.innerHTML=`
-      <div class="hist-top"><span class="hist-meta">${esc(item.tabName)} · ${fmtTime(item.timestamp)}</span><span class="hist-restore">↩ 還原到新標籤</span></div>
+    const el=document.createElement('div'); el.className='history-item';
+    el.innerHTML=`<div class="hist-top"><span class="hist-meta">${esc(item.tabName)} · ${fmtTime(item.timestamp)}</span><span class="hist-restore">↩ 還原</span></div>
       <div class="hist-preview">${esc(item.preview)}</div>
       <div class="hist-footer"><span>${item.chars} 字 · ${item.lines} 行</span>
         <div class="hist-fbtns"><button class="hist-dl" data-id="${item.id}">↓ 下載</button><button class="hist-act" data-id="${item.id}">✕ 刪除</button></div>
       </div>`;
     el.addEventListener('click',e=>{
       const id2=e.target.dataset.id;
-      if(e.target.classList.contains('hist-act')){delHistory(id2);return;}
+      if(e.target.classList.contains('hist-act')){S.history=S.history.filter(h=>h.id!==id2);renderHistory();saveState();return;}
       if(e.target.classList.contains('hist-dl')){dlText(item.content,item.tabName);return;}
       restoreHistory(item.id);
     });
     list.appendChild(el);
   });
 }
-
 function restoreHistory(id){
   const item=S.history.find(h=>h.id===id); if(!item)return;
   const cur=activeTab(); if(cur?.content?.trim()) pushHistory(cur.content,cur.name);
   newTab(item.tabName,item.content);
-  toast('✓ 已還原到新標籤','blue');
-  renderHistory(); saveState();
+  showToast('✓ 已還原到新標籤','blue'); renderHistory(); saveState();
 }
+function clearAllHistory(){ S.history=[]; renderHistory(); saveState(); showToast('紀錄已清空','red'); }
 
-function delHistory(id){ S.history=S.history.filter(h=>h.id!==id); renderHistory(); saveState(); }
-function clearAllHistory(){ S.history=[]; renderHistory(); saveState(); toast('紀錄已清空','red'); }
-
-/* ──────────────────────────────
+/* ═══════════════════════════════
    EDITOR ACTIONS
-────────────────────────────── */
+═══════════════════════════════ */
 async function doCopy(){
-  const text=ed().value; if(!text){toast('沒有內容可複製','red');return;}
-  try{await navigator.clipboard.writeText(text);}catch(e){ed().select();document.execCommand('copy');}
-  toast('✓ 已複製到剪貼簿','blue');
+  const text=getContent(); if(!text){showToast('沒有內容可複製','red');return;}
+  try{await navigator.clipboard.writeText(text);}catch(e){}
+  showToast('✓ 已複製到剪貼簿','blue');
 }
 
 async function doPaste(){
   try{
     const text=await navigator.clipboard.readText();
-    if(!text){toast('剪貼簿是空的','red');return;}
-    const ta=ed(),s=ta.selectionStart,e2=ta.selectionEnd;
-    ta.value=ta.value.slice(0,s)+text+ta.value.slice(e2);
-    ta.selectionStart=ta.selectionEnd=s+text.length;
-    onChange(); toast('✓ 已貼上','green');
-  }catch{toast('請直接按 Ctrl+V 貼上','red');}
+    if(!text){showToast('剪貼簿是空的','red');return;}
+    // insert at cursor
+    const sel=window.getSelection();
+    if(sel.rangeCount){
+      sel.deleteFromDocument();
+      const range=sel.getRangeAt(0);
+      // Insert as plain text, then re-render
+      const current=getContent();
+      // easier: just append if complex selection
+      const lines=document.querySelectorAll('#editor .ln');
+      let lineIdx=0,lineEl=null;
+      const anchor=sel.anchorNode;
+      const closestLn=anchor?.closest?.('.ln')||(anchor?.parentElement?.closest?.('.ln'));
+      if(closestLn) lineIdx=parseInt(closestLn.dataset.line)-1;
+      const allLines=getContent().split('\n');
+      const offset=sel.anchorOffset;
+      allLines[lineIdx]=allLines[lineIdx].slice(0,offset)+text+allLines[lineIdx].slice(offset);
+      const newText=allLines.join('\n');
+      renderEditor(newText);
+      onEditorChange();
+    } else {
+      renderEditor(getContent()+text);
+      onEditorChange();
+    }
+    showToast('✓ 已貼上','green');
+  }catch{ showToast('請直接按 Ctrl+V 貼上','red'); }
 }
 
 function dlText(content,filename){
   let name=filename||'untitled.txt';
   if(!name.endsWith('.txt'))name=name.replace(/\.[^.]+$/,'')+'.txt';
   const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=name; a.click();
-  URL.revokeObjectURL(url);
-  toast('✓ 已下載 '+name,'purple');
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url);
+  showToast('✓ 已下載 '+name,'purple');
 }
-
-function doDownload(){
-  const text=ed().value; if(!text){toast('沒有內容可下載','red');return;}
-  dlText(text,document.getElementById('fileNameInput').value||'untitled.txt');
-}
-
-function doSave(){
-  const t=activeTab(); if(t){t.content=ed().value;t.lang=currentLang;}
-  saveState(); document.getElementById('dotUnsaved').classList.remove('show');
-  toast('✓ 已存檔','green');
-}
-
+function doDownload(){ const t=getContent(); if(!t){showToast('沒有內容','red');return;} dlText(t,document.getElementById('fileNameInput').value||'untitled.txt'); }
+function doSave(){ const t=activeTab(); if(t){t.content=getContent();t.lang=currentLang;} saveState(); document.getElementById('dotUnsaved').classList.remove('show'); showToast('✓ 已存檔','green'); }
 function confirmClear(){
-  const text=ed().value;
-  if(!text.trim()){
-    openModal('開新文件','目前是空的，要開一個新的標籤嗎？',()=>{newTab();toast('✓ 已開新文件','green');},'開新標籤');
-    return;
-  }
+  const text=getContent();
+  if(!text.trim()){openModal('開新文件','目前是空的，要開一個新的標籤嗎？',()=>{newTab();showToast('✓ 已開新文件','green');},'開新標籤');return;}
   openModal('確認清空','目前內容將存入紀錄，確定要清空嗎？',()=>{
-    pushHistory(ed().value,activeTab()?.name);
-    ed().value=''; onChange(); renderHistory(); saveState();
-    toast('已清空，內容已存入紀錄','red');
+    pushHistory(getContent(),activeTab()?.name);
+    renderEditor(''); onEditorChange(); renderHistory(); saveState();
+    showToast('已清空，內容已存入紀錄','red');
   },'確定清空');
 }
 
-/* ──────────────────────────────
-   MODAL
-────────────────────────────── */
+/* ═══════════════════════════════
+   GOTO LINE
+═══════════════════════════════ */
+function gotoLine(){
+  const n=parseInt(document.getElementById('gotoInput').value,10);
+  if(!n||n<1) return;
+  const lns=document.querySelectorAll('#editor .ln');
+  const target=Math.min(n,lns.length)-1;
+  const el=lns[target];
+  if(!el) return;
+  const wrap=document.getElementById('codeWrap');
+  const lh=24;
+  wrap.scrollTop=Math.max(0,(target)*lh - wrap.clientHeight/2 + lh/2);
+  // place cursor
+  const range=document.createRange();
+  const sel=window.getSelection();
+  range.setStart(el,0); range.collapse(true);
+  sel.removeAllRanges(); sel.addRange(range);
+  el.scrollIntoView({block:'center',behavior:'smooth'});
+  document.getElementById('editor').focus();
+  // highlight active in gutter
+  renderGutter(lns.length, n);
+}
+
+/* ═══════════════════════════════
+   LANG
+═══════════════════════════════ */
+function toggleLang(){ document.getElementById('langDD').classList.toggle('open'); }
+function updateLangBadge(){
+  document.getElementById('langBadge').textContent=LANG_LABELS[currentLang]||'📄 純文字';
+  document.querySelectorAll('.lang-opt').forEach(el=>el.classList.toggle('cur',el.dataset.lang===currentLang));
+}
+document.addEventListener('click',e=>{
+  const dd=document.getElementById('langDD');
+  if(!dd.contains(e.target)&&e.target.id!=='langBadge') dd.classList.remove('open');
+});
+document.querySelectorAll('.lang-opt').forEach(el=>{
+  el.addEventListener('click',()=>{
+    currentLang=el.dataset.lang;
+    const t=activeTab(); if(t) t.lang=currentLang;
+    updateLangBadge();
+    document.getElementById('langDD').classList.remove('open');
+    renderEditor(getContent());  // re-highlight
+    saveState();
+  });
+});
+
+/* ═══════════════════════════════
+   MODAL / SIDEBAR / TOAST
+═══════════════════════════════ */
 function openModal(title,msg,onOk,label){
   document.getElementById('modalTitle').textContent=title;
   document.getElementById('modalMsg').textContent=msg;
@@ -537,255 +742,140 @@ function openModal(title,msg,onOk,label){
 function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
 document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
 
-/* ──────────────────────────────
-   SIDEBAR
-────────────────────────────── */
 function toggleSidebar(){
   S.sidebarOpen=!S.sidebarOpen;
   document.getElementById('sidebar').classList.toggle('open',S.sidebarOpen);
   document.getElementById('btnToggleHistory').classList.toggle('active',S.sidebarOpen);
-  if(S.sidebarOpen)renderHistory();
+  if(S.sidebarOpen) renderHistory();
   saveState();
 }
 
-/* ──────────────────────────────
-   LANG MENU
-────────────────────────────── */
-function toggleLang(){ document.getElementById('langDD').classList.toggle('open'); }
-document.addEventListener('click',e=>{
-  const dd=document.getElementById('langDD');
-  if(!dd.contains(e.target)&&e.target.id!=='langBadge') dd.classList.remove('open');
-});
-document.querySelectorAll('.lang-opt').forEach(el=>{
-  el.addEventListener('click',()=>{
-    currentLang=el.dataset.lang;
-    const t=activeTab(); if(t) t.lang=currentLang;
-    updateLangBadge(); rehighlight();
-    document.getElementById('langDD').classList.remove('open');
-    saveState();
-  });
-});
-
-function updateLangBadge(){
-  document.getElementById('langBadge').textContent=LANG_LABELS[currentLang]||'📄 純文字';
-  document.querySelectorAll('.lang-opt').forEach(el=>el.classList.toggle('cur',el.dataset.lang===currentLang));
-}
-
-/* ──────────────────────────────
-   STAT
-────────────────────────────── */
-function updateStat(){
-  const v=ed().value;
-  document.getElementById('statBox').textContent=`${v.length} 字 · ${v===''?0:v.split('\n').length} 行`;
-}
-
-/* ──────────────────────────────
-   SYNTAX HIGHLIGHT
-   — pure regex, no deps
-────────────────────────────── */
-function hlText(raw,lang){
-  // escape first
-  let s=esc(raw);
-  if(lang==='text') return s;
-
-  if(lang==='html'){
-    // comments
-    s=s.replace(/(&lt;!--[\s\S]*?--&gt;)/g,'<span class="t-cm">$1</span>');
-    // tags
-    s=s.replace(/(&lt;\/?)([\w-]+)([\s\S]*?)(\/?&gt;)/g,(m,open,tag,attrs,close)=>{
-      const aHL=attrs.replace(/([\w-:]+)(=)(&quot;[^&]*&quot;|'[^']*'|\S+)/g,
-        '<span class="t-atn">$1</span><span class="t-pun">$2</span><span class="t-atv">$3</span>');
-      return `<span class="t-ang">${open}</span><span class="t-tag">${tag}</span>${aHL}<span class="t-ang">${close}</span>`;
-    });
-    return s;
-  }
-
-  if(lang==='js'||lang==='css'||lang==='sql'){
-    // strings
-    s=s.replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;|&#039;(?:[^&]|&(?!#039;))*?&#039;|`[^`]*`)/g,'<span class="t-str">$1</span>');
-    // comments
-    s=s.replace(/(\/\/[^\n]*)/g,'<span class="t-cm">$1</span>');
-    s=s.replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="t-cm">$1</span>');
-    // numbers
-    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="t-num">$1</span>');
-    if(lang==='js'){
-      s=s.replace(/\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|new|delete|typeof|instanceof|class|extends|import|export|default|from|async|await|try|catch|finally|throw|of|in|this|super|static|get|set|null|undefined|true|false|void|yield)\b/g,'<span class="t-kw">$1</span>');
-      s=s.replace(/\b([A-Z][A-Za-z0-9_]*)/g,'<span class="t-fn">$1</span>');
-    }
-    if(lang==='css'){
-      s=s.replace(/([.#]?[\w-]+)\s*(?=\{)/g,'<span class="t-tag">$1</span>');
-      s=s.replace(/\b(color|background|margin|padding|font|border|display|position|width|height|flex|grid|transform|transition|animation|overflow|opacity|cursor|content|top|left|right|bottom|z-index|align|justify|gap|radius)\b/g,'<span class="t-prop">$1</span>');
-    }
-    if(lang==='sql'){
-      s=s.replace(/\b(SELECT|FROM|WHERE|INSERT|INTO|UPDATE|SET|DELETE|CREATE|TABLE|DROP|ALTER|INDEX|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AS|AND|OR|NOT|NULL|IS|IN|LIKE|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|DISTINCT|COUNT|SUM|AVG|MAX|MIN|UNION|ALL|WITH|VALUES|PRIMARY|KEY|FOREIGN|REFERENCES|DEFAULT|CONSTRAINT)\b/gi,'<span class="t-kw">$1</span>');
-    }
-    return s;
-  }
-
-  if(lang==='python'){
-    s=s.replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;|&#039;(?:[^&]|&(?!#039;))*?&#039;)/g,'<span class="t-str">$1</span>');
-    s=s.replace(/(#[^\n]*)/g,'<span class="t-cm">$1</span>');
-    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="t-num">$1</span>');
-    s=s.replace(/\b(def|class|return|if|elif|else|for|while|in|not|and|or|import|from|as|pass|break|continue|raise|try|except|finally|with|lambda|yield|global|nonlocal|del|assert|True|False|None|self|super)\b/g,'<span class="t-kw">$1</span>');
-    s=s.replace(/\b([A-Z][A-Za-z0-9_]*)\b/g,'<span class="t-fn">$1</span>');
-    return s;
-  }
-
-  if(lang==='json'){
-    s=s.replace(/(&quot;(?:[^&]|&(?!quot;))*?&quot;)\s*:/g,'<span class="t-prop">$1</span>:');
-    s=s.replace(/:\s*(&quot;(?:[^&]|&(?!quot;))*?&quot;)/g,': <span class="t-str">$1</span>');
-    s=s.replace(/\b(\d+\.?\d*)\b/g,'<span class="t-num">$1</span>');
-    s=s.replace(/\b(true|false|null)\b/g,'<span class="t-kw">$1</span>');
-    return s;
-  }
-
-  if(lang==='md'){
-    s=s.replace(/^(#{1,6} .+)$/gm,'<span class="t-hd">$1</span>');
-    s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-    s=s.replace(/\*(.+?)\*/g,'<em>$1</em>');
-    s=s.replace(/`([^`]+)`/g,'<span class="t-str">$1</span>');
-    s=s.replace(/\[([^\]]+)\]\([^\)]+\)/g,'<span class="t-lnk">$&</span>');
-    s=s.replace(/^(\s*[-*+] )/gm,'<span class="t-kw">$1</span>');
-    return s;
-  }
-
-  return s;
-}
-
-/* ──────────────────────────────
-   RENDER — gutter + highlight
-────────────────────────────── */
-function refresh(){
-  const ta=ed();
-  const lines=ta.value===''?['']: ta.value.split('\n');
-  const curLine=ta.value.slice(0,ta.selectionStart).split('\n').length;
-  const total=lines.length;
-
-  // --- gutter ---
-  let gHTML='';
-  for(let i=1;i<=total;i++){
-    const stripe = i % 5 === 0;
-    gHTML+=`<div class="gutter-line${i===curLine?' active':''}${stripe?' stripe':''}">${i}</div>`;
-  }
-  document.getElementById('gutterInner').innerHTML=gHTML;
-
-  // --- highlight layer ---
-  let hlHTML='';
-  for(let i=0;i<lines.length;i++){
-    const stripe = (i+1) % 5 === 0;
-    const hled=hlText(lines[i],currentLang);
-    hlHTML+=`<div class="hl-line${stripe?' stripe':''}">${hled||' '}</div>`;
-  }
-  document.getElementById('hlLayer').innerHTML=hlHTML;
-
-  // sync scroll
-  syncScroll();
-  updateStat();
-}
-
-function rehighlight(){ refresh(); }
-
-function syncScroll(){
-  const ta=ed();
-  document.getElementById('gutterInner').style.top=(-ta.scrollTop+14)+'px';
-  document.getElementById('hlLayer').scrollTop=ta.scrollTop;
-  document.getElementById('hlLayer').scrollLeft=ta.scrollLeft;
-}
-
-/* ──────────────────────────────
-   GOTO LINE
-────────────────────────────── */
-function gotoLine(){
-  const ta=ed();
-  const n=parseInt(document.getElementById('gotoInput').value,10);
-  if(!n||n<1)return;
-  const lines=ta.value.split('\n');
-  const target=Math.min(n,lines.length);
-  // calculate char offset to start of target line
-  let pos=0;
-  for(let i=0;i<target-1;i++) pos+=lines[i].length+1;
-  ta.focus();
-  ta.selectionStart=ta.selectionEnd=pos;
-  // scroll so target line is vertically centred
-  const lineH=LH;
-  const visibleH=ta.clientHeight;
-  ta.scrollTop=Math.max(0,(target-1)*lineH - visibleH/2);
-  refresh();
-}
-
-
-function onChange(){
-  refresh();
-  const t=activeTab();
-  if(t) document.getElementById('dotUnsaved').classList.toggle('show',t.content!==ed().value);
-  clearTimeout(window._st);
-  window._st=setTimeout(()=>{const tt=activeTab();if(tt){tt.content=ed().value;tt.lang=currentLang;}saveState();},800);
-}
-
-/* ──────────────────────────────
-   TOAST
-────────────────────────────── */
-function toast(msg,type=''){
+function showToast(msg,type=''){
   const el=document.getElementById('toast');
   el.textContent=msg; el.className='toast show '+type;
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>{el.className='toast';},2200);
 }
 
-/* ──────────────────────────────
-   EVENTS
-────────────────────────────── */
-const ta=ed();
-ta.addEventListener('input',onChange);
-ta.addEventListener('scroll',syncScroll);
-ta.addEventListener('click',refresh);
-ta.addEventListener('keyup',refresh);
-ta.addEventListener('keydown',e=>{
+/* ═══════════════════════════════
+   CONTENTEDITABLE INPUT HANDLER
+   After each keystroke: read plain text → re-render with highlight
+═══════════════════════════════ */
+function onEditorChange(){
+  if(suppressInput) return;
+  const text = getContent();
+  renderEditor(text);
+  const t=activeTab();
+  if(t) document.getElementById('dotUnsaved').classList.toggle('show',t.content!==text);
+  clearTimeout(window._st);
+  window._st=setTimeout(()=>{const tt=activeTab();if(tt){tt.content=getContent();tt.lang=currentLang;}saveState();},800);
+}
+
+/* ═══════════════════════════════
+   CONTENTEDITABLE EVENTS
+═══════════════════════════════ */
+const edEl = document.getElementById('editor');
+
+// Handle input — after each char, re-render highlighted
+edEl.addEventListener('input', e => {
+  if(suppressInput) return;
+  // save caret position by line/offset
+  const sel=window.getSelection();
+  let caretLine=1, caretOffset=0;
+  if(sel.rangeCount){
+    const anchor=sel.anchorNode;
+    const ln=anchor?.closest?.('.ln')||(anchor?.parentElement?.closest?.('.ln'));
+    if(ln){ caretLine=parseInt(ln.dataset.line)||1; caretOffset=sel.anchorOffset; }
+  }
+  const text=getContent();
+  suppressInput=true;
+  renderEditor(text);
+  // restore caret
+  restoreCaret(caretLine, caretOffset);
+  suppressInput=false;
+  const t=activeTab();
+  if(t) document.getElementById('dotUnsaved').classList.toggle('show',t.content!==text);
+  clearTimeout(window._st);
+  window._st=setTimeout(()=>{const tt=activeTab();if(tt){tt.content=getContent();tt.lang=currentLang;}saveState();},800);
+});
+
+function restoreCaret(lineNum, offset){
+  const lns=document.querySelectorAll('#editor .ln');
+  const ln=lns[lineNum-1]; if(!ln) return;
+  const range=document.createRange();
+  const sel=window.getSelection();
+  // find text node
+  let textNode=ln.firstChild;
+  // walk to find a text node
+  const walker=document.createTreeWalker(ln,NodeFilter.SHOW_TEXT);
+  let node, accumulated=0, targetNode=null, targetOffset=0;
+  while(node=walker.nextNode()){
+    const len=node.length;
+    if(accumulated+len>=offset){ targetNode=node; targetOffset=Math.min(offset-accumulated,len); break; }
+    accumulated+=len;
+  }
+  if(!targetNode&&ln.firstChild){ targetNode=ln; targetOffset=0; }
+  if(targetNode){
+    try{ range.setStart(targetNode,targetOffset); range.collapse(true); sel.removeAllRanges(); sel.addRange(range); }catch(e){}
+  }
+}
+
+// Handle Tab key
+edEl.addEventListener('keydown', e => {
   if(e.key==='Tab'){
     e.preventDefault();
-    const s=ta.selectionStart,e2=ta.selectionEnd;
-    ta.value=ta.value.slice(0,s)+'  '+ta.value.slice(e2);
-    ta.selectionStart=ta.selectionEnd=s+2;
-    onChange();
+    document.execCommand('insertText',false,'  ');
   }
+  // Ctrl+S / Ctrl+D shortcuts inside editor
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();doSave();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='d'){e.preventDefault();doDownload();}
 });
 
+// Handle paste — strip HTML, insert plain text
+edEl.addEventListener('paste', e => {
+  e.preventDefault();
+  const text=e.clipboardData.getData('text/plain');
+  document.execCommand('insertText',false,text);
+});
+
+// Scroll sync for gutter
+document.getElementById('codeWrap').addEventListener('scroll', updateGutterScroll);
+
+// Filename
 document.getElementById('fileNameInput').addEventListener('change',()=>{
-  const t=activeTab();
-  if(t){t.name=document.getElementById('fileNameInput').value||'untitled.txt';renderTabs();saveState();}
+  const t=activeTab(); if(t){t.name=document.getElementById('fileNameInput').value||'untitled.txt';renderTabs();saveState();}
 });
 
+// Header buttons
 document.getElementById('btnNewTab').addEventListener('click',()=>newTab());
 document.getElementById('btnToggleHistory').addEventListener('click',toggleSidebar);
 
+// Global shortcuts
 document.addEventListener('keydown',e=>{
   const mod=e.ctrlKey||e.metaKey;
   if(mod&&e.key==='t'){e.preventDefault();newTab();}
-  if(mod&&e.key==='s'){e.preventDefault();doSave();}
-  if(mod&&e.key==='d'){e.preventDefault();doDownload();}
   if(mod&&e.shiftKey&&e.key.toLowerCase()==='h'){e.preventDefault();toggleSidebar();}
   if(e.key==='Escape'){closeModal();document.getElementById('langDD').classList.remove('open');}
 });
 
-/* ──────────────────────────────
+/* ═══════════════════════════════
    INIT
-────────────────────────────── */
+═══════════════════════════════ */
 loadState();
 renderTabs();
 const t0=activeTab();
 if(t0){
-  ed().value=t0.content;
   document.getElementById('fileNameInput').value=t0.name;
   currentLang=t0.lang||'text';
+  renderEditor(t0.content||'');
 }
+updateLangBadge();
 if(S.sidebarOpen){
   document.getElementById('sidebar').classList.add('open');
   document.getElementById('btnToggleHistory').classList.add('active');
   renderHistory();
 }
-updateLangBadge();
-refresh();
-ed().focus();
+edEl.focus();
 </script>
 </body>
 </html>
