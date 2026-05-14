@@ -10,7 +10,7 @@
             --bg-color: #F5F7FA;
             --border-color: #E4E7EB;
             --active-color: #2ECC71;
-            --shape-color: #9B59B6; /* 給形狀工具不同顏色做區隔 */
+            --shape-color: #9B59B6;
         }
 
         body {
@@ -33,7 +33,6 @@
             align-items: center;
         }
 
-        /* 為了讓工具列更整齊，加入群組的視覺分隔 */
         .tool-group {
             display: flex;
             gap: 5px;
@@ -54,10 +53,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        button.tool-btn.shape-btn {
-            background-color: var(--shape-color);
-        }
-
+        button.tool-btn.shape-btn { background-color: var(--shape-color); }
         button.tool-btn:hover { filter: brightness(0.9); }
         button.tool-btn.active-tool {
             background-color: var(--active-color);
@@ -140,91 +136,46 @@
                 linear-gradient(to bottom, #e8e8e8 1px, transparent 1px);
         }
 
-        #overlayCanvas {
-            z-index: 2;
-            cursor: crosshair;
-        }
+        #overlayCanvas { z-index: 2; cursor: crosshair; }
 
-        /* --- 歷史紀錄側邊欄 --- */
         .history-sidebar {
-            position: absolute;
-            right: 0;
-            top: 0;
-            height: 100%;
-            width: 300px;
-            background-color: white;
-            border-radius: 12px 0 0 12px;
-            box-shadow: -4px 0 10px rgba(0,0,0,0.1);
-            border: 2px solid var(--border-color);
-            border-right: none;
-            display: flex;
-            flex-direction: column;
-            transform: translateX(105%); 
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute; right: 0; top: 0; height: 100%; width: 300px;
+            background-color: white; border-radius: 12px 0 0 12px;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.1); border: 2px solid var(--border-color);
+            border-right: none; display: flex; flex-direction: column;
+            transform: translateX(105%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10;
         }
 
         .history-sidebar.open { transform: translateX(0); }
 
         .history-toggle-btn {
-            position: absolute;
-            left: -48px;
-            top: 20px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px 0 0 8px;
-            cursor: pointer;
-            box-shadow: -2px 2px 5px rgba(0,0,0,0.1);
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute; left: -48px; top: 20px;
+            background-color: var(--primary-color); color: white;
+            border: none; padding: 10px; border-radius: 8px 0 0 8px;
+            cursor: pointer; box-shadow: -2px 2px 5px rgba(0,0,0,0.1);
+            font-weight: bold; display: flex; align-items: center; justify-content: center;
         }
 
         .history-header {
-            padding: 15px;
-            border-bottom: 2px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 15px; border-bottom: 2px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
         }
-
         .history-header h3 { margin: 0; color: #333; }
-
-        .history-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
+        .history-content { flex: 1; overflow-y: auto; padding: 15px; }
 
         .history-item {
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 5px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            background-color: white;
+            margin-bottom: 15px; border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 5px; cursor: pointer;
+            transition: transform 0.2s; background-color: white;
         }
-        
         .history-item:hover { transform: scale(1.02); border-color: var(--primary-color); }
-
         .history-item img {
-            width: 100%;
-            aspect-ratio: 1 / 1; 
-            object-fit: cover; 
-            object-position: top left; 
-            border-radius: 4px;
-            border: 1px solid #eee;
-            background-size: 20px 20px; 
-            background-image: 
-                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
-                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+            width: 100%; aspect-ratio: 1 / 1; object-fit: cover; 
+            object-position: top left; border-radius: 4px; border: 1px solid #eee;
+            background-size: 20px 20px; background-image: linear-gradient(to right, #f0f0f0 1px, transparent 1px), linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
         }
 
-        /* --- 浮動說明視窗 --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); z-index: 100;
@@ -257,6 +208,7 @@
         <div class="tool-group">
             <button class="tool-btn shape-btn" data-tool="line">📏 直線</button>
             <button class="tool-btn shape-btn" data-tool="rect">⬜ 矩形</button>
+            <button class="tool-btn shape-btn" data-tool="circle">⭕ 圓形</button>
             <button class="tool-btn shape-btn" data-tool="triangle">🔺 三角形</button>
         </div>
         
@@ -280,12 +232,12 @@
             <span class="close-btn" id="closeHelpBtn">&times;</span>
             <h2>💡 白板功能與小巧思全指南</h2>
             <ul>
-                <li><b>📏 幾何圖形：</b>新增了直線、矩形、三角形功能。在畫布上<b>按住並拖曳</b>即可畫出完美的圖形，適合用來畫應用題的圖解！</li>
+                <li><b>📐 Shift 完美鎖定神技：</b>畫圖形時<b>按住鍵盤的 Shift 鍵</b>，矩形會變「正方形」、圓形會變「正圓」、三角形會變「正三角形」、直線會自動對齊「45度/90度角」！</li>
+                <li><b>📏 幾何圖形：</b>新增了直線、矩形、圓形、三角形功能。在畫布上按住並拖曳即可畫出完美的圖解。</li>
                 <li><b>📝 專屬大格線：</b>特別放大 4 倍的方格（120px），專為小學生對齊直式計算設計。</li>
-                <li><b>🎨 聰明調色盤：</b>若你在「框選清除」模式下點擊顏色，系統會<b>自動幫你切換回畫筆</b>，省去多點一次的麻煩！</li>
-                <li><b>📜 無限往下寫：</b>畫布支援滑鼠滾輪往下滾動，版面超長，再長的除法或多題計算都寫得下。</li>
+                <li><b>🎨 聰明調色盤：</b>若你在「框選清除」模式下點擊顏色，系統會<b>自動幫你切換回畫筆</b>。</li>
                 <li><b>📸 截圖秒貼神技：</b>用電腦內建截圖 (Win+Shift+S / Cmd+Shift+4) 截取題目後，直接在網頁按 <b>Ctrl+V</b>，題目就會精準貼在你目前觀看畫面的左上角！</li>
-                <li><b>💾 無縫自動儲存：</b>按下「清空白板」不囉嗦，系統會自動將原本的畫面收納進右側的「儲存紀錄」抽屜，防呆又安心。</li>
+                <li><b>💾 無縫自動儲存：</b>按下「清空白板」，系統會自動將原本的畫面收納進右側的「儲存紀錄」抽屜。</li>
             </ul>
         </div>
     </div>
@@ -299,9 +251,7 @@
         </div>
         
         <div class="history-sidebar" id="historySidebar">
-            <button class="history-toggle-btn" id="toggleHistoryBtn" title="展開/收合歷史紀錄">
-                📂
-            </button>
+            <button class="history-toggle-btn" id="toggleHistoryBtn" title="展開/收合歷史紀錄">📂</button>
             <div class="history-header">
                 <h3>儲存紀錄</h3>
                 <button id="clearHistoryBtn" style="font-size: 12px; padding: 4px 8px; background-color: #95a5a6; border: none; color: white; border-radius: 4px; cursor: pointer;">清空全部</button>
@@ -342,14 +292,10 @@
         let redoStack = [];
         const MAX_HISTORY = 30;
 
-        // --- 說明視窗 ---
         helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
         closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
-        window.addEventListener('click', (e) => { 
-            if (e.target === helpModal) helpModal.style.display = 'none'; 
-        });
+        window.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; });
 
-        // --- 工具切換 ---
         toolBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 currentTool = btn.dataset.tool;
@@ -358,45 +304,30 @@
             });
         });
 
-        // --- 顏色切換 ---
         colorBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 currentColor = e.target.dataset.color;
                 mainCtx.strokeStyle = currentColor;
                 colorBtns.forEach(b => b.classList.remove('active-color'));
                 e.target.classList.add('active-color');
-                
-                // 如果目前是清除工具，選顏色時自動切回畫筆
-                if(currentTool === 'eraser') {
-                    document.querySelector('[data-tool="pen"]').click();
-                }
+                if(currentTool === 'eraser') document.querySelector('[data-tool="pen"]').click();
             });
         });
 
         function resizeCanvas() {
             const wrapper = mainCanvas.parentElement;
-            
             mainCanvas.width = wrapper.clientWidth;
             mainCanvas.height = CANVAS_HEIGHT;
             overlayCanvas.width = wrapper.clientWidth;
             overlayCanvas.height = CANVAS_HEIGHT;
-            
-            mainCtx.lineCap = 'round';
-            mainCtx.lineJoin = 'round';
-            mainCtx.lineWidth = 4;
-            mainCtx.strokeStyle = currentColor;
-
-            if (undoStack.length > 0) {
-                restoreState(undoStack[undoStack.length - 1]);
-            }
+            mainCtx.lineCap = 'round'; mainCtx.lineJoin = 'round';
+            mainCtx.lineWidth = 4; mainCtx.strokeStyle = currentColor;
+            if (undoStack.length > 0) restoreState(undoStack[undoStack.length - 1]);
         }
         window.addEventListener('resize', resizeCanvas);
 
-        toggleHistoryBtn.addEventListener('click', () => {
-            historySidebar.classList.toggle('open');
-        });
+        toggleHistoryBtn.addEventListener('click', () => { historySidebar.classList.toggle('open'); });
 
-        // --- 復原與重做邏輯 ---
         function saveState() {
             if (undoStack.length >= MAX_HISTORY) undoStack.shift();
             undoStack.push(mainCanvas.toDataURL());
@@ -435,118 +366,110 @@
             redoBtn.disabled = redoStack.length === 0;
         }
 
-        // --- 繪圖邏輯 ---
         function getMousePos(e) {
             const rect = overlayCanvas.getBoundingClientRect();
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
         function setupOverlayStyle() {
             if (currentTool === 'eraser') {
-                overlayCtx.strokeStyle = '#E74C3C';
-                overlayCtx.lineWidth = 2;
-                overlayCtx.setLineDash([5, 5]);
+                overlayCtx.strokeStyle = '#E74C3C'; overlayCtx.lineWidth = 2; overlayCtx.setLineDash([5, 5]);
             } else {
-                overlayCtx.strokeStyle = currentColor;
-                overlayCtx.lineWidth = 4;
-                overlayCtx.setLineDash([]);
-                overlayCtx.lineCap = 'round';
-                overlayCtx.lineJoin = 'round';
+                overlayCtx.strokeStyle = currentColor; overlayCtx.lineWidth = 4;
+                overlayCtx.setLineDash([]); overlayCtx.lineCap = 'round'; overlayCtx.lineJoin = 'round';
             }
         }
 
-        // 共用的繪製形狀函數 (供預覽及最終繪製使用)
-        function drawShape(ctx, type, startX, startY, endX, endY) {
+        // --- 核心：繪製圖形並處理 Shift 鎖定 ---
+        function drawShape(ctx, type, startX, startY, endX, endY, isShift) {
             ctx.beginPath();
+            let w = endX - startX;
+            let h = endY - startY;
+
+            if (isShift) {
+                if (type === 'rect' || type === 'circle') {
+                    // 強制為正方形/正圓的外框
+                    const size = Math.max(Math.abs(w), Math.abs(h));
+                    w = w < 0 ? -size : size;
+                    h = h < 0 ? -size : size;
+                } else if (type === 'triangle') {
+                    // 正三角形 (高 = 邊長 * √3 / 2)
+                    const size = Math.max(Math.abs(w), Math.abs(h));
+                    w = w < 0 ? -size : size;
+                    const height = Math.abs(w) * (Math.sqrt(3) / 2);
+                    h = h < 0 ? -height : height;
+                } else if (type === 'line') {
+                    // 直線吸附 45度角
+                    const angle = Math.atan2(h, w);
+                    const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+                    const length = Math.hypot(w, h);
+                    w = Math.cos(snappedAngle) * length;
+                    h = Math.sin(snappedAngle) * length;
+                }
+            }
+
             if (type === 'line') {
                 ctx.moveTo(startX, startY);
-                ctx.lineTo(endX, endY);
+                ctx.lineTo(startX + w, startY + h);
             } else if (type === 'rect') {
-                ctx.rect(startX, startY, endX - startX, endY - startY);
+                ctx.rect(startX, startY, w, h);
+            } else if (type === 'circle') {
+                ctx.ellipse(startX + w/2, startY + h/2, Math.abs(w/2), Math.abs(h/2), 0, 0, 2*Math.PI);
             } else if (type === 'triangle') {
-                // 等腰三角形：底邊在下面，頂點在起始點與終點的中心
-                ctx.moveTo(startX + (endX - startX) / 2, startY); 
-                ctx.lineTo(startX, endY);
-                ctx.lineTo(endX, endY);
+                ctx.moveTo(startX + w / 2, startY); 
+                ctx.lineTo(startX, startY + h);
+                ctx.lineTo(startX + w, startY + h);
                 ctx.closePath();
             }
             ctx.stroke();
         }
 
         function startPointer(e) {
-            e.preventDefault(); 
-            isDrawing = true;
+            e.preventDefault(); isDrawing = true;
             const pos = getMousePos(e);
-            startX = pos.x;
-            startY = pos.y;
-
-            if (currentTool === 'pen') {
-                mainCtx.beginPath();
-                mainCtx.moveTo(startX, startY);
-            }
+            startX = pos.x; startY = pos.y;
+            if (currentTool === 'pen') { mainCtx.beginPath(); mainCtx.moveTo(startX, startY); }
             setupOverlayStyle();
         }
 
         function movePointer(e) {
-            e.preventDefault();
-            if (!isDrawing) return;
+            e.preventDefault(); if (!isDrawing) return;
             const pos = getMousePos(e);
 
             if (currentTool === 'pen') {
-                mainCtx.lineTo(pos.x, pos.y);
-                mainCtx.stroke();
+                mainCtx.lineTo(pos.x, pos.y); mainCtx.stroke();
             } else {
-                // 其他工具需要預覽，所以在 overlayCanvas 上畫
                 overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                
                 if (currentTool === 'eraser') {
-                    const rectW = pos.x - startX;
-                    const rectH = pos.y - startY;
+                    const rectW = pos.x - startX; const rectH = pos.y - startY;
                     overlayCtx.strokeRect(startX, startY, rectW, rectH);
-                    overlayCtx.fillStyle = 'rgba(231, 76, 60, 0.2)';
-                    overlayCtx.fillRect(startX, startY, rectW, rectH);
-                } else if (['line', 'rect', 'triangle'].includes(currentTool)) {
-                    drawShape(overlayCtx, currentTool, startX, startY, pos.x, pos.y);
+                    overlayCtx.fillStyle = 'rgba(231, 76, 60, 0.2)'; overlayCtx.fillRect(startX, startY, rectW, rectH);
+                } else if (['line', 'rect', 'circle', 'triangle'].includes(currentTool)) {
+                    // 傳入 e.shiftKey 判斷是否按住 Shift
+                    drawShape(overlayCtx, currentTool, startX, startY, pos.x, pos.y, e.shiftKey);
                 }
             }
         }
 
         function endPointer(e) {
             if (!isDrawing) return;
-            isDrawing = false;
-            const pos = getMousePos(e);
+            isDrawing = false; const pos = getMousePos(e);
             
             if (currentTool === 'pen') {
-                hasDrawn = true; 
-                saveState(); 
+                hasDrawn = true; saveState(); 
             } else if (currentTool === 'eraser') {
-                const rx = Math.min(startX, pos.x);
-                const ry = Math.min(startY, pos.y);
-                const rw = Math.abs(pos.x - startX);
-                const rh = Math.abs(pos.y - startY);
-
-                mainCtx.clearRect(rx, ry, rw, rh);
+                const rx = Math.min(startX, pos.x); const ry = Math.min(startY, pos.y);
+                const rw = Math.abs(pos.x - startX); const rh = Math.abs(pos.y - startY);
+                mainCtx.clearRect(rx, ry, rw, rh); overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                if (rw > 0 && rh > 0) { hasDrawn = true; saveState(); }
+            } else if (['line', 'rect', 'circle', 'triangle'].includes(currentTool)) {
                 overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                
-                if (rw > 0 && rh > 0) {
-                    hasDrawn = true;
-                    saveState(); 
-                }
-            } else if (['line', 'rect', 'triangle'].includes(currentTool)) {
-                // 把預覽的形狀正式畫到主畫布上
-                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                
-                // 只有當使用者有稍微拖曳（大於5像素）才算畫形狀，避免誤觸點擊就畫出小黑點
                 if (Math.abs(pos.x - startX) > 5 || Math.abs(pos.y - startY) > 5) {
                     mainCtx.strokeStyle = currentColor;
-                    drawShape(mainCtx, currentTool, startX, startY, pos.x, pos.y);
-                    hasDrawn = true;
-                    saveState();
+                    drawShape(mainCtx, currentTool, startX, startY, pos.x, pos.y, e.shiftKey);
+                    hasDrawn = true; saveState();
                 }
             }
         }
@@ -562,28 +485,23 @@
                     if (e.shiftKey) { redo(); } else { undo(); }
                     e.preventDefault();
                 } else if (e.key === 'y' || e.key === 'Y') {
-                    redo();
-                    e.preventDefault();
+                    redo(); e.preventDefault();
                 }
             }
         });
 
         window.addEventListener('paste', function(e) {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.startsWith('image/')) {
-                    const blob = item.getAsFile();
-                    const reader = new FileReader();
-                    
+                    const blob = item.getAsFile(); const reader = new FileReader();
                     reader.onload = function(event) {
                         const img = new Image();
                         img.onload = function() {
                             const currentScrollY = scrollContainer.scrollTop;
                             mainCtx.drawImage(img, 20, currentScrollY + 20);
-                            hasDrawn = true;
-                            saveState();
+                            hasDrawn = true; saveState();
                         };
                         img.src = event.target.result;
                     };
@@ -592,61 +510,45 @@
             }
         });
 
-        // --- 歷史紀錄邏輯 ---
         function saveToHistory() {
             if (!hasDrawn) return; 
-
             const imageData = mainCanvas.toDataURL('image/png');
             const timestamp = new Date().toLocaleString('zh-TW');
-            
             let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
             records.unshift({ time: timestamp, image: imageData });
             if (records.length > 20) records.pop();
-            
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             renderHistory();
-            
             toggleHistoryBtn.style.transform = 'scale(1.2)';
             setTimeout(() => toggleHistoryBtn.style.transform = 'none', 200);
         }
 
         clearBtn.addEventListener('click', () => {
-            if (hasDrawn) {
-                saveToHistory();
-            }
+            if (hasDrawn) saveToHistory();
             mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-            hasDrawn = false; 
-            saveState(); 
-            scrollContainer.scrollTop = 0;
+            hasDrawn = false; saveState(); scrollContainer.scrollTop = 0;
         });
 
         document.getElementById('clearHistoryBtn').addEventListener('click', () => {
             if(confirm('確定要清空所有的儲存紀錄嗎？')) {
-                localStorage.removeItem(STORAGE_KEY);
-                renderHistory();
+                localStorage.removeItem(STORAGE_KEY); renderHistory();
             }
         });
 
         function renderHistory() {
             historyList.innerHTML = '';
             const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-
             if (records.length === 0) {
-                historyList.innerHTML = '<p style="color:#999; text-align:center;">目前無紀錄</p>';
-                return;
+                historyList.innerHTML = '<p style="color:#999; text-align:center;">目前無紀錄</p>'; return;
             }
-
             records.forEach(record => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'history-item';
                 itemDiv.innerHTML = `<img src="${record.image}"><div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">${record.time}</div>`;
-
                 itemDiv.addEventListener('click', () => {
                     if(confirm('要將這筆紀錄載入白板嗎？(會覆蓋目前的畫面)')) {
                         if(hasDrawn) saveToHistory(); 
-                        restoreState(record.image);
-                        hasDrawn = true;
-                        saveState(); 
+                        restoreState(record.image); hasDrawn = true; saveState(); 
                         historySidebar.classList.remove('open'); 
                     }
                 });
@@ -654,10 +556,7 @@
             });
         }
 
-        resizeCanvas();
-        saveState(); 
-        renderHistory();
-
+        resizeCanvas(); saveState(); renderHistory();
     </script>
 </body>
 </html>
