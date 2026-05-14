@@ -21,7 +21,7 @@
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
-            overflow: hidden; /* 防止整個網頁滾動，只讓畫布滾動 */
+            overflow: hidden; 
         }
 
         .toolbar {
@@ -99,27 +99,25 @@
         .main-container {
             display: flex;
             flex: 1;
-            position: relative; /* 為了定位歷史紀錄側邊欄 */
+            position: relative; 
             min-height: 0;
         }
 
-        /* 畫布外部容器：負責捲動 */
         .canvas-container {
             flex: 1;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             border: 2px solid var(--border-color);
             background-color: white;
-            overflow-y: auto; /* 允許上下滾動 */
+            overflow-y: auto; 
             overflow-x: hidden;
             position: relative;
         }
 
-        /* 畫布包裝層：給予超大高度 */
         .canvas-wrapper {
             position: relative;
             width: 100%;
-            height: 3000px; /* 3000px高度，足以寫很多題 */
+            height: 3000px; 
         }
 
         canvas {
@@ -144,7 +142,6 @@
             cursor: crosshair;
         }
 
-        /* 側邊歷史紀錄抽屜設計 */
         .history-sidebar {
             position: absolute;
             right: 0;
@@ -158,16 +155,15 @@
             border-right: none;
             display: flex;
             flex-direction: column;
-            transform: translateX(105%); /* 預設隱藏在右側畫面外 */
+            transform: translateX(105%); 
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10;
         }
 
         .history-sidebar.open {
-            transform: translateX(0); /* 展開 */
+            transform: translateX(0); 
         }
 
-        /* 展開/收合按鈕 */
         .history-toggle-btn {
             position: absolute;
             left: -48px;
@@ -208,6 +204,7 @@
             padding: 5px;
             cursor: pointer;
             transition: transform 0.2s;
+            background-color: white;
         }
         
         .history-item:hover {
@@ -215,11 +212,19 @@
             border-color: var(--primary-color);
         }
 
+        /* 縮圖樣式修改：正方形裁切預覽 */
         .history-item img {
             width: 100%;
-            height: auto;
+            aspect-ratio: 1 / 1; /* 強制變成正方形 */
+            object-fit: cover; /* 裁切填滿 */
+            object-position: top left; /* 只預覽左上角最前面的範圍 */
             border-radius: 4px;
-            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            /* 加上迷你的預覽方格背景 */
+            background-size: 20px 20px; 
+            background-image: 
+                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
         }
     </style>
 </head>
@@ -286,9 +291,9 @@
         let isDrawing = false;
         let startX = 0; let startY = 0;
         let currentColor = '#2c3e50'; 
-        let hasDrawn = false; // 追蹤畫布是否有內容
+        let hasDrawn = false; 
         const STORAGE_KEY = 'math_whiteboard_records';
-        const CANVAS_HEIGHT = 3000; // 固定大高度
+        const CANVAS_HEIGHT = 3000; 
 
         let undoStack = [];
         let redoStack = [];
@@ -297,7 +302,6 @@
         function resizeCanvas() {
             const wrapper = mainCanvas.parentElement;
             
-            // 寬度隨視窗縮放，高度固定 3000px 以供滾動
             mainCanvas.width = wrapper.clientWidth;
             mainCanvas.height = CANVAS_HEIGHT;
             overlayCanvas.width = wrapper.clientWidth;
@@ -318,12 +322,10 @@
         }
         window.addEventListener('resize', resizeCanvas);
 
-        // 側邊欄切換
         toggleHistoryBtn.addEventListener('click', () => {
             historySidebar.classList.toggle('open');
         });
 
-        // 顏色切換
         colorBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 currentColor = e.target.dataset.color;
@@ -376,7 +378,6 @@
             const rect = overlayCanvas.getBoundingClientRect();
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            // 由於 getBoundingClientRect() 已經計算了捲動偏移，所以這個公式在有捲軸時依然完美運作
             return {
                 x: clientX - rect.left,
                 y: clientY - rect.top
@@ -419,7 +420,7 @@
             isDrawing = false;
             
             if (currentTool === 'pen') {
-                hasDrawn = true; // 標記為有內容
+                hasDrawn = true; 
                 saveState(); 
             } else if (currentTool === 'eraser') {
                 const pos = getMousePos(e);
@@ -443,7 +444,6 @@
         overlayCanvas.addEventListener('pointerup', endPointer);
         overlayCanvas.addEventListener('pointerout', endPointer);
 
-        // 工具切換
         penBtn.addEventListener('click', () => {
             currentTool = 'pen';
             penBtn.classList.add('active-tool');
@@ -470,11 +470,9 @@
             }
         });
 
-        // 自動儲存至歷史紀錄邏輯
         function saveToHistory() {
-            if (!hasDrawn) return; // 空白畫布不存
+            if (!hasDrawn) return; 
 
-            // 為了節省空間，將白板轉存時可以先裁切，但這裡簡化為直接存整張，配合瀏覽器縮放
             const imageData = mainCanvas.toDataURL('image/png');
             const timestamp = new Date().toLocaleString('zh-TW');
             
@@ -485,21 +483,17 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             renderHistory();
             
-            // 提醒動畫 (可選)
             toggleHistoryBtn.style.transform = 'scale(1.2)';
             setTimeout(() => toggleHistoryBtn.style.transform = 'none', 200);
         }
 
-        // 清空按鈕：不廢話，直接存入歷史並清空
         clearBtn.addEventListener('click', () => {
             if (hasDrawn) {
                 saveToHistory();
             }
             mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-            hasDrawn = false; // 重置畫布狀態
-            saveState(); // 覆蓋 Undo 狀態，或是讓清空可以復原
-            
-            // 滾動條回到最上面
+            hasDrawn = false; 
+            saveState(); 
             document.querySelector('.canvas-container').scrollTop = 0;
         });
 
@@ -526,18 +520,17 @@
 
                 itemDiv.addEventListener('click', () => {
                     if(confirm('要將這筆紀錄載入白板嗎？(會覆蓋目前的畫面)')) {
-                        if(hasDrawn) saveToHistory(); // 載入前把現在未存的先存起來
+                        if(hasDrawn) saveToHistory(); 
                         restoreState(record.image);
                         hasDrawn = true;
                         saveState(); 
-                        historySidebar.classList.remove('open'); // 載入後自動收合
+                        historySidebar.classList.remove('open'); 
                     }
                 });
                 historyList.appendChild(itemDiv);
             });
         }
 
-        // 初始化
         resizeCanvas();
         saveState(); 
         renderHistory();
