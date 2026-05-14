@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小學生數學直式計算白板</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --bg-color: #F5F7FA;
+            --border-color: #E4E7EB;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: #357ABD;
+        }
+
+        #clearBtn {
+            background-color: #E74C3C;
+        }
+        
+        #clearBtn:hover {
+            background-color: #C0392B;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            min-height: 0; /* Important for flex child sizing */
+        }
+
+        .canvas-container {
+            flex: 3;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            position: relative;
+        }
+
+        /* 方格紙背景：幫助小學生對齊直式計算 */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-size: 30px 30px;
+            background-image: 
+                linear-gradient(to right, #e8e8e8 1px, transparent 1px),
+                linear-gradient(to bottom, #e8e8e8 1px, transparent 1px);
+            cursor: crosshair;
+            touch-action: none; /* 防止在平板上畫畫時螢幕滑動 */
+        }
+
+        .history-container {
+            flex: 1;
+            background-color: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .history-container h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-item {
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-color: #fff;
+        }
+
+        .history-item:hover {
+            transform: scale(1.02);
+            border-color: var(--primary-color);
+        }
+
+        .history-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        #clearHistoryBtn {
+            font-size: 12px;
+            padding: 4px 8px;
+            background-color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <button id="clearBtn">🗑️ 一鍵清空</button>
+        <button id="saveBtn">💾 儲存目前算式</button>
+        <span style="color: #666; font-size: 14px;">提示：使用滑鼠或觸控筆在方格內寫字，方格可以幫助對齊直式計算喔！</span>
+    </div>
+
+    <div class="main-container">
+        <div class="canvas-container">
+            <canvas id="whiteboard"></canvas>
+        </div>
+        <div class="history-container">
+            <h3>
+                歷史紀錄
+                <button id="clearHistoryBtn">清空紀錄</button>
+            </h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('whiteboard');
+        const ctx = canvas.getContext('2d');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        let isDrawing = false;
+        const STORAGE_KEY = 'math_whiteboard_records';
+
+        // 初始化畫布大小
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            // 儲存當前畫面
+            const tempImageData = canvas.toDataURL();
+            
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            // 畫筆設定
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#2c3e50';
+
+            // 恢復畫面 (如果是因為視窗縮放觸發)
+            if (tempImageData !== 'data:,') {
+                const img = new Image();
+                img.onload = () => ctx.drawImage(img, 0, 0);
+                img.src = tempImageData;
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 繪圖邏輯 (使用 pointer events 支援滑鼠與觸控)
+        function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath(); // 確保下次畫不會連著上一筆
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            // 取得相對於 canvas 的座標
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('pointerdown', startDrawing);
+        canvas.addEventListener('pointermove', draw);
+        canvas.addEventListener('pointerup', stopDrawing);
+        canvas.addEventListener('pointerout', stopDrawing);
+
+        // 一鍵清空
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // 儲存紀錄至 LocalStorage
+        saveBtn.addEventListener('click', () => {
+            const imageData = canvas.toDataURL('image/png');
+            const timestamp = new Date().toLocaleString('zh-TW');
+            
+            const record = {
+                time: timestamp,
+                image: imageData
+            };
+
+            let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            records.unshift(record); // 新的放前面
+            
+            // 限制最多存 20 筆，避免 localStorage 爆掉
+            if (records.length > 20) {
+                records.pop();
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            renderHistory();
+            
+            // 儲存後可選擇是否自動清空畫布，目前設定不自動清空
+            alert('算式已儲存！');
+        });
+
+        // 清空歷史紀錄
+        clearHistoryBtn.addEventListener('click', () => {
+            if(confirm('確定要清空所有歷史紀錄嗎？')) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderHistory();
+            }
+        });
+
+        // 渲染歷史紀錄
+        function renderHistory() {
+            historyList.innerHTML = '';
+            const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+            if (records.length === 0) {
+                historyList.innerHTML = '<p style="color:#999; text-align:center;">目前沒有紀錄</p>';
+                return;
+            }
+
+            records.forEach(record => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item';
+                
+                const img = document.createElement('img');
+                img.src = record.image;
+                
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'history-time';
+                timeDiv.textContent = record.time;
+
+                itemDiv.appendChild(img);
+                itemDiv.appendChild(timeDiv);
+
+                // 點擊歷史紀錄載入到白板
+                itemDiv.addEventListener('click', () => {
+                    if(confirm('要將這筆紀錄載入白板嗎？(目前的畫面會被覆蓋)')) {
+                        const loadImg = new Image();
+                        loadImg.onload = () => {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(loadImg, 0, 0);
+                        };
+                        loadImg.src = record.image;
+                    }
+                });
+
+                historyList.appendChild(itemDiv);
+            });
+        }
+
+        // 初始化載入歷史紀錄
+        renderHistory();
+
+    </script>
+</body>
+</html>
