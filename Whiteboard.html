@@ -212,15 +212,13 @@
             border-color: var(--primary-color);
         }
 
-        /* 縮圖樣式修改：正方形裁切預覽 */
         .history-item img {
             width: 100%;
-            aspect-ratio: 1 / 1; /* 強制變成正方形 */
-            object-fit: cover; /* 裁切填滿 */
-            object-position: top left; /* 只預覽左上角最前面的範圍 */
+            aspect-ratio: 1 / 1; 
+            object-fit: cover; 
+            object-position: top left; 
             border-radius: 4px;
             border: 1px solid #eee;
-            /* 加上迷你的預覽方格背景 */
             background-size: 20px 20px; 
             background-image: 
                 linear-gradient(to right, #f0f0f0 1px, transparent 1px),
@@ -248,11 +246,11 @@
     </div>
     
     <div class="instructions" id="instructionText">
-        <span>💡 提示：使用滑鼠滾輪可往下滾動，擁有超長版面白板！按「清空白板」會自動將算式存入歷史紀錄。</span>
+        <span>💡 <b>截圖題目秘訣</b>：使用系統截圖 (Win+Shift+S)，然後在白板上按 <b>Ctrl+V</b> 貼上，題目就會出現！</span>
     </div>
 
     <div class="main-container">
-        <div class="canvas-container">
+        <div class="canvas-container" id="scrollContainer">
             <div class="canvas-wrapper">
                 <canvas id="whiteboard"></canvas>
                 <canvas id="overlayCanvas"></canvas>
@@ -286,6 +284,7 @@
         const historyList = document.getElementById('historyList');
         const historySidebar = document.getElementById('historySidebar');
         const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
+        const scrollContainer = document.getElementById('scrollContainer'); // 取得滾動容器
 
         let currentTool = 'pen';
         let isDrawing = false;
@@ -470,6 +469,37 @@
             }
         });
 
+        // ======= 新增功能：監聽剪貼簿貼上事件 (Ctrl+V) =======
+        window.addEventListener('paste', function(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        const img = new Image();
+                        img.onload = function() {
+                            // 計算目前滾動條的位置，確保圖片貼在目前看得到的畫面左上角
+                            const currentScrollY = scrollContainer.scrollTop;
+                            
+                            // 將圖片繪製到畫布上 (留白 20px 邊距)
+                            mainCtx.drawImage(img, 20, currentScrollY + 20);
+                            
+                            // 標記已有內容並存入上一步紀錄，讓使用者可以 Ctrl+Z 復原
+                            hasDrawn = true;
+                            saveState();
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }
+        });
+        // ===================================================
+
         function saveToHistory() {
             if (!hasDrawn) return; 
 
@@ -494,7 +524,7 @@
             mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
             hasDrawn = false; 
             saveState(); 
-            document.querySelector('.canvas-container').scrollTop = 0;
+            scrollContainer.scrollTop = 0;
         });
 
         document.getElementById('clearHistoryBtn').addEventListener('click', () => {
