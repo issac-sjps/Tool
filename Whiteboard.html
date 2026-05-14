@@ -31,7 +31,7 @@
             align-items: center;
         }
 
-        button {
+        button.tool-btn {
             padding: 8px 16px;
             font-size: 15px;
             cursor: pointer;
@@ -44,17 +44,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        button:hover {
+        button.tool-btn:hover {
             filter: brightness(0.9);
         }
 
-        /* 畫筆與橡皮擦的啟用狀態 */
-        button.active-tool {
+        button.tool-btn.active-tool {
             background-color: var(--active-color);
             box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
         }
 
-        button:disabled {
+        button.tool-btn:disabled {
             background-color: #BDC3C7;
             cursor: not-allowed;
             box-shadow: none;
@@ -62,6 +61,36 @@
 
         #clearBtn { background-color: #E74C3C; }
         
+        /* 快速顏色選擇器樣式 */
+        .color-palette {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-left: 2px solid var(--border-color);
+            padding-left: 10px;
+            margin-left: 5px;
+        }
+
+        .color-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px transparent, 0 2px 4px rgba(0,0,0,0.2);
+            padding: 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .color-btn.active-color {
+            box-shadow: 0 0 0 2px #555, 0 2px 4px rgba(0,0,0,0.2);
+            transform: scale(1.15);
+        }
+
         .instructions {
             font-size: 14px;
             color: #666;
@@ -84,31 +113,29 @@
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             border: 2px solid var(--border-color);
-            position: relative; /* 為了讓圖層重疊 */
+            position: relative; 
             background-color: white;
             overflow: hidden;
         }
 
-        /* 將畫布設為絕對定位以重疊 */
         canvas {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            touch-action: none; /* 防止平板滑動 */
+            touch-action: none; 
         }
 
-        /* 底層：畫畫用的白板 (背景帶有方格) */
+        /* 放大方格尺寸至 120px (原本的4倍) */
         #whiteboard {
             z-index: 1;
-            background-size: 30px 30px;
+            background-size: 120px 120px;
             background-image: 
                 linear-gradient(to right, #e8e8e8 1px, transparent 1px),
                 linear-gradient(to bottom, #e8e8e8 1px, transparent 1px);
         }
 
-        /* 頂層：用來預覽橡皮擦框選範圍並接收事件 */
         #overlayCanvas {
             z-index: 2;
             cursor: crosshair;
@@ -160,16 +187,25 @@
 <body>
 
     <div class="toolbar">
-        <button id="penBtn" class="active-tool">✏️ 畫筆</button>
-        <button id="eraserBtn">🧽 框選清除</button>
-        <button id="undoBtn" disabled>↩️ 上一步</button>
-        <button id="redoBtn" disabled>↪️ 下一步</button>
-        <button id="clearBtn">🗑️ 清空白板</button>
-        <button id="saveBtn">💾 存入紀錄</button>
+        <button id="penBtn" class="tool-btn active-tool">✏️ 畫筆</button>
+        <button id="eraserBtn" class="tool-btn">🧽 框選清除</button>
+        
+        <div class="color-palette">
+            <button class="color-btn active-color" data-color="#2c3e50" style="background-color: #2c3e50;" title="深藍黑"></button>
+            <button class="color-btn" data-color="#E74C3C" style="background-color: #E74C3C;" title="紅色"></button>
+            <button class="color-btn" data-color="#3498DB" style="background-color: #3498DB;" title="藍色"></button>
+            <button class="color-btn" data-color="#2ECC71" style="background-color: #2ECC71;" title="綠色"></button>
+            <button class="color-btn" data-color="#F39C12" style="background-color: #F39C12;" title="橘色"></button>
+        </div>
+
+        <button id="undoBtn" class="tool-btn" disabled style="margin-left: auto;">↩️ 上一步</button>
+        <button id="redoBtn" class="tool-btn" disabled>↪️ 下一步</button>
+        <button id="clearBtn" class="tool-btn">🗑️ 清空白板</button>
+        <button id="saveBtn" class="tool-btn">💾 存入紀錄</button>
     </div>
     
     <div class="instructions" id="instructionText">
-        💡 提示：目前使用【畫筆】，請在方格內寫出直式算式。支援快捷鍵 <b>Ctrl+Z</b> (上一步)、<b>Ctrl+Y</b> (下一步)。
+        💡 提示：目前使用【畫筆】，方格已放大！請在格內寫出直式算式。支援快捷鍵 <b>Ctrl+Z</b> (上一步)、<b>Ctrl+Y</b> (下一步)。
     </div>
 
     <div class="main-container">
@@ -178,7 +214,7 @@
             <canvas id="overlayCanvas"></canvas>
         </div>
         <div class="history-container">
-            <h3>儲存紀錄 <button id="clearHistoryBtn" style="font-size: 12px; padding: 4px 8px; background-color: #95a5a6;">清空</button></h3>
+            <h3>儲存紀錄 <button id="clearHistoryBtn" style="font-size: 12px; padding: 4px 8px; background-color: #95a5a6; border: none; color: white; border-radius: 4px; cursor: pointer;">清空</button></h3>
             <div id="historyList"></div>
         </div>
     </div>
@@ -192,6 +228,7 @@
         
         const penBtn = document.getElementById('penBtn');
         const eraserBtn = document.getElementById('eraserBtn');
+        const colorBtns = document.querySelectorAll('.color-btn');
         const undoBtn = document.getElementById('undoBtn');
         const redoBtn = document.getElementById('redoBtn');
         const clearBtn = document.getElementById('clearBtn');
@@ -200,16 +237,17 @@
         const instructionText = document.getElementById('instructionText');
 
         // 狀態變數
-        let currentTool = 'pen'; // 'pen' 或 'eraser'
+        let currentTool = 'pen';
         let isDrawing = false;
         let startX = 0;
         let startY = 0;
+        let currentColor = '#2c3e50'; // 預設深藍黑
         const STORAGE_KEY = 'math_whiteboard_records';
 
         // 復原/重做 堆疊機制
         let undoStack = [];
         let redoStack = [];
-        const MAX_HISTORY = 30; // 避免佔用過多記憶體
+        const MAX_HISTORY = 30;
 
         // 初始化畫布
         function resizeCanvas() {
@@ -224,12 +262,12 @@
             mainCtx.lineCap = 'round';
             mainCtx.lineJoin = 'round';
             mainCtx.lineWidth = 4;
-            mainCtx.strokeStyle = '#2c3e50';
+            mainCtx.strokeStyle = currentColor; // 套用當前顏色
 
             // 框選預覽設定 (虛線)
             overlayCtx.strokeStyle = '#E74C3C';
             overlayCtx.lineWidth = 2;
-            overlayCtx.setLineDash([5, 5]); // 虛線效果
+            overlayCtx.setLineDash([5, 5]);
 
             // 視窗改變大小時，嘗試恢復當前狀態
             if (undoStack.length > 0) {
@@ -238,11 +276,28 @@
         }
         window.addEventListener('resize', resizeCanvas);
 
+        // --- 顏色選擇器 ---
+        colorBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                currentColor = e.target.dataset.color;
+                mainCtx.strokeStyle = currentColor;
+                
+                // 更新按鈕視覺狀態
+                colorBtns.forEach(b => b.classList.remove('active-color'));
+                e.target.classList.add('active-color');
+                
+                // 如果目前是橡皮擦，自動切換回畫筆
+                if(currentTool === 'eraser') {
+                    penBtn.click();
+                }
+            });
+        });
+
         // --- 狀態管理 (Undo / Redo) ---
         function saveState() {
             if (undoStack.length >= MAX_HISTORY) undoStack.shift();
             undoStack.push(mainCanvas.toDataURL());
-            redoStack = []; // 只要有新動作，就清空「下一步」的庫存
+            redoStack = []; 
             updateUndoRedoButtons();
         }
 
@@ -256,7 +311,7 @@
         }
 
         function undo() {
-            if (undoStack.length > 1) { // 必須保留至少一個初始狀態
+            if (undoStack.length > 1) { 
                 redoStack.push(undoStack.pop());
                 restoreState(undoStack[undoStack.length - 1]);
                 updateUndoRedoButtons();
@@ -280,7 +335,6 @@
         // --- 繪圖與橡皮擦邏輯 ---
         function getMousePos(e) {
             const rect = overlayCanvas.getBoundingClientRect();
-            // 支援滑鼠與觸控事件的座標取得
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
             return {
@@ -290,7 +344,7 @@
         }
 
         function startPointer(e) {
-            e.preventDefault(); // 防止平板瀏覽器預設行為
+            e.preventDefault(); 
             isDrawing = true;
             const pos = getMousePos(e);
             startX = pos.x;
@@ -311,14 +365,10 @@
                 mainCtx.lineTo(pos.x, pos.y);
                 mainCtx.stroke();
             } else if (currentTool === 'eraser') {
-                // 清除上一幀的預覽框，並畫新的虛線框
                 overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                
                 const rectW = pos.x - startX;
                 const rectH = pos.y - startY;
                 overlayCtx.strokeRect(startX, startY, rectW, rectH);
-                
-                // 加上半透明紅色填滿，讓框選範圍更明顯
                 overlayCtx.fillStyle = 'rgba(231, 76, 60, 0.2)';
                 overlayCtx.fillRect(startX, startY, rectW, rectH);
             }
@@ -329,28 +379,23 @@
             isDrawing = false;
             
             if (currentTool === 'pen') {
-                saveState(); // 畫完一筆存一次紀錄
+                saveState(); 
             } else if (currentTool === 'eraser') {
-                // 取得最後位置計算選取範圍
                 const pos = getMousePos(e);
                 const rx = Math.min(startX, pos.x);
                 const ry = Math.min(startY, pos.y);
                 const rw = Math.abs(pos.x - startX);
                 const rh = Math.abs(pos.y - startY);
 
-                // 清除主畫布對應範圍的筆跡
                 mainCtx.clearRect(rx, ry, rw, rh);
-                
-                // 清除預覽層的虛線框
                 overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
                 
                 if (rw > 0 && rh > 0) {
-                    saveState(); // 有清除動作才存紀錄
+                    saveState(); 
                 }
             }
         }
 
-        // 綁定事件 (因為 overlayCanvas 在最上層，所以事件綁定在它身上)
         overlayCanvas.addEventListener('pointerdown', startPointer);
         overlayCanvas.addEventListener('pointermove', movePointer);
         overlayCanvas.addEventListener('pointerup', endPointer);
@@ -382,9 +427,8 @@
             }
         });
 
-        // 鍵盤快捷鍵 (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z)
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey) { // metaKey 支援 Mac 的 Command 鍵
+            if (e.ctrlKey || e.metaKey) { 
                 if (e.key === 'z' || e.key === 'Z') {
                     if (e.shiftKey) { redo(); } 
                     else { undo(); }
@@ -396,7 +440,7 @@
             }
         });
 
-        // --- 本地儲存與歷史紀錄 (保留原功能) ---
+        // --- 本地儲存與歷史紀錄 ---
         saveBtn.addEventListener('click', () => {
             const imageData = mainCanvas.toDataURL('image/png');
             const timestamp = new Date().toLocaleString('zh-TW');
@@ -434,7 +478,7 @@
                 itemDiv.addEventListener('click', () => {
                     if(confirm('要將這筆紀錄載入白板嗎？(可按上一步復原)')) {
                         restoreState(record.image);
-                        saveState(); // 載入也算是一個動作，存入歷史堆疊
+                        saveState(); 
                     }
                 });
                 historyList.appendChild(itemDiv);
@@ -443,7 +487,7 @@
 
         // 初始化
         resizeCanvas();
-        saveState(); // 儲存初始的空白狀態
+        saveState(); 
         renderHistory();
 
     </script>
