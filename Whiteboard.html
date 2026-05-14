@@ -292,6 +292,10 @@
         let redoStack = [];
         const MAX_HISTORY = 30;
 
+        // --- 綁定按鈕點擊事件 (就是這裡漏掉了！修復完成！) ---
+        undoBtn.addEventListener('click', undo);
+        redoBtn.addEventListener('click', redo);
+
         helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
         closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
         window.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.style.display = 'none'; });
@@ -382,7 +386,6 @@
             }
         }
 
-        // --- 核心：繪製圖形並處理 Shift 鎖定 ---
         function drawShape(ctx, type, startX, startY, endX, endY, isShift) {
             ctx.beginPath();
             let w = endX - startX;
@@ -390,18 +393,15 @@
 
             if (isShift) {
                 if (type === 'rect' || type === 'circle') {
-                    // 強制為正方形/正圓的外框
                     const size = Math.max(Math.abs(w), Math.abs(h));
                     w = w < 0 ? -size : size;
                     h = h < 0 ? -size : size;
                 } else if (type === 'triangle') {
-                    // 正三角形 (高 = 邊長 * √3 / 2)
                     const size = Math.max(Math.abs(w), Math.abs(h));
                     w = w < 0 ? -size : size;
                     const height = Math.abs(w) * (Math.sqrt(3) / 2);
                     h = h < 0 ? -height : height;
                 } else if (type === 'line') {
-                    // 直線吸附 45度角
                     const angle = Math.atan2(h, w);
                     const snappedAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
                     const length = Math.hypot(w, h);
@@ -447,7 +447,6 @@
                     overlayCtx.strokeRect(startX, startY, rectW, rectH);
                     overlayCtx.fillStyle = 'rgba(231, 76, 60, 0.2)'; overlayCtx.fillRect(startX, startY, rectW, rectH);
                 } else if (['line', 'rect', 'circle', 'triangle'].includes(currentTool)) {
-                    // 傳入 e.shiftKey 判斷是否按住 Shift
                     drawShape(overlayCtx, currentTool, startX, startY, pos.x, pos.y, e.shiftKey);
                 }
             }
