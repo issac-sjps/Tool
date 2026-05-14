@@ -9,6 +9,7 @@
             --primary-color: #4A90E2;
             --bg-color: #F5F7FA;
             --border-color: #E4E7EB;
+            --active-color: #2ECC71;
         }
 
         body {
@@ -24,64 +25,93 @@
 
         .toolbar {
             display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
             align-items: center;
         }
 
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 8px 16px;
+            font-size: 15px;
             cursor: pointer;
             border: none;
             border-radius: 8px;
             background-color: var(--primary-color);
             color: white;
             font-weight: bold;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         button:hover {
-            background-color: #357ABD;
+            filter: brightness(0.9);
         }
 
-        #clearBtn {
-            background-color: #E74C3C;
+        /* 畫筆與橡皮擦的啟用狀態 */
+        button.active-tool {
+            background-color: var(--active-color);
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
         }
+
+        button:disabled {
+            background-color: #BDC3C7;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #clearBtn { background-color: #E74C3C; }
         
-        #clearBtn:hover {
-            background-color: #C0392B;
+        .instructions {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            background-color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
         }
 
         .main-container {
             display: flex;
             flex: 1;
             gap: 20px;
-            min-height: 0; /* Important for flex child sizing */
+            min-height: 0;
         }
 
         .canvas-container {
             flex: 3;
-            background-color: white;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow: hidden;
             border: 2px solid var(--border-color);
-            position: relative;
+            position: relative; /* 為了讓圖層重疊 */
+            background-color: white;
+            overflow: hidden;
         }
 
-        /* 方格紙背景：幫助小學生對齊直式計算 */
+        /* 將畫布設為絕對定位以重疊 */
         canvas {
-            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
+            touch-action: none; /* 防止平板滑動 */
+        }
+
+        /* 底層：畫畫用的白板 (背景帶有方格) */
+        #whiteboard {
+            z-index: 1;
             background-size: 30px 30px;
             background-image: 
                 linear-gradient(to right, #e8e8e8 1px, transparent 1px),
                 linear-gradient(to bottom, #e8e8e8 1px, transparent 1px);
+        }
+
+        /* 頂層：用來預覽橡皮擦框選範圍並接收事件 */
+        #overlayCanvas {
+            z-index: 2;
             cursor: crosshair;
-            touch-action: none; /* 防止在平板上畫畫時螢幕滑動 */
         }
 
         .history-container {
@@ -112,9 +142,8 @@
             padding: 5px;
             cursor: pointer;
             transition: transform 0.2s;
-            background-color: #fff;
         }
-
+        
         .history-item:hover {
             transform: scale(1.02);
             border-color: var(--primary-color);
@@ -126,188 +155,295 @@
             border-radius: 4px;
             background-color: #f9f9f9;
         }
-
-        .history-time {
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-            margin-top: 5px;
-        }
-
-        #clearHistoryBtn {
-            font-size: 12px;
-            padding: 4px 8px;
-            background-color: #95a5a6;
-        }
     </style>
 </head>
 <body>
 
     <div class="toolbar">
-        <button id="clearBtn">🗑️ 一鍵清空</button>
-        <button id="saveBtn">💾 儲存目前算式</button>
-        <span style="color: #666; font-size: 14px;">提示：使用滑鼠或觸控筆在方格內寫字，方格可以幫助對齊直式計算喔！</span>
+        <button id="penBtn" class="active-tool">✏️ 畫筆</button>
+        <button id="eraserBtn">🧽 框選清除</button>
+        <button id="undoBtn" disabled>↩️ 上一步</button>
+        <button id="redoBtn" disabled>↪️ 下一步</button>
+        <button id="clearBtn">🗑️ 清空白板</button>
+        <button id="saveBtn">💾 存入紀錄</button>
+    </div>
+    
+    <div class="instructions" id="instructionText">
+        💡 提示：目前使用【畫筆】，請在方格內寫出直式算式。支援快捷鍵 <b>Ctrl+Z</b> (上一步)、<b>Ctrl+Y</b> (下一步)。
     </div>
 
     <div class="main-container">
         <div class="canvas-container">
             <canvas id="whiteboard"></canvas>
+            <canvas id="overlayCanvas"></canvas>
         </div>
         <div class="history-container">
-            <h3>
-                歷史紀錄
-                <button id="clearHistoryBtn">清空紀錄</button>
-            </h3>
+            <h3>儲存紀錄 <button id="clearHistoryBtn" style="font-size: 12px; padding: 4px 8px; background-color: #95a5a6;">清空</button></h3>
             <div id="historyList"></div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('whiteboard');
-        const ctx = canvas.getContext('2d');
+        // DOM 元素
+        const mainCanvas = document.getElementById('whiteboard');
+        const mainCtx = mainCanvas.getContext('2d');
+        const overlayCanvas = document.getElementById('overlayCanvas');
+        const overlayCtx = overlayCanvas.getContext('2d');
+        
+        const penBtn = document.getElementById('penBtn');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
         const clearBtn = document.getElementById('clearBtn');
         const saveBtn = document.getElementById('saveBtn');
         const historyList = document.getElementById('historyList');
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const instructionText = document.getElementById('instructionText');
 
+        // 狀態變數
+        let currentTool = 'pen'; // 'pen' 或 'eraser'
         let isDrawing = false;
+        let startX = 0;
+        let startY = 0;
         const STORAGE_KEY = 'math_whiteboard_records';
 
-        // 初始化畫布大小
+        // 復原/重做 堆疊機制
+        let undoStack = [];
+        let redoStack = [];
+        const MAX_HISTORY = 30; // 避免佔用過多記憶體
+
+        // 初始化畫布
         function resizeCanvas() {
-            const container = canvas.parentElement;
-            // 儲存當前畫面
-            const tempImageData = canvas.toDataURL();
+            const container = mainCanvas.parentElement;
             
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
+            mainCanvas.width = container.clientWidth;
+            mainCanvas.height = container.clientHeight;
+            overlayCanvas.width = container.clientWidth;
+            overlayCanvas.height = container.clientHeight;
             
             // 畫筆設定
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#2c3e50';
+            mainCtx.lineCap = 'round';
+            mainCtx.lineJoin = 'round';
+            mainCtx.lineWidth = 4;
+            mainCtx.strokeStyle = '#2c3e50';
 
-            // 恢復畫面 (如果是因為視窗縮放觸發)
-            if (tempImageData !== 'data:,') {
-                const img = new Image();
-                img.onload = () => ctx.drawImage(img, 0, 0);
-                img.src = tempImageData;
+            // 框選預覽設定 (虛線)
+            overlayCtx.strokeStyle = '#E74C3C';
+            overlayCtx.lineWidth = 2;
+            overlayCtx.setLineDash([5, 5]); // 虛線效果
+
+            // 視窗改變大小時，嘗試恢復當前狀態
+            if (undoStack.length > 0) {
+                restoreState(undoStack[undoStack.length - 1]);
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- 狀態管理 (Undo / Redo) ---
+        function saveState() {
+            if (undoStack.length >= MAX_HISTORY) undoStack.shift();
+            undoStack.push(mainCanvas.toDataURL());
+            redoStack = []; // 只要有新動作，就清空「下一步」的庫存
+            updateUndoRedoButtons();
+        }
+
+        function restoreState(dataUrl) {
+            const img = new Image();
+            img.onload = () => {
+                mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+                mainCtx.drawImage(img, 0, 0);
+            };
+            img.src = dataUrl;
+        }
+
+        function undo() {
+            if (undoStack.length > 1) { // 必須保留至少一個初始狀態
+                redoStack.push(undoStack.pop());
+                restoreState(undoStack[undoStack.length - 1]);
+                updateUndoRedoButtons();
             }
         }
 
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        function redo() {
+            if (redoStack.length > 0) {
+                const stateToRestore = redoStack.pop();
+                undoStack.push(stateToRestore);
+                restoreState(stateToRestore);
+                updateUndoRedoButtons();
+            }
+        }
 
-        // 繪圖邏輯 (使用 pointer events 支援滑鼠與觸控)
-        function startDrawing(e) {
+        function updateUndoRedoButtons() {
+            undoBtn.disabled = undoStack.length <= 1;
+            redoBtn.disabled = redoStack.length === 0;
+        }
+
+        // --- 繪圖與橡皮擦邏輯 ---
+        function getMousePos(e) {
+            const rect = overlayCanvas.getBoundingClientRect();
+            // 支援滑鼠與觸控事件的座標取得
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startPointer(e) {
+            e.preventDefault(); // 防止平板瀏覽器預設行為
             isDrawing = true;
-            draw(e);
+            const pos = getMousePos(e);
+            startX = pos.x;
+            startY = pos.y;
+
+            if (currentTool === 'pen') {
+                mainCtx.beginPath();
+                mainCtx.moveTo(startX, startY);
+            }
         }
 
-        function stopDrawing() {
-            isDrawing = false;
-            ctx.beginPath(); // 確保下次畫不會連著上一筆
-        }
-
-        function draw(e) {
+        function movePointer(e) {
+            e.preventDefault();
             if (!isDrawing) return;
+            const pos = getMousePos(e);
 
-            // 取得相對於 canvas 的座標
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+            if (currentTool === 'pen') {
+                mainCtx.lineTo(pos.x, pos.y);
+                mainCtx.stroke();
+            } else if (currentTool === 'eraser') {
+                // 清除上一幀的預覽框，並畫新的虛線框
+                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                
+                const rectW = pos.x - startX;
+                const rectH = pos.y - startY;
+                overlayCtx.strokeRect(startX, startY, rectW, rectH);
+                
+                // 加上半透明紅色填滿，讓框選範圍更明顯
+                overlayCtx.fillStyle = 'rgba(231, 76, 60, 0.2)';
+                overlayCtx.fillRect(startX, startY, rectW, rectH);
+            }
         }
 
-        canvas.addEventListener('pointerdown', startDrawing);
-        canvas.addEventListener('pointermove', draw);
-        canvas.addEventListener('pointerup', stopDrawing);
-        canvas.addEventListener('pointerout', stopDrawing);
+        function endPointer(e) {
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            if (currentTool === 'pen') {
+                saveState(); // 畫完一筆存一次紀錄
+            } else if (currentTool === 'eraser') {
+                // 取得最後位置計算選取範圍
+                const pos = getMousePos(e);
+                const rx = Math.min(startX, pos.x);
+                const ry = Math.min(startY, pos.y);
+                const rw = Math.abs(pos.x - startX);
+                const rh = Math.abs(pos.y - startY);
 
-        // 一鍵清空
-        clearBtn.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // 清除主畫布對應範圍的筆跡
+                mainCtx.clearRect(rx, ry, rw, rh);
+                
+                // 清除預覽層的虛線框
+                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                
+                if (rw > 0 && rh > 0) {
+                    saveState(); // 有清除動作才存紀錄
+                }
+            }
+        }
+
+        // 綁定事件 (因為 overlayCanvas 在最上層，所以事件綁定在它身上)
+        overlayCanvas.addEventListener('pointerdown', startPointer);
+        overlayCanvas.addEventListener('pointermove', movePointer);
+        overlayCanvas.addEventListener('pointerup', endPointer);
+        overlayCanvas.addEventListener('pointerout', endPointer);
+
+        // --- 工具切換 ---
+        penBtn.addEventListener('click', () => {
+            currentTool = 'pen';
+            penBtn.classList.add('active-tool');
+            eraserBtn.classList.remove('active-tool');
+            instructionText.innerHTML = '💡 提示：目前使用【畫筆】，請在方格內寫出直式算式。支援快捷鍵 <b>Ctrl+Z</b> (上一步)。';
         });
 
-        // 儲存紀錄至 LocalStorage
+        eraserBtn.addEventListener('click', () => {
+            currentTool = 'eraser';
+            eraserBtn.classList.add('active-tool');
+            penBtn.classList.remove('active-tool');
+            instructionText.innerHTML = '💡 提示：目前使用【框選清除】。按住並拖曳滑鼠拉出紅框，放開即可清除框內算式。';
+        });
+
+        // --- 按鈕與快捷鍵操作 ---
+        undoBtn.addEventListener('click', undo);
+        redoBtn.addEventListener('click', redo);
+        
+        clearBtn.addEventListener('click', () => {
+            if (confirm('確定要清空白板嗎？(此動作可以按上一步復原)')) {
+                mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+                saveState();
+            }
+        });
+
+        // 鍵盤快捷鍵 (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) { // metaKey 支援 Mac 的 Command 鍵
+                if (e.key === 'z' || e.key === 'Z') {
+                    if (e.shiftKey) { redo(); } 
+                    else { undo(); }
+                    e.preventDefault();
+                } else if (e.key === 'y' || e.key === 'Y') {
+                    redo();
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // --- 本地儲存與歷史紀錄 (保留原功能) ---
         saveBtn.addEventListener('click', () => {
-            const imageData = canvas.toDataURL('image/png');
+            const imageData = mainCanvas.toDataURL('image/png');
             const timestamp = new Date().toLocaleString('zh-TW');
             
-            const record = {
-                time: timestamp,
-                image: imageData
-            };
-
             let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            records.unshift(record); // 新的放前面
+            records.unshift({ time: timestamp, image: imageData });
+            if (records.length > 20) records.pop();
             
-            // 限制最多存 20 筆，避免 localStorage 爆掉
-            if (records.length > 20) {
-                records.pop();
-            }
-
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             renderHistory();
-            
-            // 儲存後可選擇是否自動清空畫布，目前設定不自動清空
-            alert('算式已儲存！');
+            alert('算式已存入紀錄！');
         });
 
-        // 清空歷史紀錄
-        clearHistoryBtn.addEventListener('click', () => {
-            if(confirm('確定要清空所有歷史紀錄嗎？')) {
+        document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+            if(confirm('確定要清空右側的所有儲存紀錄嗎？')) {
                 localStorage.removeItem(STORAGE_KEY);
                 renderHistory();
             }
         });
 
-        // 渲染歷史紀錄
         function renderHistory() {
             historyList.innerHTML = '';
             const records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
             if (records.length === 0) {
-                historyList.innerHTML = '<p style="color:#999; text-align:center;">目前沒有紀錄</p>';
+                historyList.innerHTML = '<p style="color:#999; text-align:center;">目前無紀錄</p>';
                 return;
             }
 
             records.forEach(record => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'history-item';
-                
-                const img = document.createElement('img');
-                img.src = record.image;
-                
-                const timeDiv = document.createElement('div');
-                timeDiv.className = 'history-time';
-                timeDiv.textContent = record.time;
+                itemDiv.innerHTML = `<img src="${record.image}"><div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">${record.time}</div>`;
 
-                itemDiv.appendChild(img);
-                itemDiv.appendChild(timeDiv);
-
-                // 點擊歷史紀錄載入到白板
                 itemDiv.addEventListener('click', () => {
-                    if(confirm('要將這筆紀錄載入白板嗎？(目前的畫面會被覆蓋)')) {
-                        const loadImg = new Image();
-                        loadImg.onload = () => {
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                            ctx.drawImage(loadImg, 0, 0);
-                        };
-                        loadImg.src = record.image;
+                    if(confirm('要將這筆紀錄載入白板嗎？(可按上一步復原)')) {
+                        restoreState(record.image);
+                        saveState(); // 載入也算是一個動作，存入歷史堆疊
                     }
                 });
-
                 historyList.appendChild(itemDiv);
             });
         }
 
-        // 初始化載入歷史紀錄
+        // 初始化
+        resizeCanvas();
+        saveState(); // 儲存初始的空白狀態
         renderHistory();
 
     </script>
