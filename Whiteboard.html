@@ -11,6 +11,7 @@
             --border-color: #E4E7EB;
             --active-color: #2ECC71;
             --shape-color: #9B59B6;
+            --vs-color: #E74C3C;
         }
 
         body {
@@ -66,6 +67,20 @@
             box-shadow: none;
         }
 
+        /* 雙人競賽按鈕特別顏色 */
+        #vsBtn {
+            background-color: #F39C12;
+        }
+        #vsBtn.active-tool {
+            background-color: var(--vs-color);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
         #clearBtn { background-color: #E74C3C; }
         #helpBtn { background-color: #34495E; margin-left: auto; } 
         
@@ -117,6 +132,22 @@
             position: relative;
             width: 100%;
             height: 3000px; 
+        }
+
+        /* --- 雙人競賽分隔線 --- */
+        .canvas-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            width: 0; height: 100%;
+            border-left: 6px dashed var(--vs-color);
+            transform: translateX(-50%);
+            pointer-events: none; /* 讓滑鼠/觸控可以穿透分隔線畫畫 */
+            z-index: 5;
+            display: none;
+        }
+        .canvas-wrapper.vs-mode::after {
+            display: block;
         }
 
         canvas {
@@ -220,11 +251,13 @@
             <button class="color-btn" data-color="#F39C12" style="background-color: #F39C12;" title="橘色"></button>
         </div>
 
-        <button id="undoBtn" class="tool-btn" disabled>↩️ 復原</button>
-        <button id="redoBtn" class="tool-btn" disabled>↪️ 重做</button>
-        <button id="clearBtn" class="tool-btn" style="margin-left: 10px;">🗑️ 清空白板</button>
+        <button id="vsBtn" class="tool-btn" style="margin-left: 10px;">⚔️ 競賽模式</button>
         
-        <button id="helpBtn" class="tool-btn">❓ 使用說明</button>
+        <button id="undoBtn" class="tool-btn" disabled style="margin-left: 10px;">↩️ 復原</button>
+        <button id="redoBtn" class="tool-btn" disabled>↪️ 重做</button>
+        <button id="clearBtn" class="tool-btn">🗑️ 清空</button>
+        
+        <button id="helpBtn" class="tool-btn">❓ 說明</button>
     </div>
 
     <div id="helpModal" class="modal-overlay">
@@ -232,19 +265,18 @@
             <span class="close-btn" id="closeHelpBtn">&times;</span>
             <h2>💡 白板功能與小巧思全指南</h2>
             <ul>
+                <li><b>⚔️ 雙人競賽模式：</b>點擊上方「競賽模式」，畫面中央會出現紅色分隔線，並且支援<b>多點觸控</b>，兩位學生可以同時在螢幕左右兩邊算數學，互相不干擾！</li>
                 <li><b>📐 Shift 完美鎖定神技：</b>畫圖形時<b>按住鍵盤的 Shift 鍵</b>，矩形會變「正方形」、圓形會變「正圓」、三角形會變「正三角形」、直線會自動對齊「45度/90度角」！</li>
                 <li><b>📏 幾何圖形：</b>新增了直線、矩形、圓形、三角形功能。在畫布上按住並拖曳即可畫出完美的圖解。</li>
-                <li><b>📝 專屬大格線：</b>特別放大 4 倍的方格（120px），專為小學生對齊直式計算設計。</li>
                 <li><b>🎨 聰明調色盤：</b>若你在「框選清除」模式下點擊顏色，系統會<b>自動幫你切換回畫筆</b>。</li>
-                <li><b>📸 截圖秒貼神技：</b>用電腦內建截圖 (Win+Shift+S / Cmd+Shift+4) 截取題目後，直接在網頁按 <b>Ctrl+V</b>，題目就會精準貼在你目前觀看畫面的左上角！</li>
-                <li><b>💾 無縫自動儲存：</b>按下「清空白板」，系統會自動將原本的畫面收納進右側的「儲存紀錄」抽屜。</li>
+                <li><b>📸 截圖秒貼神技：</b>在網頁按 <b>Ctrl+V</b>，題目圖片就會精準貼在你目前觀看畫面的左上角！</li>
             </ul>
         </div>
     </div>
 
     <div class="main-container">
         <div class="canvas-container" id="scrollContainer">
-            <div class="canvas-wrapper">
+            <div class="canvas-wrapper" id="canvasWrapper">
                 <canvas id="whiteboard"></canvas>
                 <canvas id="overlayCanvas"></canvas>
             </div>
@@ -271,6 +303,9 @@
         const undoBtn = document.getElementById('undoBtn');
         const redoBtn = document.getElementById('redoBtn');
         const clearBtn = document.getElementById('clearBtn');
+        const vsBtn = document.getElementById('vsBtn');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        
         const historyList = document.getElementById('historyList');
         const historySidebar = document.getElementById('historySidebar');
         const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
@@ -281,8 +316,6 @@
         const closeHelpBtn = document.getElementById('closeHelpBtn');
 
         let currentTool = 'pen';
-        let isDrawing = false;
-        let startX = 0; let startY = 0;
         let currentColor = '#2c3e50'; 
         let hasDrawn = false; 
         const STORAGE_KEY = 'math_whiteboard_records';
@@ -292,9 +325,18 @@
         let redoStack = [];
         const MAX_HISTORY = 30;
 
-        // --- 綁定按鈕點擊事件 (就是這裡漏掉了！修復完成！) ---
+        // --- 多點觸控狀態引擎 ---
+        // 記錄畫面上目前所有的觸控點/滑鼠 (用 pointerId 當作鑰匙)
+        let activePointers = {}; 
+
+        // 綁定按鈕
         undoBtn.addEventListener('click', undo);
         redoBtn.addEventListener('click', redo);
+
+        vsBtn.addEventListener('click', () => {
+            canvasWrapper.classList.toggle('vs-mode');
+            vsBtn.classList.toggle('active-tool');
+        });
 
         helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
         closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
@@ -311,7 +353,6 @@
         colorBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 currentColor = e.target.dataset.color;
-                mainCtx.strokeStyle = currentColor;
                 colorBtns.forEach(b => b.classList.remove('active-color'));
                 e.target.classList.add('active-color');
                 if(currentTool === 'eraser') document.querySelector('[data-tool="pen"]').click();
@@ -324,8 +365,7 @@
             mainCanvas.height = CANVAS_HEIGHT;
             overlayCanvas.width = wrapper.clientWidth;
             overlayCanvas.height = CANVAS_HEIGHT;
-            mainCtx.lineCap = 'round'; mainCtx.lineJoin = 'round';
-            mainCtx.lineWidth = 4; mainCtx.strokeStyle = currentColor;
+            
             if (undoStack.length > 0) restoreState(undoStack[undoStack.length - 1]);
         }
         window.addEventListener('resize', resizeCanvas);
@@ -372,18 +412,8 @@
 
         function getMousePos(e) {
             const rect = overlayCanvas.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        function setupOverlayStyle() {
-            if (currentTool === 'eraser') {
-                overlayCtx.strokeStyle = '#E74C3C'; overlayCtx.lineWidth = 2; overlayCtx.setLineDash([5, 5]);
-            } else {
-                overlayCtx.strokeStyle = currentColor; overlayCtx.lineWidth = 4;
-                overlayCtx.setLineDash([]); overlayCtx.lineCap = 'round'; overlayCtx.lineJoin = 'round';
-            }
+            // 在 pointerEvent 裡面，e.clientX 就可以精準代表該手指/滑鼠的位置
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
         }
 
         function drawShape(ctx, type, startX, startY, endX, endY, isShift) {
@@ -426,57 +456,125 @@
             ctx.stroke();
         }
 
+        // --- 多點觸控的核心邏輯 ---
         function startPointer(e) {
-            e.preventDefault(); isDrawing = true;
+            e.preventDefault(); 
             const pos = getMousePos(e);
-            startX = pos.x; startY = pos.y;
-            if (currentTool === 'pen') { mainCtx.beginPath(); mainCtx.moveTo(startX, startY); }
-            setupOverlayStyle();
+            
+            // 記錄這根手指/滑鼠的初始狀態
+            activePointers[e.pointerId] = {
+                startX: pos.x, startY: pos.y,
+                lastX: pos.x, lastY: pos.y,
+                currentX: pos.x, currentY: pos.y,
+                tool: currentTool,     // 鎖定當下手持的工具
+                color: currentColor,   // 鎖定當下的顏色
+                isShift: e.shiftKey
+            };
         }
 
         function movePointer(e) {
-            e.preventDefault(); if (!isDrawing) return;
-            const pos = getMousePos(e);
+            e.preventDefault(); 
+            // 如果這根手指沒有被記錄到，就不理它
+            if (!activePointers[e.pointerId]) return;
 
-            if (currentTool === 'pen') {
-                mainCtx.lineTo(pos.x, pos.y); mainCtx.stroke();
+            const pos = getMousePos(e);
+            const p = activePointers[e.pointerId];
+            p.currentX = pos.x;
+            p.currentY = pos.y;
+            p.isShift = e.shiftKey;
+
+            if (p.tool === 'pen') {
+                // 如果是畫筆，直接畫在主畫布上
+                mainCtx.beginPath();
+                mainCtx.strokeStyle = p.color;
+                mainCtx.lineWidth = 4;
+                mainCtx.lineCap = 'round';
+                mainCtx.lineJoin = 'round';
+                mainCtx.moveTo(p.lastX, p.lastY);
+                mainCtx.lineTo(pos.x, pos.y);
+                mainCtx.stroke();
+                
+                p.lastX = pos.x;
+                p.lastY = pos.y;
             } else {
-                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                if (currentTool === 'eraser') {
-                    const rectW = pos.x - startX; const rectH = pos.y - startY;
-                    overlayCtx.strokeRect(startX, startY, rectW, rectH);
-                    overlayCtx.fillStyle = 'rgba(231, 76, 60, 0.2)'; overlayCtx.fillRect(startX, startY, rectW, rectH);
-                } else if (['line', 'rect', 'circle', 'triangle'].includes(currentTool)) {
-                    drawShape(overlayCtx, currentTool, startX, startY, pos.x, pos.y, e.shiftKey);
+                // 如果是形狀或橡皮擦，更新預覽畫面
+                redrawOverlay();
+            }
+        }
+
+        // 負責統一重新繪製預覽層 (處理多個人同時拉形狀的狀況)
+        function redrawOverlay() {
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            
+            for (let id in activePointers) {
+                const p = activePointers[id];
+                if (p.tool === 'pen') continue; // 畫筆不用預覽
+
+                if (p.tool === 'eraser') {
+                    const rectW = p.currentX - p.startX;
+                    const rectH = p.currentY - p.startY;
+                    overlayCtx.strokeStyle = '#E74C3C';
+                    overlayCtx.lineWidth = 2;
+                    overlayCtx.setLineDash([5, 5]);
+                    overlayCtx.strokeRect(p.startX, p.startY, rectW, rectH);
+                    overlayCtx.fillStyle = 'rgba(231, 76, 60, 0.2)';
+                    overlayCtx.fillRect(p.startX, p.startY, rectW, rectH);
+                } else {
+                    overlayCtx.strokeStyle = p.color;
+                    overlayCtx.lineWidth = 4;
+                    overlayCtx.setLineDash([]);
+                    overlayCtx.lineCap = 'round';
+                    overlayCtx.lineJoin = 'round';
+                    drawShape(overlayCtx, p.tool, p.startX, p.startY, p.currentX, p.currentY, p.isShift);
                 }
             }
         }
 
         function endPointer(e) {
-            if (!isDrawing) return;
-            isDrawing = false; const pos = getMousePos(e);
+            if (!activePointers[e.pointerId]) return;
+            const p = activePointers[e.pointerId];
             
-            if (currentTool === 'pen') {
-                hasDrawn = true; saveState(); 
-            } else if (currentTool === 'eraser') {
-                const rx = Math.min(startX, pos.x); const ry = Math.min(startY, pos.y);
-                const rw = Math.abs(pos.x - startX); const rh = Math.abs(pos.y - startY);
-                mainCtx.clearRect(rx, ry, rw, rh); overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                if (rw > 0 && rh > 0) { hasDrawn = true; saveState(); }
-            } else if (['line', 'rect', 'circle', 'triangle'].includes(currentTool)) {
-                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-                if (Math.abs(pos.x - startX) > 5 || Math.abs(pos.y - startY) > 5) {
-                    mainCtx.strokeStyle = currentColor;
-                    drawShape(mainCtx, currentTool, startX, startY, pos.x, pos.y, e.shiftKey);
-                    hasDrawn = true; saveState();
+            if (p.tool === 'pen') {
+                hasDrawn = true; 
+            } else if (p.tool === 'eraser') {
+                const rx = Math.min(p.startX, p.currentX);
+                const ry = Math.min(p.startY, p.currentY);
+                const rw = Math.abs(p.currentX - p.startX);
+                const rh = Math.abs(p.currentY - p.startY);
+                
+                mainCtx.clearRect(rx, ry, rw, rh);
+                if (rw > 0 && rh > 0) hasDrawn = true;
+            } else if (['line', 'rect', 'circle', 'triangle'].includes(p.tool)) {
+                // 正式將形狀畫到主畫布
+                if (Math.abs(p.currentX - p.startX) > 5 || Math.abs(p.currentY - p.startY) > 5) {
+                    mainCtx.strokeStyle = p.color;
+                    mainCtx.lineWidth = 4;
+                    mainCtx.setLineDash([]);
+                    mainCtx.lineCap = 'round';
+                    mainCtx.lineJoin = 'round';
+                    drawShape(mainCtx, p.tool, p.startX, p.startY, p.currentX, p.currentY, p.isShift);
+                    hasDrawn = true;
                 }
+            }
+
+            // 這根手指離開了，把它的紀錄刪除
+            delete activePointers[e.pointerId];
+            
+            // 重新整理預覽層
+            redrawOverlay();
+
+            // 如果畫面上已經沒有任何手指，且有畫圖，就儲存歷史紀錄 (避免多指操作存太多次)
+            if (Object.keys(activePointers).length === 0 && hasDrawn) {
+                saveState();
             }
         }
 
+        // Pointer 事件原生支援 滑鼠、觸控、觸控筆
         overlayCanvas.addEventListener('pointerdown', startPointer);
         overlayCanvas.addEventListener('pointermove', movePointer);
         overlayCanvas.addEventListener('pointerup', endPointer);
         overlayCanvas.addEventListener('pointerout', endPointer);
+        overlayCanvas.addEventListener('pointercancel', endPointer); // 防止系統中斷觸控
 
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.metaKey) { 
