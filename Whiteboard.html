@@ -3,194 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小學生數學白板 v4</title>
+    <title>小學生數學白板 v5</title>
     <style>
         :root {
-            --primary: #4A90E2; --bg: #F5F7FA; --border: #E4E7EB;
-            --active: #2ECC71; --shape: #9B59B6; --danger: #E74C3C; --dark: #2c3e50;
+            --primary:#4A90E2; --bg:#F5F7FA; --border:#E4E7EB;
+            --active:#2ECC71; --shape:#9B59B6; --danger:#E74C3C; --dark:#2c3e50;
         }
-        * { box-sizing: border-box; }
+        * { box-sizing:border-box; }
         body {
-            margin: 0; padding: 12px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg); display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
+            margin:0; padding:12px;
+            font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+            background:var(--bg); display:flex; flex-direction:column;
+            height:100vh; overflow:hidden;
         }
-        .toolbar {
-            display: flex; flex-wrap: wrap; gap: 8px;
-            margin-bottom: 10px; align-items: center;
-        }
-        .tool-group { display: flex; gap: 5px; padding-right: 10px; border-right: 2px solid var(--border); }
+        .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; align-items:center; }
+        .tool-group { display:flex; gap:5px; padding-right:10px; border-right:2px solid var(--border); }
         button.tool-btn {
-            padding: 7px 11px; font-size: 14px; cursor: pointer; border: none;
-            border-radius: 8px; background: var(--primary); color: white;
-            font-weight: bold; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding:7px 11px; font-size:14px; cursor:pointer; border:none;
+            border-radius:8px; background:var(--primary); color:white;
+            font-weight:bold; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,.1);
         }
-        button.tool-btn.shape-btn { background: var(--shape); }
-        button.tool-btn:hover { filter: brightness(0.9); }
-        button.tool-btn.active-tool {
-            background: var(--active); box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); transform: scale(0.95);
-        }
-        button.tool-btn:disabled { background: #BDC3C7; cursor: not-allowed; box-shadow: none; }
-        #vsBtn { background: #F39C12; }
-        #vsBtn.active-tool { background: var(--danger); animation: pulse 1.5s infinite; }
+        button.tool-btn.shape-btn { background:var(--shape); }
+        button.tool-btn:hover { filter:brightness(.9); }
+        button.tool-btn.active-tool { background:var(--active); box-shadow:inset 0 3px 5px rgba(0,0,0,.2); transform:scale(.95); }
+        button.tool-btn:disabled { background:#BDC3C7; cursor:not-allowed; box-shadow:none; }
+        #vsBtn { background:#F39C12; }
+        #vsBtn.active-tool { background:var(--danger); animation:pulse 1.5s infinite; }
         @keyframes pulse {
-            0%   { box-shadow: 0 0 0 0 rgba(231,76,60,0.7); }
-            70%  { box-shadow: 0 0 0 10px rgba(231,76,60,0); }
-            100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+            0%  { box-shadow:0 0 0 0 rgba(231,76,60,.7); }
+            70% { box-shadow:0 0 0 10px rgba(231,76,60,0); }
+            100%{ box-shadow:0 0 0 0 rgba(231,76,60,0); }
         }
-        #clearBtn { background: var(--danger); }
-        #helpBtn  { background: #34495E; margin-left: auto; }
+        #clearBtn { background:var(--danger); }
+        #helpBtn  { background:#34495E; margin-left:auto; }
 
-        .color-palette {
-            display: flex; gap: 8px; align-items: center;
-            padding-left: 5px; border-right: 2px solid var(--border); padding-right: 15px;
-        }
-        .color-btn {
-            width: 30px; height: 30px; border-radius: 50%; border: 2px solid white;
-            box-shadow: 0 0 0 2px transparent, 0 2px 4px rgba(0,0,0,0.2);
-            padding: 0; cursor: pointer; transition: transform 0.2s;
-        }
-        .color-btn:hover { transform: scale(1.1); }
-        .color-btn.active-color { box-shadow: 0 0 0 2px #555, 0 2px 4px rgba(0,0,0,0.2); transform: scale(1.15); }
+        .color-palette { display:flex; gap:8px; align-items:center; padding-left:5px; border-right:2px solid var(--border); padding-right:15px; }
+        .color-btn { width:30px; height:30px; border-radius:50%; border:2px solid white; box-shadow:0 0 0 2px transparent, 0 2px 4px rgba(0,0,0,.2); padding:0; cursor:pointer; transition:transform .2s; }
+        .color-btn:hover { transform:scale(1.1); }
+        .color-btn.active-color { box-shadow:0 0 0 2px #555, 0 2px 4px rgba(0,0,0,.2); transform:scale(1.15); }
 
-        /* ── 主容器（左側數字欄 + 畫布） ── */
-        .main-container { display: flex; flex: 1; position: relative; min-height: 0; gap: 10px; }
+        .main-container { display:flex; flex:1; position:relative; min-height:0; gap:10px; }
 
-        /* ══════════════════════════════
-           數字面板
-        ══════════════════════════════ */
+        /* ══ 數字面板（左側窄欄，只放 chips） ══ */
         #numberPanel {
-            width: 58px; flex-shrink: 0;
-            background: white; border-radius: 12px;
-            border: 2px solid var(--border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            display: flex; flex-direction: column; align-items: center;
-            padding: 8px 6px; gap: 4px; overflow-y: auto;
-            user-select: none;
+            width:62px; flex-shrink:0;
+            background:white; border-radius:12px;
+            border:2px solid var(--border);
+            box-shadow:0 4px 6px rgba(0,0,0,.05);
+            display:flex; flex-direction:column; align-items:center;
+            padding:8px 6px; gap:4px; overflow-y:auto;
+            user-select:none;
         }
-        #numberPanel .panel-label {
-            font-size: 10px; color: #999; text-align: center;
-            line-height: 1.2; margin-bottom: 2px;
+        #numberPanel .panel-label { font-size:10px; color:#999; text-align:center; line-height:1.3; }
+        /* 字體大小設定按鈕 */
+        #numSizeBtn {
+            font-size:11px; padding:3px 6px; border-radius:6px;
+            border:1px solid var(--border); background:var(--primary);
+            color:white; cursor:pointer; font-weight:bold; width:100%;
         }
-        /* 尺寸選擇器 */
-        #numberPanel .size-btns {
-            display: flex; gap: 3px; margin-bottom: 4px;
-        }
-        #numberPanel .size-btn {
-            padding: 2px 5px; font-size: 11px; border: 1px solid var(--border);
-            border-radius: 4px; cursor: pointer; background: white; color: #555;
-            font-weight: bold; transition: all 0.15s;
-        }
-        #numberPanel .size-btn.active {
-            background: var(--primary); color: white; border-color: var(--primary);
-        }
-        /* 數字 chip */
         .num-chip {
-            width: 42px; height: 42px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; cursor: grab; transition: transform 0.15s, box-shadow 0.15s;
-            border: 2px solid transparent; background: #f8f9fa;
-            touch-action: none;
+            width:46px; height:46px; border-radius:8px;
+            display:flex; align-items:center; justify-content:center;
+            font-weight:900; cursor:grab; transition:transform .15s, box-shadow .15s;
+            border:2px solid transparent; background:#f8f9fa; touch-action:none;
         }
-        .num-chip:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .num-chip:active { cursor: grabbing; }
+        .num-chip:hover { transform:scale(1.08); box-shadow:0 4px 12px rgba(0,0,0,.15); }
+        .num-chip:active { cursor:grabbing; }
 
-        /* ══════════════════════════════
-           畫布區域
-        ══════════════════════════════ */
+        /* ══ 浮動數字設定視窗 ══ */
+        #numSettingsPanel {
+            position:fixed; z-index:200;
+            background:white; border-radius:14px;
+            border:2px solid var(--border);
+            box-shadow:0 8px 30px rgba(0,0,0,.2);
+            padding:16px; width:200px;
+            display:none; flex-direction:column; gap:10px;
+            top:80px; left:80px;
+        }
+        #numSettingsPanel.open { display:flex; }
+        #numSettingsPanel .ns-header {
+            display:flex; justify-content:space-between; align-items:center;
+            font-weight:bold; font-size:14px; color:#333; cursor:move;
+            padding-bottom:8px; border-bottom:1px solid var(--border);
+        }
+        #numSettingsPanel .ns-header span { font-size:18px; cursor:pointer; color:#aaa; }
+        #numSettingsPanel label { font-size:12px; color:#666; }
+        #numSettingsPanel input[type=number] {
+            width:100%; padding:6px 10px; border-radius:8px;
+            border:1px solid var(--border); font-size:20px; font-weight:bold;
+            text-align:center; color:var(--dark);
+        }
+        .ns-preview {
+            text-align:center; padding:10px; background:#f8f9fa;
+            border-radius:8px; font-weight:900; transition:font-size .1s;
+        }
+        #ns-apply { background:var(--active); color:white; border:none; border-radius:8px; padding:8px; font-size:14px; font-weight:bold; cursor:pointer; }
+        #ns-apply:hover { filter:brightness(.9); }
+
+        /* ══ 畫布 ══ */
         .canvas-container {
-            flex: 1; border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid var(--border);
-            background: white; overflow-y: auto; overflow-x: hidden; position: relative;
+            flex:1; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,.05);
+            border:2px solid var(--border); background:white;
+            overflow-y:auto; overflow-x:hidden; position:relative;
         }
-        .canvas-wrapper { position: relative; width: 100%; height: 3000px; }
+        .canvas-wrapper { position:relative; width:100%; height:3000px; }
         .canvas-wrapper::after {
-            content: ''; position: absolute; top: 0; left: 50%; width: 0; height: 100%;
-            border-left: 6px dashed var(--danger); transform: translateX(-50%);
-            pointer-events: none; z-index: 5; display: none;
+            content:''; position:absolute; top:0; left:50%; width:0; height:100%;
+            border-left:6px dashed var(--danger); transform:translateX(-50%);
+            pointer-events:none; z-index:5; display:none;
         }
-        .canvas-wrapper.vs-mode::after { display: block; }
-        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; }
+        .canvas-wrapper.vs-mode::after { display:block; }
+        canvas { position:absolute; top:0; left:0; width:100%; height:100%; touch-action:none; }
         #whiteboard {
-            z-index: 1;
-            background-size: 120px 120px;
-            background-image: linear-gradient(to right, #e8e8e8 1px, transparent 1px),
-                              linear-gradient(to bottom, #e8e8e8 1px, transparent 1px);
+            z-index:1;
+            background-size:120px 120px;
+            background-image:linear-gradient(to right,#e8e8e8 1px,transparent 1px),
+                             linear-gradient(to bottom,#e8e8e8 1px,transparent 1px);
         }
-        #overlayCanvas { z-index: 2; cursor: crosshair; }
+        #overlayCanvas { z-index:2; cursor:crosshair; }
 
-        /* ── 浮動物件工具列 ── */
+        /* ══ 浮動物件工具列 ══ */
         #objectToolbar {
-            display: none; position: fixed; bottom: 24px; left: 50%;
-            transform: translateX(-50%); background: #1a1a2e;
-            border-radius: 50px; padding: 10px 20px; gap: 12px;
-            align-items: center; box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-            z-index: 50; animation: slideUp 0.25s ease;
+            display:none; position:fixed; bottom:24px; left:50%;
+            transform:translateX(-50%); background:#1a1a2e;
+            border-radius:50px; padding:9px 18px; gap:8px;
+            align-items:center; box-shadow:0 8px 30px rgba(0,0,0,.35);
+            z-index:50; animation:slideUp .25s ease; flex-wrap:wrap; justify-content:center;
         }
-        #objectToolbar.visible { display: flex; }
+        #objectToolbar.visible { display:flex; }
         @keyframes slideUp {
-            from { opacity:0; transform: translateX(-50%) translateY(20px); }
-            to   { opacity:1; transform: translateX(-50%) translateY(0); }
+            from { opacity:0; transform:translateX(-50%) translateY(20px); }
+            to   { opacity:1; transform:translateX(-50%) translateY(0); }
         }
-        #objectToolbar span { color: #aaa; font-size: 13px; white-space: nowrap; }
+        #objectToolbar span { color:#aaa; font-size:13px; white-space:nowrap; }
         #objectToolbar button {
-            padding: 8px 18px; border: none; border-radius: 30px;
-            font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+            padding:7px 14px; border:none; border-radius:30px;
+            font-size:13px; font-weight:bold; cursor:pointer; transition:all .2s;
         }
-        #confirmBtn     { background: #2ECC71; color: white; }
-        #confirmBtn:hover { background: #27ae60; }
-        #duplicateBtn   { background: #3498DB; color: white; }
-        #duplicateBtn:hover { background: #2980b9; }
-        #deleteObjBtn   { background: #E74C3C; color: white; }
-        #deleteObjBtn:hover { background: #c0392b; }
-        #cancelSelectBtn { background: #555; color: #ddd; }
-        #cancelSelectBtn:hover { background: #777; }
+        #duplicateBtn    { background:#3498DB; color:white; }
+        #rotate90Btn     { background:#9B59B6; color:white; }
+        #flipHBtn        { background:#16a085; color:white; }
+        #flipVBtn        { background:#1abc9c; color:white; }
+        #confirmBtn      { background:#2ECC71; color:white; }
+        #flattenAllBtn   { background:#e67e22; color:white; }
+        #deleteObjBtn    { background:#E74C3C; color:white; }
+        #cancelSelectBtn { background:#555; color:#ddd; }
+        #objectToolbar button:hover { filter:brightness(.88); }
 
-        /* ── 提示泡泡 ── */
+        /* ══ 角度提示 ══ */
         #rotateHint {
-            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
-            background: rgba(26,26,46,0.9); color: #fff; padding: 6px 16px;
-            border-radius: 20px; font-size: 13px; pointer-events: none; z-index: 60; display: none;
+            position:fixed; top:70px; left:50%; transform:translateX(-50%);
+            background:rgba(26,26,46,.9); color:#fff; padding:6px 16px;
+            border-radius:20px; font-size:13px; pointer-events:none; z-index:60; display:none;
         }
 
-        /* ── 歷史側欄 ── */
+        /* ══ 歷史側欄 ══ */
         .history-sidebar {
-            position: absolute; right: 0; top: 0; height: 100%; width: 280px;
-            background: white; border-radius: 12px 0 0 12px;
-            box-shadow: -4px 0 10px rgba(0,0,0,0.1); border: 2px solid var(--border);
-            border-right: none; display: flex; flex-direction: column;
-            transform: translateX(105%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); z-index: 10;
+            position:absolute; right:0; top:0; height:100%; width:280px;
+            background:white; border-radius:12px 0 0 12px;
+            box-shadow:-4px 0 10px rgba(0,0,0,.1); border:2px solid var(--border);
+            border-right:none; display:flex; flex-direction:column;
+            transform:translateX(105%); transition:transform .3s cubic-bezier(.4,0,.2,1); z-index:10;
         }
-        .history-sidebar.open { transform: translateX(0); }
+        .history-sidebar.open { transform:translateX(0); }
         .history-toggle-btn {
-            position: absolute; left: -44px; top: 20px; background: var(--primary); color: white;
-            border: none; padding: 9px; border-radius: 8px 0 0 8px;
-            cursor: pointer; box-shadow: -2px 2px 5px rgba(0,0,0,0.1); font-weight: bold;
+            position:absolute; left:-44px; top:20px; background:var(--primary); color:white;
+            border:none; padding:9px; border-radius:8px 0 0 8px;
+            cursor:pointer; box-shadow:-2px 2px 5px rgba(0,0,0,.1); font-weight:bold;
         }
-        .history-header { padding: 14px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .history-header h3 { margin: 0; color: #333; }
-        .history-content { flex: 1; overflow-y: auto; padding: 14px; }
-        .history-item { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; padding: 5px; cursor: pointer; transition: transform 0.2s; background: white; }
-        .history-item:hover { transform: scale(1.02); border-color: var(--primary); }
-        .history-item img { width: 100%; aspect-ratio: 1/1; object-fit: cover; object-position: top left; border-radius: 4px; border: 1px solid #eee; }
+        .history-header { padding:14px; border-bottom:2px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        .history-header h3 { margin:0; color:#333; }
+        .history-content { flex:1; overflow-y:auto; padding:14px; }
+        .history-item { margin-bottom:14px; border:1px solid var(--border); border-radius:8px; padding:5px; cursor:pointer; transition:transform .2s; background:white; }
+        .history-item:hover { transform:scale(1.02); border-color:var(--primary); }
+        .history-item img { width:100%; aspect-ratio:1/1; object-fit:cover; object-position:top left; border-radius:4px; border:1px solid #eee; }
 
-        /* ── Modal ── */
+        /* ══ Modal ══ */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.6); z-index: 100;
-            display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px);
+            position:fixed; top:0; left:0; width:100vw; height:100vh;
+            background:rgba(0,0,0,.6); z-index:100;
+            display:none; justify-content:center; align-items:center; backdrop-filter:blur(2px);
         }
         .modal-content {
-            background: white; padding: 28px; border-radius: 12px;
-            max-width: 600px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            position: relative; line-height: 1.7; color: #333;
+            background:white; padding:28px; border-radius:12px;
+            max-width:620px; width:90%; box-shadow:0 10px 25px rgba(0,0,0,.2);
+            position:relative; line-height:1.7; color:#333;
         }
-        .modal-content h2 { margin-top: 0; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 10px; }
-        .modal-content ul { padding-left: 20px; }
-        .modal-content li { margin-bottom: 12px; }
-        .close-btn { position: absolute; top: 14px; right: 18px; font-size: 26px; cursor: pointer; color: #aaa; transition: color 0.2s; line-height: 1; }
-        .close-btn:hover { color: var(--danger); }
+        .modal-content h2 { margin-top:0; color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:10px; }
+        .modal-content ul { padding-left:20px; }
+        .modal-content li { margin-bottom:11px; }
+        .close-btn { position:absolute; top:14px; right:18px; font-size:26px; cursor:pointer; color:#aaa; transition:color .2s; line-height:1; }
+        .close-btn:hover { color:var(--danger); }
     </style>
 </head>
 <body>
@@ -224,26 +227,45 @@
 <div id="objectToolbar">
     <span id="objLabel">📐 圖形已選取</span>
     <button id="duplicateBtn">⧉ 複製</button>
+    <button id="rotate90Btn">🔄 右轉90°</button>
+    <button id="flipHBtn">↔️ 水平翻轉</button>
+    <button id="flipVBtn">↕️ 垂直翻轉</button>
     <button id="confirmBtn">✅ 確認壓平</button>
+    <button id="flattenAllBtn">🗜️ 全部壓平</button>
     <button id="deleteObjBtn">🗑️ 刪除</button>
     <button id="cancelSelectBtn">✕ 取消</button>
 </div>
 <div id="rotateHint">旋轉：0°</div>
 
+<!-- 浮動數字設定視窗 -->
+<div id="numSettingsPanel">
+    <div class="ns-header" id="nsHeader">
+        ⚙️ 數字字體大小
+        <span id="nsClose">&times;</span>
+    </div>
+    <label>字體大小（px）</label>
+    <input type="number" id="numSizeInput" value="48" min="12" max="300" step="2">
+    <div class="ns-preview" id="nsPreview" style="font-size:48px;color:#2c3e50">8</div>
+    <button id="ns-apply">套用並關閉</button>
+</div>
+
 <!-- 說明 Modal -->
 <div id="helpModal" class="modal-overlay">
     <div class="modal-content">
         <span class="close-btn" id="closeHelpBtn">&times;</span>
-        <h2>💡 白板說明 v4</h2>
+        <h2>💡 白板說明 v5</h2>
         <ul>
-            <li><b>🔢 左側數字面板：</b>選好大/中/小尺寸後，直接把數字 <b>拖曳</b> 到畫布，放開後變成可移動、旋轉的浮動數字。</li>
-            <li><b>↔️ 上下左右拉伸：</b>選取圖形後，<b>上下邊中點</b>（橘色）改高度，<b>左右邊中點</b>（橘色）改寬度，<b>四個角落</b>（白色）自由縮放。</li>
-            <li><b>🔄 旋轉：</b>拖曳頂部綠色 ↻ 把手，旋轉時右上角顯示角度。</li>
-            <li><b>⧉ 複製：</b>複製一個相同物件，適合全等三角形比對。</li>
-            <li><b>✅ 確認壓平：</b>滿意後按此，圖形融入畫布固定。</li>
-            <li><b>⚔️ 競賽模式：</b>畫面中央出現紅色分隔線，支援多點觸控雙人同時書寫。</li>
+            <li><b>🔢 左側數字面板：</b>點上方 <b>⚙️字體大小</b> 按鈕，在浮動視窗設定想要的 px 大小（預設 48），再把數字拖曳到畫布上。</li>
+            <li><b>⚙️ 浮動設定視窗：</b>可以拖曳移動到任意位置，不遮擋畫布。</li>
+            <li><b>🔄 右轉90°：</b>選取物件後，點一下就旋轉 90 度，方便快速對齊。</li>
+            <li><b>↔️ 水平翻轉 / ↕️ 垂直翻轉：</b>鏡像翻轉物件，全等三角形教學必備。</li>
+            <li><b>🗜️ 全部壓平：</b>一次把所有浮動物件壓入畫布，再用橡皮擦或清空都不影響其他內容。</li>
+            <li><b>↔️ 拉伸控制點：</b>選取圖形後，橘色中點 → 單向拉伸；白色角落 → 自由縮放。</li>
+            <li><b>🔄 旋轉：</b>拖曳頂部綠色 ↻ 把手，旋轉時顯示角度。</li>
+            <li><b>⚔️ 競賽模式：</b>畫面中央紅線，支援多點觸控雙人同時書寫。</li>
             <li><b>📐 Shift 鎖定：</b>畫圖形時按住 Shift → 正方形、正圓、正三角形、水平垂直線。</li>
-            <li><b>📸 貼圖：</b>Ctrl+V 貼入剪貼簿圖片。</li>
+            <li><b>📸 貼圖：</b>Ctrl+V 貼入剪貼簿圖片到目前畫面位置。</li>
+            <li><b>🧽 框選清除：</b>框選一個區域後放開，該區域的筆跡會被清除（紅色預覽框正常現象）。</li>
         </ul>
     </div>
 </div>
@@ -253,12 +275,8 @@
     <!-- 左側數字面板 -->
     <div id="numberPanel">
         <div class="panel-label">數字<br>面板</div>
-        <div class="size-btns">
-            <button class="size-btn" data-size="small">小</button>
-            <button class="size-btn active" data-size="medium">中</button>
-            <button class="size-btn" data-size="large">大</button>
-        </div>
-        <!-- 數字 chips 由 JS 產生 -->
+        <button id="numSizeBtn">⚙️ 字體<br>大小</button>
+        <!-- chips 由 JS 產生 -->
     </div>
 
     <div class="canvas-container" id="scrollContainer">
@@ -279,96 +297,84 @@
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════
-//  基本設定
-// ════════════════════════════════════════════════════════
-const mainCanvas     = document.getElementById('whiteboard');
-const mainCtx        = mainCanvas.getContext('2d');
-const overlayCanvas  = document.getElementById('overlayCanvas');
-const overlayCtx     = overlayCanvas.getContext('2d');
-const toolBtns       = document.querySelectorAll('.toolbar .tool-btn[data-tool]');
-const colorBtns      = document.querySelectorAll('.color-btn');
-const undoBtn        = document.getElementById('undoBtn');
-const redoBtn        = document.getElementById('redoBtn');
-const clearBtn       = document.getElementById('clearBtn');
-const vsBtn          = document.getElementById('vsBtn');
-const canvasWrapper  = document.getElementById('canvasWrapper');
-const scrollContainer= document.getElementById('scrollContainer');
-const objectToolbar  = document.getElementById('objectToolbar');
-const objLabel       = document.getElementById('objLabel');
-const confirmBtn     = document.getElementById('confirmBtn');
-const duplicateBtn   = document.getElementById('duplicateBtn');
-const deleteObjBtn   = document.getElementById('deleteObjBtn');
-const cancelSelectBtn= document.getElementById('cancelSelectBtn');
-const rotateHint     = document.getElementById('rotateHint');
-const helpBtn        = document.getElementById('helpBtn');
-const helpModal      = document.getElementById('helpModal');
-const closeHelpBtn   = document.getElementById('closeHelpBtn');
-const historyList    = document.getElementById('historyList');
-const historySidebar = document.getElementById('historySidebar');
+// ════════════════════════════════════════════════
+//  常數 & DOM refs
+// ════════════════════════════════════════════════
+const mainCanvas      = document.getElementById('whiteboard');
+const mainCtx         = mainCanvas.getContext('2d');
+const overlayCanvas   = document.getElementById('overlayCanvas');
+const overlayCtx      = overlayCanvas.getContext('2d');
+const toolBtns        = document.querySelectorAll('.toolbar .tool-btn[data-tool]');
+const colorBtns       = document.querySelectorAll('.color-btn');
+const undoBtn         = document.getElementById('undoBtn');
+const redoBtn         = document.getElementById('redoBtn');
+const clearBtn        = document.getElementById('clearBtn');
+const vsBtn           = document.getElementById('vsBtn');
+const canvasWrapper   = document.getElementById('canvasWrapper');
+const scrollContainer = document.getElementById('scrollContainer');
+const objectToolbar   = document.getElementById('objectToolbar');
+const objLabel        = document.getElementById('objLabel');
+const confirmBtn      = document.getElementById('confirmBtn');
+const flattenAllBtn   = document.getElementById('flattenAllBtn');
+const duplicateBtn    = document.getElementById('duplicateBtn');
+const rotate90Btn     = document.getElementById('rotate90Btn');
+const flipHBtn        = document.getElementById('flipHBtn');
+const flipVBtn        = document.getElementById('flipVBtn');
+const deleteObjBtn    = document.getElementById('deleteObjBtn');
+const cancelSelectBtn = document.getElementById('cancelSelectBtn');
+const rotateHint      = document.getElementById('rotateHint');
+const helpBtn         = document.getElementById('helpBtn');
+const helpModal       = document.getElementById('helpModal');
+const closeHelpBtn    = document.getElementById('closeHelpBtn');
+const historyList     = document.getElementById('historyList');
+const historySidebar  = document.getElementById('historySidebar');
 const toggleHistoryBtn= document.getElementById('toggleHistoryBtn');
-const numberPanel    = document.getElementById('numberPanel');
+const numberPanel     = document.getElementById('numberPanel');
+const numSizeBtn      = document.getElementById('numSizeBtn');
+const numSettingsPanel= document.getElementById('numSettingsPanel');
+const numSizeInput    = document.getElementById('numSizeInput');
+const nsPreview       = document.getElementById('nsPreview');
+const nsClose         = document.getElementById('nsClose');
+const nsHeader        = document.getElementById('nsHeader');
 
-const STORAGE_KEY   = 'math_wb_v4';
+const STORAGE_KEY   = 'math_wb_v5';
 const CANVAS_HEIGHT = 3000;
-const HR            = 9;   // handle radius
-const ROTATE_DIST   = 40;  // 旋轉把手距離中心
+const HR            = 9;
+const ROTATE_DIST   = 40;
+const DIGITS = ['0','1','2','3','4','5','6','7','8','9','+','−','×','÷','='];
 
 let currentTool  = 'pen';
 let currentColor = '#2c3e50';
-let numSize      = 'medium'; // small | medium | large
+let numFontSize  = 48;        // 使用者設定的字體大小
 let hasDrawn     = false;
-let undoStack    = [], redoStack = [];
-const MAX_HIST   = 30;
+let undoStack = [], redoStack = [];
+const MAX_HIST = 30;
 
-// ── 浮動物件陣列 ──
-// shape obj: { type, points, color, rotation, cx, cy }
-// text  obj: { type:'text', char, fontSize, color, rotation, cx, cy }
 let floatingObjects = [];
 let selectedObj     = null;
-let dragState       = null;  // 拖曳狀態
-let activePointers  = {};    // 多點觸控（畫筆/橡皮擦）
-let previewShape    = null;  // 圖形預覽
+let dragState       = null;
+let activePointers  = {};
+let previewShape    = null;
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  數字面板
-// ════════════════════════════════════════════════════════
-const DIGITS = ['0','1','2','3','4','5','6','7','8','9','+','−','×','÷','='];
-const SIZE_MAP = { small: 22, medium: 36, large: 54 };
-
+// ════════════════════════════════════════════════
 function buildNumberPanel() {
-    // 移除舊 chips
     numberPanel.querySelectorAll('.num-chip').forEach(el => el.remove());
-
     DIGITS.forEach(ch => {
         const chip = document.createElement('div');
         chip.className = 'num-chip';
         chip.textContent = ch;
         chip.dataset.char = ch;
         chip.style.color = currentColor;
-        chip.style.fontSize = SIZE_MAP[numSize] + 'px';
+        chip.style.fontSize = Math.min(numFontSize, 36) + 'px'; // chip 最大顯示 36px，拖出去才是真實大小
         chip.style.borderColor = currentColor + '33';
-
-        // 滑鼠拖曳
         chip.addEventListener('mousedown', startChipDrag);
-        // 觸控拖曳
         chip.addEventListener('touchstart', startChipTouchDrag, { passive: false });
-
         numberPanel.appendChild(chip);
     });
 }
 
-// 尺寸切換
-numberPanel.querySelectorAll('.size-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        numSize = btn.dataset.size;
-        numberPanel.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        buildNumberPanel();
-    });
-});
-
-// 顏色變更時同步數字面板顏色
 function syncChipColors() {
     numberPanel.querySelectorAll('.num-chip').forEach(chip => {
         chip.style.color = currentColor;
@@ -376,115 +382,141 @@ function syncChipColors() {
     });
 }
 
-// ── 拖曳數字到畫布（滑鼠） ──
-let chipDrag = null; // { char, ghost, startX, startY }
+// ── 浮動設定視窗 ──
+numSizeBtn.addEventListener('click', () => {
+    numSettingsPanel.classList.toggle('open');
+    nsPreview.style.color = currentColor;
+});
+nsClose.addEventListener('click', () => numSettingsPanel.classList.remove('open'));
+
+numSizeInput.addEventListener('input', () => {
+    const v = Math.max(12, Math.min(300, parseInt(numSizeInput.value) || 48));
+    nsPreview.style.fontSize = Math.min(v, 80) + 'px';
+});
+
+document.getElementById('ns-apply').addEventListener('click', () => {
+    numFontSize = Math.max(12, Math.min(300, parseInt(numSizeInput.value) || 48));
+    numSizeInput.value = numFontSize;
+    numSettingsPanel.classList.remove('open');
+    buildNumberPanel();
+});
+
+// 浮動視窗拖曳
+(function() {
+    let dragging = false, ox = 0, oy = 0;
+    nsHeader.addEventListener('mousedown', e => {
+        if (e.target === nsClose) return;
+        dragging = true;
+        const r = numSettingsPanel.getBoundingClientRect();
+        ox = e.clientX - r.left; oy = e.clientY - r.top;
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        numSettingsPanel.style.left = (e.clientX - ox) + 'px';
+        numSettingsPanel.style.top  = (e.clientY - oy) + 'px';
+    });
+    document.addEventListener('mouseup', () => dragging = false);
+})();
+
+// ── 拖曳 chip 到畫布（滑鼠） ──
+let chipDrag = null;
 
 function startChipDrag(e) {
     if (e.button !== 0) return;
     e.preventDefault();
     const ch = e.currentTarget.dataset.char;
-    const ghost = createChipGhost(ch, e.clientX, e.clientY);
+    const ghost = createGhost(ch, e.clientX, e.clientY);
     chipDrag = { char: ch, ghost };
     document.addEventListener('mousemove', moveChipDrag);
     document.addEventListener('mouseup', endChipDrag);
 }
-
 function moveChipDrag(e) {
     if (!chipDrag) return;
-    chipDrag.ghost.style.left = e.clientX - 20 + 'px';
-    chipDrag.ghost.style.top  = e.clientY - 20 + 'px';
+    // 把 ghost 中心對到滑鼠
+    const half = numFontSize * 0.4;
+    chipDrag.ghost.style.left = (e.clientX - half) + 'px';
+    chipDrag.ghost.style.top  = (e.clientY - half) + 'px';
 }
-
 function endChipDrag(e) {
     if (!chipDrag) return;
     document.removeEventListener('mousemove', moveChipDrag);
     document.removeEventListener('mouseup', endChipDrag);
     document.body.removeChild(chipDrag.ghost);
-
-    const canvasRect = overlayCanvas.getBoundingClientRect();
-    const x = e.clientX - canvasRect.left;
-    const y = e.clientY - canvasRect.top;
-
-    if (x >= 0 && y >= 0 && x <= canvasRect.width && y <= canvasRect.height) {
-        dropNumber(chipDrag.char, x, y);
-    }
+    const {x, y} = clientToCanvas(e.clientX, e.clientY);
+    if (x !== null) dropNumber(chipDrag.char, x, y);
     chipDrag = null;
 }
 
-// ── 拖曳數字到畫布（觸控） ──
+// ── 拖曳 chip 到畫布（觸控） ──
 let chipTouch = null;
 
 function startChipTouchDrag(e) {
     e.preventDefault();
     const touch = e.touches[0];
     const ch = e.currentTarget.dataset.char;
-    const ghost = createChipGhost(ch, touch.clientX, touch.clientY);
+    const ghost = createGhost(ch, touch.clientX, touch.clientY);
     chipTouch = { char: ch, ghost, id: touch.identifier };
-
     document.addEventListener('touchmove', moveChipTouch, { passive: false });
     document.addEventListener('touchend', endChipTouch);
 }
-
 function moveChipTouch(e) {
     if (!chipTouch) return;
     e.preventDefault();
-    for (let t of e.touches) {
-        if (t.identifier === chipTouch.id) {
-            chipTouch.ghost.style.left = t.clientX - 20 + 'px';
-            chipTouch.ghost.style.top  = t.clientY - 20 + 'px';
-        }
+    for (const t of e.touches) {
+        if (t.identifier !== chipTouch.id) continue;
+        const half = numFontSize * 0.4;
+        chipTouch.ghost.style.left = (t.clientX - half) + 'px';
+        chipTouch.ghost.style.top  = (t.clientY - half) + 'px';
     }
 }
-
 function endChipTouch(e) {
     if (!chipTouch) return;
     document.removeEventListener('touchmove', moveChipTouch);
     document.removeEventListener('touchend', endChipTouch);
     document.body.removeChild(chipTouch.ghost);
-
-    for (let t of e.changedTouches) {
-        if (t.identifier === chipTouch.id) {
-            const canvasRect = overlayCanvas.getBoundingClientRect();
-            const x = t.clientX - canvasRect.left;
-            const y = t.clientY - canvasRect.top;
-            if (x >= 0 && y >= 0 && x <= canvasRect.width && y <= canvasRect.height) {
-                dropNumber(chipTouch.char, x, y);
-            }
-        }
+    for (const t of e.changedTouches) {
+        if (t.identifier !== chipTouch.id) continue;
+        const {x, y} = clientToCanvas(t.clientX, t.clientY);
+        if (x !== null) dropNumber(chipTouch.char, x, y);
     }
     chipTouch = null;
 }
 
-function createChipGhost(ch, cx, cy) {
-    const ghost = document.createElement('div');
-    ghost.textContent = ch;
-    ghost.style.cssText = `
-        position:fixed; pointer-events:none; z-index:9999;
-        font-size:${SIZE_MAP[numSize]}px; font-weight:900;
-        color:${currentColor}; opacity:0.8;
-        left:${cx-20}px; top:${cy-20}px;
-        transition: none;
-    `;
-    document.body.appendChild(ghost);
-    return ghost;
+function createGhost(ch, cx, cy) {
+    const half = numFontSize * 0.4;
+    const el = document.createElement('div');
+    el.textContent = ch;
+    el.style.cssText = `position:fixed;pointer-events:none;z-index:9999;
+        font-size:${numFontSize}px;font-weight:900;color:${currentColor};opacity:.8;
+        left:${cx - half}px;top:${cy - half}px;line-height:1;`;
+    document.body.appendChild(el);
+    return el;
+}
+
+// 把 client 座標換算成 canvas 內部座標（含捲動補正）
+function clientToCanvas(cx, cy) {
+    const rect = overlayCanvas.getBoundingClientRect();
+    // getBoundingClientRect 給的是 CSS 顯示尺寸，canvas 內部座標需乘以 DPR 比
+    const scaleX = overlayCanvas.width  / rect.width;
+    const scaleY = overlayCanvas.height / rect.height;
+    const x = (cx - rect.left) * scaleX;
+    const y = (cy - rect.top)  * scaleY + scrollContainer.scrollTop;
+    if (x < 0 || y < 0 || x > overlayCanvas.width) return { x: null, y: null };
+    return { x, y };
 }
 
 function dropNumber(ch, x, y) {
-    const obj = {
-        type: 'text', char: ch,
-        fontSize: SIZE_MAP[numSize],
-        color: currentColor,
-        rotation: 0, cx: x, cy: y
-    };
+    const obj = { type:'text', char:ch, fontSize:numFontSize, color:currentColor, rotation:0, cx:x, cy:y };
     floatingObjects.push(obj);
     selectObject(obj);
     saveState();
     redrawAll();
 }
 
-// ════════════════════════════════════════════════════════
-//  工具列互動
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+//  工具列
+// ════════════════════════════════════════════════
 toolBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         currentTool = btn.dataset.tool;
@@ -493,17 +525,16 @@ toolBtns.forEach(btn => {
         if (!['line','rect','circle','triangle'].includes(currentTool)) deselectObject();
     });
 });
-
 colorBtns.forEach(btn => {
     btn.addEventListener('click', e => {
         currentColor = e.target.dataset.color;
         colorBtns.forEach(b => b.classList.remove('active-color'));
         e.target.classList.add('active-color');
         syncChipColors();
+        nsPreview.style.color = currentColor;
         if (currentTool === 'eraser') document.querySelector('[data-tool="pen"]').click();
     });
 });
-
 vsBtn.addEventListener('click', () => { canvasWrapper.classList.toggle('vs-mode'); vsBtn.classList.toggle('active-tool'); });
 helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
 closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
@@ -512,51 +543,100 @@ toggleHistoryBtn.addEventListener('click', () => historySidebar.classList.toggle
 undoBtn.addEventListener('click', undo);
 redoBtn.addEventListener('click', redo);
 
-// ════════════════════════════════════════════════════════
-//  物件工具列
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+//  物件工具列按鈕
+// ════════════════════════════════════════════════
 confirmBtn.addEventListener('click', () => {
     if (!selectedObj) return;
     flattenObject(selectedObj);
     floatingObjects = floatingObjects.filter(o => o !== selectedObj);
     deselectObject(); saveState(); redrawAll();
 });
+
+flattenAllBtn.addEventListener('click', () => {
+    if (!floatingObjects.length) return;
+    floatingObjects.forEach(obj => flattenObject(obj));
+    floatingObjects = [];
+    deselectObject(); saveState(); redrawAll();
+});
+
 duplicateBtn.addEventListener('click', () => {
     if (!selectedObj) return;
     const clone = JSON.parse(JSON.stringify(selectedObj));
     clone.cx += 30; clone.cy += 30;
     floatingObjects.push(clone);
-    deselectObject();
-    selectedObj = clone;
+    deselectObject(); selectedObj = clone;
     showObjectToolbar(); redrawAll();
 });
+
+rotate90Btn.addEventListener('click', () => {
+    if (!selectedObj) return;
+    selectedObj.rotation = (selectedObj.rotation + Math.PI / 2) % (2 * Math.PI);
+    redrawAll();
+});
+
+flipHBtn.addEventListener('click', () => {
+    if (!selectedObj) return;
+    flipObject(selectedObj, 'h');
+    redrawAll();
+});
+
+flipVBtn.addEventListener('click', () => {
+    if (!selectedObj) return;
+    flipObject(selectedObj, 'v');
+    redrawAll();
+});
+
 deleteObjBtn.addEventListener('click', () => {
     if (!selectedObj) return;
     floatingObjects = floatingObjects.filter(o => o !== selectedObj);
     deselectObject(); redrawAll();
 });
+
 cancelSelectBtn.addEventListener('click', () => { deselectObject(); redrawAll(); });
 
-// ════════════════════════════════════════════════════════
+// ── 翻轉邏輯 ──
+function flipObject(obj, dir) {
+    if (obj.type === 'text') {
+        // 文字翻轉：加上旋轉模擬
+        if (dir === 'h') obj.rotation = Math.PI - obj.rotation;
+        else             obj.rotation = -obj.rotation;
+        return;
+    }
+    if (obj.type === 'circle') {
+        // 橢圓翻轉：rx/ry 對調（dir 不影響圓，改旋轉即可）
+        if (dir === 'h') { const [rx,ry] = obj.points[0]; obj.points[0] = [-rx, ry]; } // 對稱
+        return;
+    }
+    if (obj.type === 'line') {
+        if (dir === 'h') obj.points = obj.points.map(([x,y]) => [-x, y]);
+        else             obj.points = obj.points.map(([x,y]) => [x, -y]);
+        return;
+    }
+    // rect / triangle
+    if (dir === 'h') obj.points = obj.points.map(([x,y]) => [-x, y]);
+    else             obj.points = obj.points.map(([x,y]) => [x, -y]);
+}
+
+// ════════════════════════════════════════════════
 //  畫布 resize
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 function resizeCanvas() {
     const w = mainCanvas.parentElement.clientWidth;
     mainCanvas.width = overlayCanvas.width = w;
     mainCanvas.height = overlayCanvas.height = CANVAS_HEIGHT;
-    if (undoStack.length > 0) restoreState(undoStack[undoStack.length-1]);
+    if (undoStack.length > 0) restoreState(undoStack[undoStack.length - 1]);
     redrawAll();
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  Undo / Redo
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 function saveState() {
     if (undoStack.length >= MAX_HIST) undoStack.shift();
     undoStack.push({ bitmap: mainCanvas.toDataURL(), objects: JSON.parse(JSON.stringify(floatingObjects)) });
-    redoStack = [];
-    updateUndoRedoButtons();
+    redoStack = []; updateUndoRedoButtons();
 }
 function restoreState(state) {
     const img = new Image();
@@ -569,196 +649,120 @@ function undo() { if (undoStack.length>1) { redoStack.push(undoStack.pop()); res
 function redo() { if (redoStack.length>0) { const s=redoStack.pop(); undoStack.push(s); restoreState(s); updateUndoRedoButtons(); } }
 function updateUndoRedoButtons() { undoBtn.disabled=undoStack.length<=1; redoBtn.disabled=redoStack.length===0; }
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  幾何物件建構
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 function buildShapeObject(type, sx, sy, ex, ey, isShift, color) {
-    let w = ex-sx, h = ey-sy;
+    let w=ex-sx, h=ey-sy;
     if (isShift) {
-        if (type==='rect'||type==='circle') {
-            const s=Math.max(Math.abs(w),Math.abs(h)); w=w<0?-s:s; h=h<0?-s:s;
-        } else if (type==='triangle') {
-            const s=Math.max(Math.abs(w),Math.abs(h)); w=w<0?-s:s;
-            const hi=Math.abs(w)*(Math.sqrt(3)/2); h=h<0?-hi:hi;
-        } else if (type==='line') {
-            const angle=Math.atan2(h,w);
-            const snapped=Math.round(angle/(Math.PI/4))*(Math.PI/4);
-            const len=Math.hypot(w,h); w=Math.cos(snapped)*len; h=Math.sin(snapped)*len;
-        }
+        if (type==='rect'||type==='circle') { const s=Math.max(Math.abs(w),Math.abs(h)); w=w<0?-s:s; h=h<0?-s:s; }
+        else if (type==='triangle') { const s=Math.max(Math.abs(w),Math.abs(h)); w=w<0?-s:s; const hi=Math.abs(w)*(Math.sqrt(3)/2); h=h<0?-hi:hi; }
+        else if (type==='line') { const a=Math.atan2(h,w),sn=Math.round(a/(Math.PI/4))*(Math.PI/4),l=Math.hypot(w,h); w=Math.cos(sn)*l; h=Math.sin(sn)*l; }
     }
     let cx,cy,points;
-    if (type==='line')     { cx=sx+w/2; cy=sy+h/2; points=[[-w/2,-h/2],[w/2,h/2]]; }
+    if      (type==='line')     { cx=sx+w/2; cy=sy+h/2; points=[[-w/2,-h/2],[w/2,h/2]]; }
     else if (type==='rect')     { cx=sx+w/2; cy=sy+h/2; points=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]]; }
     else if (type==='circle')   { cx=sx+w/2; cy=sy+h/2; points=[[Math.abs(w/2),Math.abs(h/2)]]; }
-    else if (type==='triangle') {
-        cx=sx+w/2; cy=sy+h/2;
-        points=[[0,-(Math.abs(h)/2)],[-Math.abs(w)/2,Math.abs(h)/2],[Math.abs(w)/2,Math.abs(h)/2]];
-    }
+    else if (type==='triangle') { cx=sx+w/2; cy=sy+h/2; points=[[0,-(Math.abs(h)/2)],[-Math.abs(w)/2,Math.abs(h)/2],[Math.abs(w)/2,Math.abs(h)/2]]; }
     return { type, points, color, rotation:0, cx, cy };
 }
 
-// ════════════════════════════════════════════════════════
-//  控制點計算（8個 + 旋轉把手）
-// ════════════════════════════════════════════════════════
-// 回傳 { corners:[4], edges:[4 or 0], rotate:[x,y] }
-// corners: TL TR BR BL（自由縮放）
-// edges:   T B L R（單軸拉伸）
-
+// ════════════════════════════════════════════════
+//  控制點計算
+// ════════════════════════════════════════════════
 function getHandles(obj) {
     if (obj.type === 'text') return getTextHandles(obj);
-
-    const cos = Math.cos(obj.rotation), sin = Math.sin(obj.rotation);
-    const rot = ([lx,ly]) => [obj.cx + lx*cos - ly*sin, obj.cy + lx*sin + ly*cos];
-
-    if (obj.type === 'line') {
-        const [p0, p1] = obj.points;
-        return {
-            corners: [rot(p0), rot(p1)],
-            edges: [],
-            rotate: rot([-(p0[1]+p1[1])/2 === 0 ? -ROTATE_DIST : 0,
-                         -Math.abs((p0[1]+p1[1])/2 || ROTATE_DIST)])
-        };
-    }
-
-    let minX, maxX, minY, maxY;
-    if (obj.type === 'circle') {
-        const [rx,ry] = obj.points[0];
-        minX=-rx; maxX=rx; minY=-ry; maxY=ry;
-    } else {
-        minX = Math.min(...obj.points.map(p=>p[0]));
-        maxX = Math.max(...obj.points.map(p=>p[0]));
-        minY = Math.min(...obj.points.map(p=>p[1]));
-        maxY = Math.max(...obj.points.map(p=>p[1]));
-    }
-    const mx = (minX+maxX)/2, my = (minY+maxY)/2;
-
-    return {
-        corners: [
-            rot([minX,minY]), rot([maxX,minY]),
-            rot([maxX,maxY]), rot([minX,maxY])
-        ],
-        edges: [
-            rot([mx, minY]),  // top
-            rot([mx, maxY]),  // bottom
-            rot([minX, my]),  // left
-            rot([maxX, my])   // right
-        ],
-        rotate: rot([mx, minY - ROTATE_DIST])
-    };
-}
-
-function getTextHandles(obj) {
-    // 估算文字 bounding box
-    const w = obj.fontSize * 0.65, h = obj.fontSize;
     const cos=Math.cos(obj.rotation), sin=Math.sin(obj.rotation);
     const rot = ([lx,ly]) => [obj.cx+lx*cos-ly*sin, obj.cy+lx*sin+ly*cos];
-    const hw=w/2, hh=h/2;
+    if (obj.type === 'line') {
+        const [p0,p1]=obj.points;
+        return { corners:[rot(p0),rot(p1)], edges:[], rotate:rot([0,-ROTATE_DIST]) };
+    }
+    let minX,maxX,minY,maxY;
+    if (obj.type==='circle') { const [rx,ry]=obj.points[0]; minX=-rx;maxX=rx;minY=-ry;maxY=ry; }
+    else { minX=Math.min(...obj.points.map(p=>p[0])); maxX=Math.max(...obj.points.map(p=>p[0])); minY=Math.min(...obj.points.map(p=>p[1])); maxY=Math.max(...obj.points.map(p=>p[1])); }
+    const mx=(minX+maxX)/2, my=(minY+maxY)/2;
     return {
-        corners: [rot([-hw,-hh]),rot([hw,-hh]),rot([hw,hh]),rot([-hw,hh])],
-        edges: [],
-        rotate: rot([0,-hh-ROTATE_DIST+10])
+        corners:[rot([minX,minY]),rot([maxX,minY]),rot([maxX,maxY]),rot([minX,maxY])],
+        edges:[rot([mx,minY]),rot([mx,maxY]),rot([minX,my]),rot([maxX,my])],
+        rotate:rot([mx,minY-ROTATE_DIST])
     };
 }
+function getTextHandles(obj) {
+    const w=obj.fontSize*0.65, h=obj.fontSize;
+    const cos=Math.cos(obj.rotation), sin=Math.sin(obj.rotation);
+    const rot=([lx,ly])=>[obj.cx+lx*cos-ly*sin, obj.cy+lx*sin+ly*cos];
+    const hw=w/2, hh=h/2;
+    return { corners:[rot([-hw,-hh]),rot([hw,-hh]),rot([hw,hh]),rot([-hw,hh])], edges:[], rotate:rot([0,-hh-ROTATE_DIST+10]) };
+}
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  繪圖
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 function drawObj(ctx, obj, selected) {
     ctx.save();
     ctx.translate(obj.cx, obj.cy);
     ctx.rotate(obj.rotation);
-    ctx.strokeStyle = obj.color;
-    ctx.fillStyle   = obj.color;
-    ctx.lineWidth   = 4;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.setLineDash([]);
+    ctx.strokeStyle=obj.color; ctx.fillStyle=obj.color;
+    ctx.lineWidth=4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.setLineDash([]);
 
-    if (obj.type === 'text') {
-        ctx.font = `900 ${obj.fontSize}px 'Segoe UI', Arial, sans-serif`;
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(obj.char, 0, 0);
-    } else if (obj.type === 'line') {
-        const [[x1,y1],[x2,y2]] = obj.points;
+    if (obj.type==='text') {
+        ctx.font=`900 ${obj.fontSize}px 'Segoe UI',Arial,sans-serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(obj.char,0,0);
+    } else if (obj.type==='line') {
+        const [[x1,y1],[x2,y2]]=obj.points;
         ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-    } else if (obj.type === 'rect') {
-        const [tl,,br] = obj.points;
+    } else if (obj.type==='rect') {
+        const [tl,,br]=obj.points;
         ctx.beginPath(); ctx.rect(tl[0],tl[1],br[0]-tl[0],br[1]-tl[1]); ctx.stroke();
-    } else if (obj.type === 'circle') {
-        const [rx,ry] = obj.points[0];
+    } else if (obj.type==='circle') {
+        const [rx,ry]=obj.points[0];
         ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,0,2*Math.PI); ctx.stroke();
-    } else if (obj.type === 'triangle') {
-        const [p0,p1,p2] = obj.points;
+    } else if (obj.type==='triangle') {
+        const [p0,p1,p2]=obj.points;
         ctx.beginPath(); ctx.moveTo(p0[0],p0[1]); ctx.lineTo(p1[0],p1[1]); ctx.lineTo(p2[0],p2[1]); ctx.closePath(); ctx.stroke();
     }
     ctx.restore();
 
-    // 選取控制框
     if (selected) {
-        const h = getHandles(obj);
-
-        // 虛線外框（針對有 corners 的）
-        if (h.corners.length === 4 && obj.type !== 'line') {
+        const h=getHandles(obj);
+        if (h.corners.length===4 && obj.type!=='line') {
             ctx.save(); ctx.setLineDash([6,4]); ctx.strokeStyle='#4A90E2'; ctx.lineWidth=1.5;
-            ctx.beginPath();
-            ctx.moveTo(h.corners[0][0],h.corners[0][1]);
-            h.corners.forEach(([x,y]) => ctx.lineTo(x,y));
-            ctx.closePath(); ctx.stroke(); ctx.restore();
+            ctx.beginPath(); ctx.moveTo(h.corners[0][0],h.corners[0][1]);
+            h.corners.forEach(([x,y])=>ctx.lineTo(x,y)); ctx.closePath(); ctx.stroke(); ctx.restore();
         }
-
-        // 旋轉把手（綠色）
-        const [rhx,rhy] = h.rotate;
+        const [rhx,rhy]=h.rotate;
         ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle='#2ECC71'; ctx.lineWidth=1.5;
         ctx.beginPath(); ctx.moveTo(obj.cx,obj.cy); ctx.lineTo(rhx,rhy); ctx.stroke(); ctx.restore();
         ctx.beginPath(); ctx.arc(rhx,rhy,HR,0,2*Math.PI);
-        ctx.fillStyle='#2ECC71'; ctx.fill();
-        ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.setLineDash([]); ctx.stroke();
-        ctx.fillStyle='white'; ctx.font='bold 11px sans-serif';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText('↻',rhx,rhy);
-
-        // 角落控制點（白色 □）
-        h.corners.forEach(([hx,hy]) => {
-            ctx.beginPath(); ctx.arc(hx,hy,HR-1,0,2*Math.PI);
-            ctx.fillStyle='white'; ctx.fill();
-            ctx.strokeStyle='#4A90E2'; ctx.lineWidth=2; ctx.setLineDash([]); ctx.stroke();
-        });
-
-        // 邊中點控制點（橘色 ◇，上下左右）
-        const edgeLabels = ['↕','↕','↔','↔'];
-        h.edges.forEach(([hx,hy], i) => {
-            ctx.beginPath(); ctx.arc(hx,hy,HR-1,0,2*Math.PI);
-            ctx.fillStyle='#F39C12'; ctx.fill();
-            ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.setLineDash([]); ctx.stroke();
-            ctx.fillStyle='white'; ctx.font='bold 9px sans-serif';
-            ctx.textAlign='center'; ctx.textBaseline='middle';
-            ctx.fillText(edgeLabels[i],hx,hy);
-        });
+        ctx.fillStyle='#2ECC71'; ctx.fill(); ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.setLineDash([]); ctx.stroke();
+        ctx.fillStyle='white'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('↻',rhx,rhy);
+        h.corners.forEach(([hx,hy])=>{ ctx.beginPath(); ctx.arc(hx,hy,HR-1,0,2*Math.PI); ctx.fillStyle='white'; ctx.fill(); ctx.strokeStyle='#4A90E2'; ctx.lineWidth=2; ctx.setLineDash([]); ctx.stroke(); });
+        h.edges.forEach(([hx,hy],i)=>{ ctx.beginPath(); ctx.arc(hx,hy,HR-1,0,2*Math.PI); ctx.fillStyle='#F39C12'; ctx.fill(); ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.setLineDash([]); ctx.stroke(); ctx.fillStyle='white'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(i<2?'↕':'↔',hx,hy); });
     }
 }
 
 function redrawAll() {
     overlayCtx.clearRect(0,0,overlayCanvas.width,overlayCanvas.height);
-    floatingObjects.forEach(obj => drawObj(overlayCtx, obj, obj===selectedObj));
-
-    // 形狀預覽
+    floatingObjects.forEach(obj=>drawObj(overlayCtx,obj,obj===selectedObj));
     if (previewShape) {
-        overlayCtx.strokeStyle = previewShape.color;
-        overlayCtx.lineWidth = 4; overlayCtx.setLineDash([]); overlayCtx.lineCap='round'; overlayCtx.lineJoin='round';
-        drawShapePreview(overlayCtx, previewShape);
+        overlayCtx.strokeStyle=previewShape.color; overlayCtx.lineWidth=4; overlayCtx.setLineDash([]); overlayCtx.lineCap='round'; overlayCtx.lineJoin='round';
+        drawShapePreview(overlayCtx,previewShape);
     }
-    // 橡皮擦預覽
-    for (let id in activePointers) {
-        const p = activePointers[id];
+    for (const id in activePointers) {
+        const p=activePointers[id];
         if (p.tool==='eraser') {
             overlayCtx.strokeStyle='#E74C3C'; overlayCtx.lineWidth=2; overlayCtx.setLineDash([5,5]);
             overlayCtx.strokeRect(p.startX,p.startY,p.currentX-p.startX,p.currentY-p.startY);
-            overlayCtx.fillStyle='rgba(231,76,60,0.12)';
+            overlayCtx.fillStyle='rgba(231,76,60,.12)';
             overlayCtx.fillRect(p.startX,p.startY,p.currentX-p.startX,p.currentY-p.startY);
         }
     }
     overlayCtx.setLineDash([]);
 }
 
-function drawShapePreview(ctx, s) {
+function drawShapePreview(ctx,s) {
     let w=s.ex-s.sx, h=s.ey-s.sy;
     if (s.isShift) {
         if (s.type==='rect'||s.type==='circle') { const sz=Math.max(Math.abs(w),Math.abs(h)); w=w<0?-sz:sz; h=h<0?-sz:sz; }
@@ -766,43 +770,36 @@ function drawShapePreview(ctx, s) {
         else if (s.type==='line') { const a=Math.atan2(h,w),sn=Math.round(a/(Math.PI/4))*(Math.PI/4),l=Math.hypot(w,h); w=Math.cos(sn)*l; h=Math.sin(sn)*l; }
     }
     ctx.beginPath();
-    if (s.type==='line')     { ctx.moveTo(s.sx,s.sy); ctx.lineTo(s.sx+w,s.sy+h); }
+    if      (s.type==='line')     { ctx.moveTo(s.sx,s.sy); ctx.lineTo(s.sx+w,s.sy+h); }
     else if (s.type==='rect')     { ctx.rect(s.sx,s.sy,w,h); }
     else if (s.type==='circle')   { ctx.ellipse(s.sx+w/2,s.sy+h/2,Math.abs(w/2),Math.abs(h/2),0,0,2*Math.PI); }
     else if (s.type==='triangle') { ctx.moveTo(s.sx+w/2,s.sy); ctx.lineTo(s.sx,s.sy+h); ctx.lineTo(s.sx+w,s.sy+h); ctx.closePath(); }
     ctx.stroke();
 }
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  命中測試
-// ════════════════════════════════════════════════════════
-function dist(ax,ay,bx,by) { return Math.hypot(ax-bx,ay-by); }
+// ════════════════════════════════════════════════
+const dist = (ax,ay,bx,by) => Math.hypot(ax-bx,ay-by);
 
 function toLocal(obj,x,y) {
     const cos=Math.cos(-obj.rotation), sin=Math.sin(-obj.rotation);
     const dx=x-obj.cx, dy=y-obj.cy;
     return [dx*cos-dy*sin, dx*sin+dy*cos];
 }
-
 function hitObj(obj,x,y) {
-    if (obj.type==='text') {
-        const [lx,ly]=toLocal(obj,x,y);
-        const hw=obj.fontSize*0.65/2, hh=obj.fontSize/2;
-        return Math.abs(lx)<=hw+8 && Math.abs(ly)<=hh+8;
-    }
+    if (obj.type==='text') { const [lx,ly]=toLocal(obj,x,y); const hw=obj.fontSize*.65/2,hh=obj.fontSize/2; return Math.abs(lx)<=hw+8&&Math.abs(ly)<=hh+8; }
     const [lx,ly]=toLocal(obj,x,y);
     if (obj.type==='line') return distPL(lx,ly,...obj.points[0],...obj.points[1])<12;
     if (obj.type==='circle') { const [rx,ry]=obj.points[0]; return lx*lx/(rx*rx)+ly*ly/(ry*ry)<=1.35; }
     return ptInPoly(lx,ly,obj.points,12);
 }
-
 function distPL(px,py,x1,y1,x2,y2) {
-    const dx=x2-x1, dy=y2-y1, l2=dx*dx+dy*dy;
+    const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy;
     if (!l2) return dist(px,py,x1,y1);
     const t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/l2));
     return dist(px,py,x1+t*dx,y1+t*dy);
 }
-
 function ptInPoly(px,py,pts,tol) {
     const n=pts.length;
     for (let i=0;i<n;i++) { const [x1,y1]=pts[i],[x2,y2]=pts[(i+1)%n]; if (distPL(px,py,x1,y1,x2,y2)<tol) return true; }
@@ -810,20 +807,17 @@ function ptInPoly(px,py,pts,tol) {
     for (let i=0,j=n-1;i<n;j=i++) { const [xi,yi]=pts[i],[xj,yj]=pts[j]; if (((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/(yj-yi)+xi)) inside=!inside; }
     return inside;
 }
-
 function hitRotate(obj,x,y) { const [hx,hy]=getHandles(obj).rotate; return dist(x,y,hx,hy)<=HR+5; }
-
-// 回傳命中的控制點：{ kind:'corner'|'edge', idx }  或 null
 function hitHandlePoint(obj,x,y) {
     const h=getHandles(obj);
-    for (let i=0;i<h.corners.length;i++) { if (dist(x,y,...h.corners[i])<=HR+3) return {kind:'corner',idx:i}; }
-    for (let i=0;i<h.edges.length;i++)   { if (dist(x,y,...h.edges[i])<=HR+3)   return {kind:'edge',idx:i}; }
+    for (let i=0;i<h.corners.length;i++) if (dist(x,y,...h.corners[i])<=HR+3) return {kind:'corner',idx:i};
+    for (let i=0;i<h.edges.length;i++)   if (dist(x,y,...h.edges[i])<=HR+3)   return {kind:'edge',idx:i};
     return null;
 }
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  選取 / 取消
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 function selectObject(obj) {
     selectedObj = obj;
     objLabel.textContent = obj.type==='text' ? `🔢 數字「${obj.char}」已選取` : '📐 圖形已選取';
@@ -832,41 +826,47 @@ function selectObject(obj) {
 function deselectObject() { selectedObj=null; objectToolbar.classList.remove('visible'); rotateHint.style.display='none'; }
 function showObjectToolbar() { objectToolbar.classList.add('visible'); }
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  壓平
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 function flattenObject(obj) {
     mainCtx.save();
     mainCtx.translate(obj.cx, obj.cy);
     mainCtx.rotate(obj.rotation);
-    mainCtx.strokeStyle = obj.color; mainCtx.fillStyle = obj.color;
+    mainCtx.strokeStyle=obj.color; mainCtx.fillStyle=obj.color;
     mainCtx.lineWidth=4; mainCtx.lineCap='round'; mainCtx.lineJoin='round'; mainCtx.setLineDash([]);
-
     if (obj.type==='text') {
         mainCtx.font=`900 ${obj.fontSize}px 'Segoe UI',Arial,sans-serif`;
-        mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
-        mainCtx.fillText(obj.char,0,0);
+        mainCtx.textAlign='center'; mainCtx.textBaseline='middle'; mainCtx.fillText(obj.char,0,0);
     } else {
         mainCtx.beginPath();
-        if (obj.type==='line')     { const [[x1,y1],[x2,y2]]=obj.points; mainCtx.moveTo(x1,y1); mainCtx.lineTo(x2,y2); }
+        if      (obj.type==='line')     { const [[x1,y1],[x2,y2]]=obj.points; mainCtx.moveTo(x1,y1); mainCtx.lineTo(x2,y2); }
         else if (obj.type==='rect')     { const [tl,,br]=obj.points; mainCtx.rect(tl[0],tl[1],br[0]-tl[0],br[1]-tl[1]); }
         else if (obj.type==='circle')   { const [rx,ry]=obj.points[0]; mainCtx.ellipse(0,0,rx,ry,0,0,2*Math.PI); }
         else if (obj.type==='triangle') { const [p0,p1,p2]=obj.points; mainCtx.moveTo(p0[0],p0[1]); mainCtx.lineTo(p1[0],p1[1]); mainCtx.lineTo(p2[0],p2[1]); mainCtx.closePath(); }
         mainCtx.stroke();
     }
     mainCtx.restore();
-    hasDrawn=true;
+    hasDrawn = true;
 }
 
-// ════════════════════════════════════════════════════════
-//  Pointer 事件
-// ════════════════════════════════════════════════════════
-function getPos(e) { const r=overlayCanvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+// ════════════════════════════════════════════════
+//  Pointer 事件（overlayCanvas 座標已是 canvas 內部座標）
+// ════════════════════════════════════════════════
+function getPos(e) {
+    const rect = overlayCanvas.getBoundingClientRect();
+    const scaleX = overlayCanvas.width  / rect.width;
+    const scaleY = overlayCanvas.height / rect.height;
+    return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top)  * scaleY + scrollContainer.scrollTop
+    };
+}
 
-overlayCanvas.addEventListener('pointerdown', onDown);
-overlayCanvas.addEventListener('pointermove', onMove);
-overlayCanvas.addEventListener('pointerup',   onEnd);
-overlayCanvas.addEventListener('pointerout',  onEnd);
+overlayCanvas.addEventListener('pointerdown',   onDown);
+overlayCanvas.addEventListener('pointermove',   onMove);
+overlayCanvas.addEventListener('pointerup',     onEnd);
+overlayCanvas.addEventListener('pointerout',    onEnd);
 overlayCanvas.addEventListener('pointercancel', onEnd);
 
 function onDown(e) {
@@ -874,55 +874,38 @@ function onDown(e) {
     const {x,y}=getPos(e);
     const shapeTools=['line','rect','circle','triangle'];
 
-    // 已選物件的控制點
     if (selectedObj) {
         if (hitRotate(selectedObj,x,y)) {
-            dragState={ mode:'rotate', pointerId:e.pointerId,
-                origRot:selectedObj.rotation,
-                origAngle:Math.atan2(y-selectedObj.cy, x-selectedObj.cx) };
+            dragState={ mode:'rotate', pointerId:e.pointerId, origRot:selectedObj.rotation, origAngle:Math.atan2(y-selectedObj.cy, x-selectedObj.cx) };
             overlayCanvas.setPointerCapture(e.pointerId); return;
         }
-        const hp = hitHandlePoint(selectedObj,x,y);
+        const hp=hitHandlePoint(selectedObj,x,y);
         if (hp) {
-            // 記錄原始資料
-            dragState={ mode:'scale', pointerId:e.pointerId,
-                kind:hp.kind, idx:hp.idx,
-                startX:x, startY:y,
-                origPoints:JSON.parse(JSON.stringify(selectedObj.points)),
-                origFontSize: selectedObj.fontSize,
-                origCx:selectedObj.cx, origCy:selectedObj.cy };
+            dragState={ mode:'scale', pointerId:e.pointerId, kind:hp.kind, idx:hp.idx, startX:x, startY:y, origPoints:JSON.parse(JSON.stringify(selectedObj.points)), origFontSize:selectedObj.fontSize, origCx:selectedObj.cx, origCy:selectedObj.cy };
             overlayCanvas.setPointerCapture(e.pointerId); return;
         }
         if (hitObj(selectedObj,x,y)) {
-            dragState={ mode:'move', pointerId:e.pointerId,
-                startX:x, startY:y,
-                origCx:selectedObj.cx, origCy:selectedObj.cy };
+            dragState={ mode:'move', pointerId:e.pointerId, startX:x, startY:y, origCx:selectedObj.cx, origCy:selectedObj.cy };
             overlayCanvas.setPointerCapture(e.pointerId); return;
         }
     }
 
-    // 點選其他浮動物件
     for (let i=floatingObjects.length-1;i>=0;i--) {
         if (hitObj(floatingObjects[i],x,y)) {
             selectObject(floatingObjects[i]);
-            dragState={ mode:'move', pointerId:e.pointerId,
-                startX:x, startY:y,
-                origCx:floatingObjects[i].cx, origCy:floatingObjects[i].cy };
+            dragState={ mode:'move', pointerId:e.pointerId, startX:x, startY:y, origCx:floatingObjects[i].cx, origCy:floatingObjects[i].cy };
             overlayCanvas.setPointerCapture(e.pointerId); return;
         }
     }
 
-    // 開始畫形狀
     if (shapeTools.includes(currentTool)) {
         previewShape={ type:currentTool, sx:x, sy:y, ex:x, ey:y, color:currentColor, isShift:e.shiftKey };
         activePointers[e.pointerId]={ tool:'shape', startX:x, startY:y };
         overlayCanvas.setPointerCapture(e.pointerId); return;
     }
 
-    // 畫筆 / 橡皮擦
     if (!shapeTools.includes(currentTool)) {
-        activePointers[e.pointerId]={ tool:currentTool, color:currentColor,
-            startX:x, startY:y, lastX:x, lastY:y, currentX:x, currentY:y, isShift:e.shiftKey };
+        activePointers[e.pointerId]={ tool:currentTool, color:currentColor, startX:x, startY:y, lastX:x, lastY:y, currentX:x, currentY:y, isShift:e.shiftKey };
         overlayCanvas.setPointerCapture(e.pointerId);
     }
 }
@@ -931,34 +914,22 @@ function onMove(e) {
     e.preventDefault();
     const {x,y}=getPos(e);
 
-    // 拖曳浮動物件
     if (dragState && dragState.pointerId===e.pointerId && selectedObj) {
-        if (dragState.mode==='move') {
-            selectedObj.cx=dragState.origCx+(x-dragState.startX);
-            selectedObj.cy=dragState.origCy+(y-dragState.startY);
-            redrawAll(); return;
-        }
+        if (dragState.mode==='move') { selectedObj.cx=dragState.origCx+(x-dragState.startX); selectedObj.cy=dragState.origCy+(y-dragState.startY); redrawAll(); return; }
         if (dragState.mode==='rotate') {
             const angle=Math.atan2(y-selectedObj.cy, x-selectedObj.cx);
             selectedObj.rotation=dragState.origRot+(angle-dragState.origAngle);
             const deg=((Math.round(selectedObj.rotation*180/Math.PI)%360)+360)%360;
-            rotateHint.textContent=`旋轉：${deg}°`;
-            rotateHint.style.display='block';
+            rotateHint.textContent=`旋轉：${deg}°`; rotateHint.style.display='block';
             redrawAll(); return;
         }
-        if (dragState.mode==='scale') {
-            scaleObject(selectedObj, dragState, x, y);
-            redrawAll(); return;
-        }
+        if (dragState.mode==='scale') { scaleObject(selectedObj,dragState,x,y); redrawAll(); return; }
     }
 
-    // 形狀預覽
     if (previewShape && activePointers[e.pointerId]?.tool==='shape') {
-        previewShape.ex=x; previewShape.ey=y; previewShape.isShift=e.shiftKey;
-        redrawAll(); return;
+        previewShape.ex=x; previewShape.ey=y; previewShape.isShift=e.shiftKey; redrawAll(); return;
     }
 
-    // 畫筆 / 橡皮擦
     const p=activePointers[e.pointerId];
     if (!p||p.tool==='shape') return;
     p.currentX=x; p.currentY=y;
@@ -970,86 +941,34 @@ function onMove(e) {
     } else { redrawAll(); }
 }
 
-// ── 縮放邏輯 ──
-// kind='corner' → 自由縮放（維持對角固定）
-// kind='edge', idx=0(top)|1(bottom) → 只改高度
-// kind='edge', idx=2(left)|3(right) → 只改寬度
-function scaleObject(obj, ds, x, y) {
-    const origPts = ds.origPoints;
-
-    if (obj.type === 'text') {
-        // 文字：統一縮放 fontSize
-        const startDist = dist(ds.startX, ds.startY, ds.origCx, ds.origCy);
-        const nowDist   = dist(x, y, obj.cx, obj.cy);
-        const scale = Math.max(0.2, nowDist / (startDist || 1));
-        obj.fontSize = Math.max(12, Math.round((ds.origFontSize||36) * scale));
+function scaleObject(obj,ds,x,y) {
+    const origPts=ds.origPoints;
+    if (obj.type==='text') {
+        const sd=dist(ds.startX,ds.startY,ds.origCx,ds.origCy);
+        const nd=dist(x,y,obj.cx,obj.cy);
+        obj.fontSize=Math.max(12,Math.round((ds.origFontSize||48)*Math.max(.2,nd/(sd||1))));
         return;
     }
-
-    if (obj.type === 'circle') {
-        const [lx,ly] = toLocal(obj, x, y);
-        obj.points[0] = [Math.max(10,Math.abs(lx)), Math.max(10,Math.abs(ly))];
-        return;
-    }
-
-    if (obj.type === 'line') {
-        // 線段：移動端點
-        const [lx,ly]=toLocal(obj,x,y);
-        if (ds.idx===0) obj.points[0]=[lx,ly];
-        else obj.points[1]=[lx,ly];
-        return;
-    }
-
-    // rect / triangle
-    const [lx,ly] = toLocal(obj, x, y);
-
+    if (obj.type==='circle') { const [lx,ly]=toLocal(obj,x,y); obj.points[0]=[Math.max(10,Math.abs(lx)),Math.max(10,Math.abs(ly))]; return; }
+    if (obj.type==='line') { const [lx,ly]=toLocal(obj,x,y); if (ds.idx===0) obj.points[0]=[lx,ly]; else obj.points[1]=[lx,ly]; return; }
+    const [lx,ly]=toLocal(obj,x,y);
     if (ds.kind==='corner') {
-        // 計算從中心到該角的縮放比例
-        const origHandle = origPts[ds.idx];
-        const scaleX = origHandle[0]!==0 ? lx/origHandle[0] : 1;
-        const scaleY = origHandle[1]!==0 ? ly/origHandle[1] : 1;
-        obj.points = origPts.map(([px,py]) => [px*scaleX, py*scaleY]);
+        const oh=origPts[ds.idx];
+        const sx2=oh[0]!==0?lx/oh[0]:1, sy2=oh[1]!==0?ly/oh[1]:1;
+        obj.points=origPts.map(([px,py])=>[px*sx2,py*sy2]);
     } else {
-        // edge: idx 0=top 1=bottom 2=left 3=right
         const idx=ds.idx;
-        const minY = Math.min(...origPts.map(p=>p[1]));
-        const maxY = Math.max(...origPts.map(p=>p[1]));
-        const minX = Math.min(...origPts.map(p=>p[0]));
-        const maxX = Math.max(...origPts.map(p=>p[0]));
-
-        if (idx===0) {
-            // 上邊 → 只改 Y（minY 往 ly 移）
-            const scaleY = maxY!==minY ? (ly-maxY)/(minY-maxY) : 1;
-            obj.points = origPts.map(([px,py]) => {
-                const t=(py-maxY)/(minY-maxY||1);
-                return [px, maxY + t*(ly-maxY)];
-            });
-        } else if (idx===1) {
-            // 下邊 → 只改 Y（maxY 往 ly 移）
-            obj.points = origPts.map(([px,py]) => {
-                const t=(py-minY)/(maxY-minY||1);
-                return [px, minY + t*(ly-minY)];
-            });
-        } else if (idx===2) {
-            // 左邊 → 只改 X
-            obj.points = origPts.map(([px,py]) => {
-                const t=(px-maxX)/(minX-maxX||1);
-                return [maxX + t*(lx-maxX), py];
-            });
-        } else {
-            // 右邊 → 只改 X
-            obj.points = origPts.map(([px,py]) => {
-                const t=(px-minX)/(maxX-minX||1);
-                return [minX + t*(lx-minX), py];
-            });
-        }
+        const minY=Math.min(...origPts.map(p=>p[1])),maxY=Math.max(...origPts.map(p=>p[1]));
+        const minX=Math.min(...origPts.map(p=>p[0])),maxX=Math.max(...origPts.map(p=>p[0]));
+        if (idx===0) { obj.points=origPts.map(([px,py])=>{ const t=(py-maxY)/(minY-maxY||1); return [px,maxY+t*(ly-maxY)]; }); }
+        else if (idx===1) { obj.points=origPts.map(([px,py])=>{ const t=(py-minY)/(maxY-minY||1); return [px,minY+t*(ly-minY)]; }); }
+        else if (idx===2) { obj.points=origPts.map(([px,py])=>{ const t=(px-maxX)/(minX-maxX||1); return [maxX+t*(lx-maxX),py]; }); }
+        else              { obj.points=origPts.map(([px,py])=>{ const t=(px-minX)/(maxX-minX||1); return [minX+t*(lx-minX),py]; }); }
     }
 }
 
 function onEnd(e) {
-    if (dragState && dragState.pointerId===e.pointerId) {
-        dragState=null; rotateHint.style.display='none'; redrawAll(); return;
-    }
+    if (dragState && dragState.pointerId===e.pointerId) { dragState=null; rotateHint.style.display='none'; redrawAll(); return; }
     if (previewShape && activePointers[e.pointerId]?.tool==='shape') {
         if (Math.abs(previewShape.ex-previewShape.sx)>8||Math.abs(previewShape.ey-previewShape.sy)>8) {
             const obj=buildShapeObject(previewShape.type,previewShape.sx,previewShape.sy,previewShape.ex,previewShape.ey,previewShape.isShift,previewShape.color);
@@ -1070,58 +989,50 @@ function onEnd(e) {
     redrawAll();
 }
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  鍵盤
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
     if (e.ctrlKey||e.metaKey) {
         if (e.key==='z'||e.key==='Z') { e.shiftKey?redo():undo(); e.preventDefault(); }
         if (e.key==='y'||e.key==='Y') { redo(); e.preventDefault(); }
     }
     if ((e.key==='Delete'||e.key==='Backspace')&&selectedObj&&e.target===document.body) {
-        floatingObjects=floatingObjects.filter(o=>o!==selectedObj);
-        deselectObject(); redrawAll();
+        floatingObjects=floatingObjects.filter(o=>o!==selectedObj); deselectObject(); redrawAll();
     }
 });
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  貼上圖片
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 window.addEventListener('paste', e => {
     const items=(e.clipboardData||e.originalEvent.clipboardData).items;
-    for (let idx in items) {
+    for (const idx in items) {
         const item=items[idx];
         if (item.kind==='file'&&item.type.startsWith('image/')) {
             const blob=item.getAsFile(), reader=new FileReader();
-            reader.onload=ev=>{
-                const img=new Image();
-                img.onload=()=>{ mainCtx.drawImage(img,20,scrollContainer.scrollTop+20); hasDrawn=true; saveState(); redrawAll(); };
-                img.src=ev.target.result;
-            };
+            reader.onload=ev=>{ const img=new Image(); img.onload=()=>{ mainCtx.drawImage(img,20,scrollContainer.scrollTop+20); hasDrawn=true; saveState(); redrawAll(); }; img.src=ev.target.result; };
             reader.readAsDataURL(blob);
         }
     }
 });
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  清空 / 歷史紀錄
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 clearBtn.addEventListener('click', () => {
     if (hasDrawn||floatingObjects.length>0) saveToHistory();
     mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
     floatingObjects=[]; deselectObject(); hasDrawn=false; saveState(); scrollContainer.scrollTop=0; redrawAll();
 });
 
-function flattenToCanvas(tmpCtx) {
+function flattenToTmpCtx(tmpCtx) {
     floatingObjects.forEach(obj=>{
         tmpCtx.save(); tmpCtx.translate(obj.cx,obj.cy); tmpCtx.rotate(obj.rotation);
         tmpCtx.strokeStyle=obj.color; tmpCtx.fillStyle=obj.color;
         tmpCtx.lineWidth=4; tmpCtx.lineCap='round'; tmpCtx.lineJoin='round'; tmpCtx.setLineDash([]);
-        if (obj.type==='text') {
-            tmpCtx.font=`900 ${obj.fontSize}px 'Segoe UI',Arial,sans-serif`;
-            tmpCtx.textAlign='center'; tmpCtx.textBaseline='middle'; tmpCtx.fillText(obj.char,0,0);
-        } else {
-            tmpCtx.beginPath();
+        if (obj.type==='text') { tmpCtx.font=`900 ${obj.fontSize}px 'Segoe UI',Arial,sans-serif`; tmpCtx.textAlign='center'; tmpCtx.textBaseline='middle'; tmpCtx.fillText(obj.char,0,0); }
+        else { tmpCtx.beginPath();
             if (obj.type==='line') { const [[x1,y1],[x2,y2]]=obj.points; tmpCtx.moveTo(x1,y1); tmpCtx.lineTo(x2,y2); }
             else if (obj.type==='rect') { const [tl,,br]=obj.points; tmpCtx.rect(tl[0],tl[1],br[0]-tl[0],br[1]-tl[1]); }
             else if (obj.type==='circle') { const [rx,ry]=obj.points[0]; tmpCtx.ellipse(0,0,rx,ry,0,0,2*Math.PI); }
@@ -1135,7 +1046,7 @@ function flattenToCanvas(tmpCtx) {
 function saveToHistory() {
     if (!hasDrawn&&floatingObjects.length===0) return;
     const tmp=document.createElement('canvas'); tmp.width=mainCanvas.width; tmp.height=mainCanvas.height;
-    const tCtx=tmp.getContext('2d'); tCtx.drawImage(mainCanvas,0,0); flattenToCanvas(tCtx);
+    const tCtx=tmp.getContext('2d'); tCtx.drawImage(mainCanvas,0,0); flattenToTmpCtx(tCtx);
     const imageData=tmp.toDataURL('image/png');
     const timestamp=new Date().toLocaleString('zh-TW');
     let records=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
@@ -1170,9 +1081,9 @@ function renderHistory() {
     });
 }
 
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 //  初始化
-// ════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
 buildNumberPanel();
 resizeCanvas();
 saveState();
