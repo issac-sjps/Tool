@@ -9,49 +9,50 @@
             margin: 0;
             padding: 0;
             font-family: 'Arial', sans-serif;
-            background-color: #111;
+            background-color: #000; /* 改為純黑背景，更像電子計分板 */
             color: white;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            user-select: none; /* 防止連按時反白文字 */
+            user-select: none; 
         }
 
         /* 上半部：計時器 */
         #top-section {
-            flex: 1;
+            flex: 0.8;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #222;
-            border-bottom: 5px solid #444;
+            background-color: #111;
+            border-bottom: 2px solid #333;
+            padding-top: 10px;
         }
 
         #timer {
-            font-size: 15vw;
+            font-size: 12vw;
             font-weight: bold;
             color: #FFD700;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
             line-height: 1;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
         }
 
         .timer-controls button {
-            font-size: 2vw;
-            padding: 10px 30px;
-            margin: 0 10px;
+            font-size: 1.8vw;
+            padding: 10px 25px;
+            margin: 0 5px;
             cursor: pointer;
-            border: none;
-            border-radius: 10px;
-            background-color: #444;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background-color: #222;
             color: white;
             transition: 0.2s;
         }
-        .timer-controls button:hover { background-color: #666; }
-        .timer-controls button:active { background-color: #888; }
+        .timer-controls button:hover { background-color: #444; }
+        .timer-controls button:active { background-color: #666; }
 
         /* 下半部：計分板 */
         #bottom-section {
@@ -67,24 +68,45 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
         }
 
-        #red-team { background-color: #8B0000; } /* 暗紅色 */
-        #blue-team { background-color: #00008B; border-left: 5px solid #222;} /* 暗藍色 */
+        #red-team { background-color: #b30000; } /* 鮮明暗紅 */
+        #blue-team { background-color: #0033cc; border-left: 2px solid #111;} /* 鮮明暗藍 */
 
-        .team-name {
-            font-size: 4vw;
-            margin: 0;
-            margin-bottom: 20px;
+        /* 可編輯的隊名輸入框 */
+        .team-name-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px dashed rgba(255,255,255,0.4); /* 虛線提示可點擊 */
+            color: white;
+            font-size: 6vw;
+            font-weight: bold;
+            text-align: center;
+            width: 70%;
+            margin-bottom: 10px;
+            font-family: inherit;
             text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+        
+        .team-name-input:focus {
+            outline: none;
+            border-bottom: 2px solid white;
+            background: rgba(0,0,0,0.2); /* 點擊輸入時背景微暗 */
         }
 
         .score {
-            font-size: 20vw;
+            font-size: 25vw; /* 分數數字放更大 */
             font-weight: bold;
             line-height: 1;
             margin-bottom: 20px;
-            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .score-controls {
+            display: flex;
+            gap: 20px;
         }
 
         .score-controls button {
@@ -92,21 +114,22 @@
             width: 8vw;
             height: 8vw;
             border-radius: 50%;
-            border: none;
-            margin: 0 10px;
+            border: 2px solid rgba(255,255,255,0.2);
             cursor: pointer;
             font-weight: bold;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
+            transition: transform 0.1s, background-color 0.2s;
         }
 
         .score-controls button:active {
-            transform: scale(0.95);
+            transform: scale(0.9);
         }
 
-        /* 加減分按鈕顏色 */
-        .btn-plus { background-color: #4CAF50; color: white; }
-        .btn-minus { background-color: #f44336; color: white; }
+        /* 加減分按鈕顏色 (融入背景色系) */
+        .btn-plus { background-color: rgba(255,255,255,0.2); color: white; }
+        .btn-plus:hover { background-color: rgba(255,255,255,0.4); }
+        .btn-minus { background-color: rgba(0,0,0,0.3); color: #ccc; }
+        .btn-minus:hover { background-color: rgba(0,0,0,0.5); color: white; }
 
     </style>
 </head>
@@ -115,16 +138,16 @@
     <div id="top-section">
         <div id="timer">20</div>
         <div class="timer-controls">
-            <button onclick="startTimer()">開始</button>
-            <button onclick="pauseTimer()">暫停</button>
-            <button onclick="resetTimer()">重置 20 秒</button>
-            <button onclick="resetScores()">雙方分數歸零</button>
+            <button onclick="startTimer()">▶ 開始</button>
+            <button onclick="pauseTimer()">⏸ 暫停</button>
+            <button onclick="resetTimer()">🔄 重置 20 秒</button>
+            <button onclick="resetScores()">🗑 分數歸零</button>
         </div>
     </div>
 
     <div id="bottom-section">
         <div class="team" id="red-team">
-            <h2 class="team-name">紅 隊</h2>
+            <input type="text" class="team-name-input" value="紅 隊" maxlength="8">
             <div class="score" id="red-score">0</div>
             <div class="score-controls">
                 <button class="btn-minus" onclick="changeScore('red', -1)">-1</button>
@@ -133,7 +156,7 @@
         </div>
 
         <div class="team" id="blue-team">
-            <h2 class="team-name">藍 隊</h2>
+            <input type="text" class="team-name-input" value="藍 隊" maxlength="8">
             <div class="score" id="blue-score">0</div>
             <div class="score-controls">
                 <button class="btn-minus" onclick="changeScore('blue', -1)">-1</button>
@@ -150,7 +173,7 @@
         function changeScore(team, amount) {
             if (team === 'red') {
                 redScore += amount;
-                if (redScore < 0) redScore = 0; // 不允許扣到負分
+                if (redScore < 0) redScore = 0;
                 document.getElementById('red-score').innerText = redScore;
             } else if (team === 'blue') {
                 blueScore += amount;
@@ -177,11 +200,11 @@
         function updateTimerDisplay() {
             document.getElementById('timer').innerText = timeLeft;
             if(timeLeft <= 5 && timeLeft > 0) {
-                document.getElementById('timer').style.color = '#FF4500'; // 最後5秒變紅橘色
+                document.getElementById('timer').style.color = '#ff6666'; 
             } else if (timeLeft === 0) {
-                document.getElementById('timer').style.color = '#FF0000'; // 0秒變紅色
+                document.getElementById('timer').style.color = '#ff0000'; 
             } else {
-                document.getElementById('timer').style.color = '#FFD700'; // 正常黃色
+                document.getElementById('timer').style.color = '#FFD700'; 
             }
         }
 
@@ -189,7 +212,6 @@
             if (isRunning || timeLeft === 0) return; 
             isRunning = true;
             
-            // 由於瀏覽器安全機制，音效需要透過使用者點擊後解鎖
             initAudio(); 
 
             timerInterval = setInterval(() => {
@@ -199,7 +221,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     isRunning = false;
-                    playBuzzer(); // 時間到播放聲音
+                    playBuzzer(); 
                 }
             }, 1000);
         }
@@ -226,23 +248,20 @@
         function playBuzzer() {
             if (!audioCtx) initAudio();
             
-            // 建立振盪器發出「嗶」聲
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             
-            // 設定聲音類型為方波 (比較像運動比賽的蜂鳴器)
             oscillator.type = 'square';
-            oscillator.frequency.value = 400; // 音高頻率
+            oscillator.frequency.value = 450; // 微調音高
             
-            // 設定音量變化，避免爆音
             gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
             
             oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 1.5); // 聲音持續 1.5 秒
+            oscillator.stop(audioCtx.currentTime + 1.5); 
         }
     </script>
 </body>
