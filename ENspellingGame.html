@@ -7,21 +7,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --red: #e63946;
-      --red-dark: #9b1c26;
       --red-glow: rgba(230,57,70,0.5);
-      --blue: #1d6fc4;
-      --blue-dark: #0a3d70;
       --blue-glow: rgba(29,111,196,0.5);
       --gold: #FFD700;
       --gold-dim: #b89b00;
       --bg: #050508;
       --panel: #0d0d14;
       --border: #1e1e2e;
+      --top-h: 38vh; /* draggable */
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
       background: var(--bg);
@@ -33,612 +28,562 @@
       user-select: none;
     }
 
-    /* ─── HEADER ─── */
+    /* ── HEADER ── */
     #header {
-      background: linear-gradient(90deg, #0d0d14, #131320, #0d0d14);
+      background: linear-gradient(90deg,#0d0d14,#131320,#0d0d14);
       border-bottom: 2px solid var(--border);
-      padding: 6px 20px;
+      padding: 5px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
       flex-shrink: 0;
+      z-index: 30;
     }
-
     #title {
-      font-size: clamp(1rem, 2.2vw, 1.6rem);
+      font-size: clamp(0.85rem,2vw,1.4rem);
       font-weight: 900;
       letter-spacing: 0.12em;
       color: var(--gold);
       text-shadow: 0 0 18px var(--gold-dim);
       white-space: nowrap;
     }
-
-    /* Round selector */
-    #round-selector {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: clamp(0.75rem, 1.3vw, 1rem);
-      color: #aaa;
+    #header-right { display:flex; align-items:center; gap:10px; }
+    #custom-time-wrap {
+      display:flex; align-items:center; gap:5px;
+      font-size:clamp(0.7rem,1.1vw,0.85rem); color:#888;
     }
-    #round-selector select {
-      background: #1a1a2e;
-      color: var(--gold);
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-family: inherit;
-      font-size: inherit;
-      cursor: pointer;
+    #custom-time {
+      width:48px; background:#1a1a2e; color:var(--gold);
+      border:1px solid #333; border-radius:6px;
+      padding:3px 5px; font-family:'Orbitron',sans-serif;
+      font-size:inherit; text-align:center;
     }
+    #custom-time:focus { outline:none; border-color:var(--gold); }
 
-    /* ─── TIMER SECTION ─── */
+    /* History button */
+    #history-btn {
+      font-family:'Noto Sans TC',sans-serif;
+      font-size:clamp(0.7rem,1.1vw,0.85rem);
+      padding:5px 14px; cursor:pointer;
+      border:1px solid #555; border-radius:8px;
+      background:#1a1a28; color:#aaa;
+      transition:all 0.15s; white-space:nowrap;
+    }
+    #history-btn:hover { background:#2a2a3e; color:var(--gold); border-color:var(--gold-dim); }
+
+    /* ── TIMER SECTION (resizable) ── */
     #top-section {
-      flex: 0 0 auto;
+      height: var(--top-h);
+      min-height: 120px;
+      max-height: 75vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 0 8px;
+      padding: 8px 0 6px;
       background: var(--panel);
-      border-bottom: 2px solid var(--border);
       position: relative;
+      flex-shrink: 0;
+      overflow: hidden;
     }
-
     #timer {
-      font-size: clamp(4rem, 14vw, 10rem);
+      font-size: clamp(3rem,12vw,9rem);
       font-weight: 900;
       color: var(--gold);
       line-height: 1;
       letter-spacing: 0.05em;
       font-variant-numeric: tabular-nums;
       text-shadow: 0 0 30px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.15);
-      transition: color 0.3s, text-shadow 0.3s;
+      transition: color 0.3s;
     }
+    #timer.warning { color:#ff9900; text-shadow:0 0 30px rgba(255,153,0,0.6); animation:pulse-warn 0.5s ease-in-out infinite alternate; }
+    #timer.danger  { color:#ff3333; text-shadow:0 0 30px rgba(255,50,50,0.8); animation:pulse-danger 0.3s ease-in-out infinite alternate; }
+    @keyframes pulse-warn  { from{transform:scale(1)} to{transform:scale(1.03)} }
+    @keyframes pulse-danger{ from{transform:scale(1);opacity:1} to{transform:scale(1.05);opacity:0.85} }
 
-    #timer.warning {
-      color: #ff9900;
-      text-shadow: 0 0 30px rgba(255,153,0,0.6), 0 0 60px rgba(255,153,0,0.3);
-      animation: pulse-warn 0.5s ease-in-out infinite alternate;
-    }
-
-    #timer.danger {
-      color: #ff3333;
-      text-shadow: 0 0 30px rgba(255,50,50,0.8), 0 0 60px rgba(255,50,50,0.4);
-      animation: pulse-danger 0.3s ease-in-out infinite alternate;
-    }
-
-    @keyframes pulse-warn {
-      from { transform: scale(1); }
-      to { transform: scale(1.03); }
-    }
-    @keyframes pulse-danger {
-      from { transform: scale(1); opacity: 1; }
-      to { transform: scale(1.05); opacity: 0.85; }
-    }
-
-    /* Progress bar */
     #progress-bar-wrap {
-      width: 80%;
-      max-width: 600px;
-      height: 6px;
-      background: #1a1a2e;
-      border-radius: 3px;
-      margin: 6px 0;
-      overflow: hidden;
+      width:78%; max-width:580px; height:5px;
+      background:#1a1a2e; border-radius:3px; margin:5px 0; overflow:hidden;
     }
-    #progress-bar {
-      height: 100%;
-      background: var(--gold);
-      border-radius: 3px;
-      transition: width 0.5s linear, background 0.5s;
-    }
+    #progress-bar { height:100%; background:var(--gold); border-radius:3px; transition:width 0.5s linear,background 0.5s; }
 
-    .timer-controls {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 8px;
-    }
-
+    .timer-controls { display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-top:6px; }
     .timer-controls button {
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: clamp(0.7rem, 1.4vw, 1rem);
-      padding: 8px 18px;
-      cursor: pointer;
-      border: 1px solid #333;
-      border-radius: 8px;
-      background: #1a1a28;
-      color: #ccc;
-      transition: all 0.15s;
-      letter-spacing: 0.05em;
+      font-family:'Noto Sans TC',sans-serif;
+      font-size:clamp(0.65rem,1.3vw,0.95rem);
+      padding:7px 16px; cursor:pointer;
+      border:1px solid #333; border-radius:8px;
+      background:#1a1a28; color:#ccc; transition:all 0.15s;
     }
-    .timer-controls button:hover { background: #2a2a3e; color: white; border-color: #555; }
-    .timer-controls button:active { transform: scale(0.95); }
-    .btn-start { border-color: #3a3 !important; color: #6f6 !important; }
-    .btn-start:hover { background: #1a2e1a !important; }
-    .btn-pause { border-color: #aa6 !important; color: var(--gold) !important; }
-    .btn-reset { border-color: #555 !important; }
+    .timer-controls button:hover { background:#2a2a3e; color:white; border-color:#555; }
+    .timer-controls button:active { transform:scale(0.95); }
+    .btn-start { border-color:#3a3!important; color:#6f6!important; }
+    .btn-start:hover { background:#1a2e1a!important; }
+    .btn-pause { border-color:#aa6!important; color:var(--gold)!important; }
 
-    /* custom time input */
-    #custom-time-wrap {
-      display: flex; align-items: center; gap: 6px;
-      font-size: clamp(0.7rem, 1.2vw, 0.9rem);
-      color: #888;
+    /* ── DRAG HANDLE ── */
+    #drag-handle {
+      height: 10px;
+      background: linear-gradient(180deg, #1e1e2e, #111);
+      cursor: ns-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 20;
+      transition: background 0.15s;
     }
-    #custom-time {
-      width: 52px;
-      background: #1a1a2e;
-      color: var(--gold);
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 4px 6px;
-      font-family: 'Orbitron', sans-serif;
-      font-size: inherit;
-      text-align: center;
+    #drag-handle:hover { background: #2a2a40; }
+    #drag-handle::after {
+      content: '⠿';
+      color: #444;
+      font-size: 14px;
+      letter-spacing: 3px;
     }
-    #custom-time:focus { outline: none; border-color: var(--gold); }
 
-    /* ─── SCOREBOARD ─── */
+    /* ── SCOREBOARD ── */
     #bottom-section {
       flex: 1;
       display: flex;
       min-height: 0;
+      position: relative;
     }
-
     .team {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 16px 10px 20px;
+      padding: 12px 10px 16px;
       position: relative;
       overflow: hidden;
     }
-
     .team::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      opacity: 0.12;
-      background-size: 40px 40px;
+      content:''; position:absolute; inset:0; opacity:0.08;
+      background-size:40px 40px;
       background-image:
-        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+        linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
     }
-
-    #red-team {
-      background: linear-gradient(160deg, #1a0305, #2d0810, #150203);
-      border-right: 1px solid #111;
-    }
+    #red-team  { background:linear-gradient(160deg,#1a0305,#2d0810,#150203); }
+    #blue-team { background:linear-gradient(160deg,#010a1a,#031128,#010a18); }
     #red-team::after {
-      content: '';
-      position: absolute;
-      top: -30%; left: 50%;
-      transform: translateX(-50%);
-      width: 80%; height: 60%;
-      background: radial-gradient(ellipse, rgba(180,0,20,0.18) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    #blue-team {
-      background: linear-gradient(160deg, #010a1a, #031128, #010a18);
-      border-left: 1px solid #111;
+      content:''; position:absolute; top:-30%; left:50%;
+      transform:translateX(-50%); width:80%; height:60%;
+      background:radial-gradient(ellipse,rgba(180,0,20,0.18) 0%,transparent 70%);
+      pointer-events:none;
     }
     #blue-team::after {
-      content: '';
-      position: absolute;
-      top: -30%; left: 50%;
-      transform: translateX(-50%);
-      width: 80%; height: 60%;
-      background: radial-gradient(ellipse, rgba(0,60,180,0.18) 0%, transparent 70%);
-      pointer-events: none;
+      content:''; position:absolute; top:-30%; left:50%;
+      transform:translateX(-50%); width:80%; height:60%;
+      background:radial-gradient(ellipse,rgba(0,60,180,0.18) 0%,transparent 70%);
+      pointer-events:none;
     }
 
-    /* Team name dropdown */
+    /* No vertical divider line — removed */
+
     .team-name-select {
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid rgba(255,255,255,0.25);
-      color: white;
-      font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
-      font-size: clamp(1.4rem, 4.5vw, 3.5rem);
-      font-weight: 900;
-      text-align: center;
-      cursor: pointer;
-      letter-spacing: 0.1em;
-      margin-bottom: 6px;
-      padding: 0 4px;
-      transition: border-color 0.2s;
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      max-width: 480px;
-      appearance: none;
-      -webkit-appearance: none;
-      text-shadow: 1px 1px 6px rgba(0,0,0,0.5);
-      text-align-last: center;
+      background:transparent; border:none;
+      border-bottom:2px solid rgba(255,255,255,0.2);
+      font-family:'Orbitron','Noto Sans TC',sans-serif;
+      font-size:clamp(1.2rem,4vw,3rem);
+      font-weight:900; text-align:center; cursor:pointer;
+      letter-spacing:0.1em; margin-bottom:4px; padding:0 4px;
+      transition:border-color 0.2s; position:relative; z-index:2;
+      width:90%; max-width:460px;
+      appearance:none; -webkit-appearance:none;
+      text-align-last:center;
     }
-    .team-name-select:focus { outline: none; border-bottom-color: white; }
-    .team-name-select option {
-      background: #0d0d1a;
-      font-size: 1rem;
-      color: white;
-      font-family: 'Noto Sans TC', sans-serif;
-    }
+    .team-name-select:focus { outline:none; border-bottom-color:white; }
+    .team-name-select option { background:#0d0d1a; font-size:1rem; color:white; font-family:'Noto Sans TC',sans-serif; }
+    #red-team  .team-name-select { color:#ff8888; }
+    #blue-team .team-name-select { color:#88aaff; }
 
-    #red-team .team-name-select { color: #ff8888; }
-    #blue-team .team-name-select { color: #88aaff; }
-
-    /* Score */
     .score {
-      font-size: clamp(5rem, 22vw, 16rem);
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -0.02em;
-      position: relative;
-      z-index: 2;
-      transition: transform 0.08s;
+      font-size:clamp(4.5rem,20vw,15rem);
+      font-weight:900; line-height:1; letter-spacing:-0.02em;
+      position:relative; z-index:2;
     }
+    #red-team  .score { color:#fff; text-shadow:0 0 30px var(--red-glow),0 4px 20px rgba(0,0,0,0.6); }
+    #blue-team .score { color:#fff; text-shadow:0 0 30px var(--blue-glow),0 4px 20px rgba(0,0,0,0.6); }
+    .score.bump { animation:scoreBump 0.2s ease-out; }
+    @keyframes scoreBump { 0%{transform:scale(1)} 50%{transform:scale(1.18)} 100%{transform:scale(1)} }
 
-    #red-team .score {
-      color: #ffffff;
-      text-shadow: 0 0 30px var(--red-glow), 0 4px 20px rgba(0,0,0,0.6);
-    }
-    #blue-team .score {
-      color: #ffffff;
-      text-shadow: 0 0 30px var(--blue-glow), 0 4px 20px rgba(0,0,0,0.6);
-    }
-
-    .score.bump {
-      animation: scoreBump 0.2s ease-out;
-    }
-    @keyframes scoreBump {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.18); }
-      100% { transform: scale(1); }
-    }
-
-    /* Controls */
-    .score-controls {
-      display: flex;
-      gap: 14px;
-      margin-top: 10px;
-      position: relative;
-      z-index: 2;
-    }
-
+    .score-controls { display:flex; gap:12px; margin-top:8px; position:relative; z-index:2; }
     .score-controls button {
-      font-family: 'Orbitron', sans-serif;
-      font-size: clamp(1rem, 2.8vw, 2rem);
-      width: clamp(52px, 7.5vw, 90px);
-      height: clamp(52px, 7.5vw, 90px);
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.15);
-      cursor: pointer;
-      font-weight: 900;
-      transition: transform 0.1s, background 0.15s, box-shadow 0.15s;
-      backdrop-filter: blur(4px);
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(0.9rem,2.5vw,1.8rem);
+      width:clamp(48px,7vw,84px); height:clamp(48px,7vw,84px);
+      border-radius:50%; border:2px solid rgba(255,255,255,0.15);
+      cursor:pointer; font-weight:900;
+      transition:transform 0.1s,background 0.15s,box-shadow 0.15s;
     }
-    .score-controls button:active { transform: scale(0.88) !important; }
+    .score-controls button:active { transform:scale(0.88)!important; }
+    #red-team  .btn-plus  { background:rgba(200,30,50,0.55); color:#fff; box-shadow:0 4px 16px rgba(200,30,50,0.4); }
+    #red-team  .btn-plus:hover { background:rgba(220,40,60,0.8); }
+    #red-team  .btn-minus { background:rgba(80,0,10,0.5); color:#faa; border-color:rgba(255,100,100,0.2); }
+    #red-team  .btn-minus:hover { background:rgba(120,10,20,0.7); }
+    #blue-team .btn-plus  { background:rgba(20,80,200,0.55); color:#fff; box-shadow:0 4px 16px rgba(20,80,200,0.4); }
+    #blue-team .btn-plus:hover { background:rgba(30,100,220,0.8); }
+    #blue-team .btn-minus { background:rgba(0,10,80,0.5); color:#aaf; border-color:rgba(100,130,255,0.2); }
+    #blue-team .btn-minus:hover { background:rgba(10,20,120,0.7); }
 
-    #red-team .btn-plus  { background: rgba(200,30,50,0.55); color: #fff; box-shadow: 0 4px 16px rgba(200,30,50,0.4); }
-    #red-team .btn-plus:hover { background: rgba(220,40,60,0.8); box-shadow: 0 4px 24px rgba(220,40,60,0.6); }
-    #red-team .btn-minus { background: rgba(80,0,10,0.5); color: #faa; border-color: rgba(255,100,100,0.2); }
-    #red-team .btn-minus:hover { background: rgba(120,10,20,0.7); }
-
-    #blue-team .btn-plus  { background: rgba(20,80,200,0.55); color: #fff; box-shadow: 0 4px 16px rgba(20,80,200,0.4); }
-    #blue-team .btn-plus:hover { background: rgba(30,100,220,0.8); box-shadow: 0 4px 24px rgba(30,100,220,0.6); }
-    #blue-team .btn-minus { background: rgba(0,10,80,0.5); color: #aaf; border-color: rgba(100,130,255,0.2); }
-    #blue-team .btn-minus:hover { background: rgba(10,20,120,0.7); }
-
-    /* Win highlight */
-    .team.winning .score {
-      animation: winPulse 1.4s ease-in-out infinite;
-    }
+    .team.winning .score { animation:winPulse 1.4s ease-in-out infinite; }
     @keyframes winPulse {
-      0%, 100% { text-shadow: 0 0 30px rgba(255,220,50,0.3), 0 4px 20px rgba(0,0,0,0.6); }
-      50% { text-shadow: 0 0 60px rgba(255,220,50,0.9), 0 0 100px rgba(255,200,0,0.4), 0 4px 20px rgba(0,0,0,0.6); }
+      0%,100%{text-shadow:0 0 30px rgba(255,220,50,0.3),0 4px 20px rgba(0,0,0,0.6)}
+      50%{text-shadow:0 0 60px rgba(255,220,50,0.9),0 0 100px rgba(255,200,0,0.4),0 4px 20px rgba(0,0,0,0.6)}
     }
 
-    /* Divider line */
-    #divider {
-      position: absolute;
-      left: 50%;
-      top: 0; bottom: 0;
-      width: 2px;
-      background: linear-gradient(to bottom, transparent, #333, #333, transparent);
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    /* ─── RESET BUTTON ─── */
+    /* ── RESET BTN ── */
     #reset-scores-btn {
-      position: fixed;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(10,10,20,0.85);
-      border: 1px solid #333;
-      color: #888;
-      font-family: 'Noto Sans TC', sans-serif;
-      font-size: 0.8rem;
-      padding: 6px 18px;
-      border-radius: 20px;
-      cursor: pointer;
-      z-index: 20;
-      transition: color 0.2s, border-color 0.2s;
-      backdrop-filter: blur(4px);
+      position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
+      background:rgba(10,10,20,0.88); border:1px solid #333;
+      color:#888; font-family:'Noto Sans TC',sans-serif;
+      font-size:0.78rem; padding:5px 16px; border-radius:20px;
+      cursor:pointer; z-index:20; transition:color 0.2s,border-color 0.2s;
+      backdrop-filter:blur(4px);
     }
-    #reset-scores-btn:hover { color: #ff8888; border-color: #ff4444; }
+    #reset-scores-btn:hover { color:#ff8888; border-color:#ff4444; }
 
-    /* ─── FLASH OVERLAY (時間到) ─── */
+    /* ── FLASH ── */
     #flash-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(255,50,50,0.15);
-      pointer-events: none;
-      z-index: 50;
-      animation: flashAnim 0.3s ease-out;
+      display:none; position:fixed; inset:0;
+      background:rgba(255,50,50,0.15); pointer-events:none; z-index:50;
     }
-    @keyframes flashAnim {
-      from { opacity: 1; }
-      to { opacity: 0; }
+    @keyframes flashAnim { from{opacity:1} to{opacity:0} }
+
+    /* ── HISTORY MODAL ── */
+    #history-modal {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.82); z-index:100;
+      align-items:center; justify-content:center;
     }
+    #history-modal.open { display:flex; }
+    #history-box {
+      background:#0d0d18; border:1px solid #2a2a3e;
+      border-radius:16px; padding:28px 32px;
+      max-width:600px; width:92vw; max-height:80vh;
+      overflow-y:auto; position:relative;
+    }
+    #history-box h2 {
+      font-family:'Noto Sans TC',sans-serif;
+      font-size:1.2rem; color:var(--gold); margin-bottom:16px;
+      border-bottom:1px solid #2a2a3e; padding-bottom:10px;
+    }
+    .hist-entry {
+      border:1px solid #1e1e2e; border-radius:10px;
+      padding:12px 16px; margin-bottom:10px;
+      background:#111120;
+    }
+    .hist-date { font-size:0.72rem; color:#555; margin-bottom:6px; font-family:'Noto Sans TC',sans-serif; }
+    .hist-teams {
+      display:flex; gap:10px; align-items:center;
+      font-size:clamp(0.9rem,2vw,1.15rem); font-weight:900;
+    }
+    .hist-red  { color:#ff7777; }
+    .hist-blue { color:#7799ff; }
+    .hist-vs   { color:#444; font-size:0.85rem; }
+    .hist-winner { font-size:0.72rem; margin-top:6px; color:#aaa; font-family:'Noto Sans TC',sans-serif; }
+    .hist-winner span { color:var(--gold); }
+    #history-close {
+      position:absolute; top:14px; right:18px;
+      background:none; border:none; color:#666;
+      font-size:1.4rem; cursor:pointer;
+    }
+    #history-close:hover { color:white; }
+    #history-empty { color:#444; font-family:'Noto Sans TC',sans-serif; font-size:0.9rem; text-align:center; padding:20px 0; }
+    #history-clear-btn {
+      margin-top:12px; width:100%;
+      background:#1a0808; border:1px solid #441111;
+      color:#aa4444; font-family:'Noto Sans TC',sans-serif;
+      font-size:0.8rem; padding:7px; border-radius:8px;
+      cursor:pointer; transition:all 0.15s;
+    }
+    #history-clear-btn:hover { background:#2a0a0a; color:#ff6666; }
   </style>
 </head>
 <body>
 
-<!-- Flash overlay -->
 <div id="flash-overlay"></div>
 
 <!-- Header -->
 <div id="header">
   <div id="title">🔤 英語拼單字比賽</div>
-  <div id="round-selector">
-    <span>回合</span>
-    <select id="round-select" onchange="setRound(this.value)">
-      <option value="預賽">預賽</option>
-      <option value="複賽">複賽</option>
-      <option value="準決賽">準決賽</option>
-      <option value="決賽" selected>決賽</option>
-    </select>
-  </div>
-  <div id="custom-time-wrap">
-    <span>秒數</span>
-    <input type="number" id="custom-time" value="20" min="5" max="120" onchange="setCustomTime(this.value)">
-    <span>秒</span>
+  <div id="header-right">
+    <div id="custom-time-wrap">
+      <span>秒數</span>
+      <input type="number" id="custom-time" value="20" min="5" max="120" onchange="setCustomTime(this.value)">
+      <span>秒</span>
+    </div>
+    <button id="history-btn" onclick="openHistory()">📋 歷史紀錄</button>
   </div>
 </div>
 
-<!-- Timer -->
+<!-- Timer (resizable) -->
 <div id="top-section">
   <div id="timer">20</div>
   <div id="progress-bar-wrap"><div id="progress-bar" style="width:100%"></div></div>
   <div class="timer-controls">
     <button class="btn-start" onclick="startTimer()">▶ 開始</button>
     <button class="btn-pause" onclick="pauseTimer()">⏸ 暫停</button>
-    <button class="btn-reset" onclick="resetTimer()">🔄 重置</button>
+    <button onclick="resetTimer()">🔄 重置</button>
   </div>
 </div>
+
+<!-- Drag handle -->
+<div id="drag-handle"></div>
 
 <!-- Scores -->
 <div id="bottom-section">
   <div class="team" id="red-team">
-    <select class="team-name-select" id="red-name-select" onchange="updateTeamLabel('red',this.value)">
-      <!-- options injected by JS -->
-    </select>
+    <select class="team-name-select" id="red-name-select"></select>
     <div class="score" id="red-score">0</div>
     <div class="score-controls">
-      <button class="btn-minus" onclick="changeScore('red', -1)">−1</button>
-      <button class="btn-plus"  onclick="changeScore('red',  1)">+1</button>
+      <button class="btn-minus" onclick="changeScore('red',-1)">−1</button>
+      <button class="btn-plus"  onclick="changeScore('red', 1)">+1</button>
     </div>
   </div>
 
-  <div id="divider"></div>
-
   <div class="team" id="blue-team">
-    <select class="team-name-select" id="blue-name-select" onchange="updateTeamLabel('blue',this.value)">
-      <!-- options injected by JS -->
-    </select>
+    <select class="team-name-select" id="blue-name-select"></select>
     <div class="score" id="blue-score">0</div>
     <div class="score-controls">
-      <button class="btn-minus" onclick="changeScore('blue', -1)">−1</button>
-      <button class="btn-plus"  onclick="changeScore('blue',  1)">+1</button>
+      <button class="btn-minus" onclick="changeScore('blue',-1)">−1</button>
+      <button class="btn-plus"  onclick="changeScore('blue', 1)">+1</button>
     </div>
   </div>
 </div>
 
-<button id="reset-scores-btn" onclick="resetScores()">🗑 分數歸零</button>
+<button id="reset-scores-btn" onclick="resetScores()">🗑 分數歸零 &amp; 儲存紀錄</button>
+
+<!-- History Modal -->
+<div id="history-modal">
+  <div id="history-box">
+    <button id="history-close" onclick="closeHistory()">✕</button>
+    <h2>📋 比賽歷史紀錄</h2>
+    <div id="history-list"></div>
+    <button id="history-clear-btn" onclick="clearHistory()">🗑 清除所有紀錄</button>
+  </div>
+</div>
 
 <script>
-  // ── Team name options ──
-  const CLASS_TEAMS = [
-    { value: '601', label: '601 班' },
-    { value: '602', label: '602 班' },
-    { value: '603', label: '603 班' },
-    { value: '604', label: '604 班' },
-    { value: '605', label: '605 班' },
-    { value: '606', label: '606 班' },
-    { value: '607', label: '607 班' },
-    { value: '608', label: '608 班' },
-    { value: 'red',  label: '紅 隊' },
-    { value: 'blue', label: '藍 隊' },
-  ];
+// ── Team options ──
+const CLASS_TEAMS = [
+  {v:'601',l:'601 班'},{v:'602',l:'602 班'},{v:'603',l:'603 班'},
+  {v:'604',l:'604 班'},{v:'605',l:'605 班'},{v:'606',l:'606 班'},
+  {v:'607',l:'607 班'},{v:'608',l:'608 班'},
+  {v:'red',l:'紅 隊'},{v:'blue',l:'藍 隊'},
+];
+['red-name-select','blue-name-select'].forEach((id,i) => {
+  const sel = document.getElementById(id);
+  CLASS_TEAMS.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.v; o.textContent = t.l; sel.appendChild(o);
+  });
+  sel.value = i===0 ? '601' : '602';
+});
 
-  function buildSelects() {
-    ['red-name-select','blue-name-select'].forEach((id, idx) => {
-      const sel = document.getElementById(id);
-      CLASS_TEAMS.forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t.value;
-        opt.textContent = t.label;
-        sel.appendChild(opt);
-      });
-      // default: red=601, blue=602
-      sel.value = idx === 0 ? '601' : '602';
-    });
+// ── Scores ──
+let scores = {red:0, blue:0};
+function changeScore(team, amount) {
+  scores[team] = Math.max(0, scores[team]+amount);
+  const el = document.getElementById(team+'-score');
+  el.textContent = scores[team];
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  updateWinHighlight();
+}
+function updateWinHighlight() {
+  document.getElementById('red-team').classList.toggle('winning', scores.red > scores.blue);
+  document.getElementById('blue-team').classList.toggle('winning', scores.blue > scores.red);
+}
+
+function getTeamLabel(side) {
+  const sel = document.getElementById(side+'-name-select');
+  return sel.options[sel.selectedIndex].text;
+}
+
+function resetScores() {
+  if (!confirm('確定歸零？本局紀錄將自動儲存。')) return;
+  // Save record
+  saveRecord();
+  scores.red = scores.blue = 0;
+  document.getElementById('red-score').textContent = '0';
+  document.getElementById('blue-score').textContent = '0';
+  updateWinHighlight();
+}
+
+// ── History (localStorage) ──
+const HIST_KEY = 'spelling_history';
+function saveRecord() {
+  const redLabel  = getTeamLabel('red');
+  const blueLabel = getTeamLabel('blue');
+  const rs = scores.red, bs = scores.blue;
+  let winner = '平手';
+  if (rs > bs) winner = redLabel;
+  else if (bs > rs) winner = blueLabel;
+  const entry = {
+    time: new Date().toLocaleString('zh-TW'),
+    red: {label:redLabel, score:rs},
+    blue:{label:blueLabel, score:bs},
+    winner
+  };
+  const hist = JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  hist.unshift(entry);
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist.slice(0,50)));
+}
+
+function openHistory() {
+  const hist = JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  const list = document.getElementById('history-list');
+  if (hist.length === 0) {
+    list.innerHTML = '<div id="history-empty">尚無比賽紀錄</div>';
+  } else {
+    list.innerHTML = hist.map((e,i) => `
+      <div class="hist-entry">
+        <div class="hist-date">${e.time}</div>
+        <div class="hist-teams">
+          <span class="hist-red">${e.red.label} <b>${e.red.score}</b></span>
+          <span class="hist-vs">vs</span>
+          <span class="hist-blue"><b>${e.blue.score}</b> ${e.blue.label}</span>
+        </div>
+        <div class="hist-winner">🏆 勝隊：<span>${e.winner}</span></div>
+      </div>`).join('');
   }
-  buildSelects();
+  document.getElementById('history-modal').classList.add('open');
+}
+function closeHistory() { document.getElementById('history-modal').classList.remove('open'); }
+function clearHistory() {
+  if (!confirm('確定清除所有紀錄？')) return;
+  localStorage.removeItem(HIST_KEY);
+  closeHistory();
+}
+// close on backdrop click
+document.getElementById('history-modal').addEventListener('click', function(e){
+  if (e.target === this) closeHistory();
+});
 
-  function updateTeamLabel(team, val) { /* just uses select display */ }
-
-  function setRound(r) { /* cosmetic */ }
-
-  // ── Scores ──
-  let scores = { red: 0, blue: 0 };
-
-  function changeScore(team, amount) {
-    scores[team] = Math.max(0, scores[team] + amount);
-    const el = document.getElementById(team + '-score');
-    el.textContent = scores[team];
-    el.classList.remove('bump');
-    void el.offsetWidth;
-    el.classList.add('bump');
-    updateWinHighlight();
-  }
-
-  function updateWinHighlight() {
-    const rt = document.getElementById('red-team');
-    const bt = document.getElementById('blue-team');
-    rt.classList.toggle('winning', scores.red > scores.blue);
-    bt.classList.toggle('winning', scores.blue > scores.red);
-  }
-
-  function resetScores() {
-    if (!confirm('確定要將雙方分數歸零嗎？')) return;
-    scores.red = scores.blue = 0;
-    document.getElementById('red-score').textContent = '0';
-    document.getElementById('blue-score').textContent = '0';
-    updateWinHighlight();
-  }
-
-  // ── Timer ──
-  let DEFAULT_TIME = 20;
-  let timeLeft = DEFAULT_TIME;
-  let timerInterval = null;
-  let isRunning = false;
-
-  function setCustomTime(v) {
-    v = Math.max(5, Math.min(120, parseInt(v) || 20));
-    document.getElementById('custom-time').value = v;
-    DEFAULT_TIME = v;
-    if (!isRunning) { timeLeft = v; updateTimerDisplay(); }
-  }
-
-  function updateTimerDisplay() {
-    const el = document.getElementById('timer');
-    el.textContent = timeLeft;
-    const pct = (timeLeft / DEFAULT_TIME) * 100;
-    const bar = document.getElementById('progress-bar');
-    bar.style.width = pct + '%';
-    el.classList.remove('warning','danger');
-    if (timeLeft === 0) {
-      el.classList.add('danger');
-      bar.style.background = '#ff3333';
-    } else if (timeLeft <= 5) {
-      el.classList.add('danger');
-      bar.style.background = '#ff4400';
-    } else if (timeLeft <= Math.ceil(DEFAULT_TIME * 0.3)) {
-      el.classList.add('warning');
-      bar.style.background = '#ff9900';
-    } else {
-      bar.style.background = 'var(--gold)';
-    }
-  }
-
-  function startTimer() {
-    if (isRunning || timeLeft === 0) return;
-    isRunning = true;
-    initAudio();
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      updateTimerDisplay();
-      if (timeLeft <= 3 && timeLeft > 0) playBeep(880, 0.08);
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-        isRunning = false;
-        triggerTimeUp();
-      }
-    }, 1000);
-  }
-
-  function pauseTimer() {
-    clearInterval(timerInterval);
-    isRunning = false;
-  }
-
-  function resetTimer() {
-    pauseTimer();
-    timeLeft = DEFAULT_TIME;
+// ── Timer ──
+let DEFAULT_TIME = 20, timeLeft = 20, timerInterval = null, isRunning = false;
+function setCustomTime(v) {
+  v = Math.max(5, Math.min(120, parseInt(v)||20));
+  document.getElementById('custom-time').value = v;
+  DEFAULT_TIME = v;
+  if (!isRunning) { timeLeft = v; updateTimerDisplay(); }
+}
+function updateTimerDisplay() {
+  const el = document.getElementById('timer');
+  el.textContent = timeLeft;
+  const pct = (timeLeft/DEFAULT_TIME)*100;
+  const bar = document.getElementById('progress-bar');
+  bar.style.width = pct+'%';
+  el.classList.remove('warning','danger');
+  if (timeLeft === 0) { el.classList.add('danger'); bar.style.background='#ff3333'; }
+  else if (timeLeft <= 5) { el.classList.add('danger'); bar.style.background='#ff4400'; }
+  else if (timeLeft <= Math.ceil(DEFAULT_TIME*0.3)) { el.classList.add('warning'); bar.style.background='#ff9900'; }
+  else bar.style.background = 'var(--gold)';
+}
+function startTimer() {
+  if (isRunning || timeLeft===0) return;
+  isRunning = true; initAudio();
+  timerInterval = setInterval(() => {
+    timeLeft--;
     updateTimerDisplay();
+    if (timeLeft<=3 && timeLeft>0) playBeep(880, 0.08);
+    if (timeLeft<=0) { clearInterval(timerInterval); isRunning=false; triggerTimeUp(); }
+  }, 1000);
+}
+function pauseTimer() { clearInterval(timerInterval); isRunning=false; }
+function resetTimer() { pauseTimer(); timeLeft=DEFAULT_TIME; updateTimerDisplay(); }
+
+function triggerTimeUp() {
+  const ov = document.getElementById('flash-overlay');
+  ov.style.display='block';
+  ov.style.animation='none'; void ov.offsetWidth;
+  ov.style.animation='flashAnim 0.4s ease-out forwards';
+  setTimeout(()=>{ ov.style.display='none'; }, 500);
+  playBuzzer();
+  // English speech x3: "Time's up!"
+  speakRepeat("Time's up!", 3, 1300);
+}
+
+function speakRepeat(text, times, interval) {
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+  let count = 0;
+  function go() {
+    if (count >= times) return;
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'en-US';
+    utt.rate = 0.88;
+    utt.pitch = 1.05;
+    utt.volume = 1;
+    window.speechSynthesis.speak(utt);
+    count++;
+    if (count < times) setTimeout(go, interval);
   }
+  go();
+}
 
-  function triggerTimeUp() {
-    // Flash overlay
-    const ov = document.getElementById('flash-overlay');
-    ov.style.display = 'block';
-    setTimeout(() => { ov.style.display = 'none'; }, 400);
+// ── Audio ──
+let audioCtx;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+function playBeep(freq, dur) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type='sine'; o.frequency.value=freq;
+  g.gain.setValueAtTime(0.35, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+  o.start(); o.stop(audioCtx.currentTime+dur);
+}
+function playBuzzer() {
+  if (!audioCtx) initAudio();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type='square'; o.frequency.value=440;
+  g.gain.setValueAtTime(0.5, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+1.8);
+  o.start(); o.stop(audioCtx.currentTime+1.8);
+}
 
-    playBuzzer();
+// ── Drag handle to resize top/bottom ──
+(function() {
+  const handle = document.getElementById('drag-handle');
+  const topSec = document.getElementById('top-section');
+  let dragging = false, startY = 0, startH = 0;
 
-    // 語音「時間到囉！」× 3 次，間隔 1.5 秒
-    speakThrice('時間到囉！', 3, 1400);
+  function onStart(e) {
+    dragging = true;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    startH = topSec.getBoundingClientRect().height;
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
   }
-
-  function speakThrice(text, times, interval) {
-    let count = 0;
-    function speak() {
-      if (count >= times) return;
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.lang = 'zh-TW';
-      utt.rate = 0.9;
-      utt.pitch = 1.1;
-      utt.volume = 1;
-      window.speechSynthesis.speak(utt);
-      count++;
-      if (count < times) setTimeout(speak, interval);
-    }
-    speak();
+  function onMove(e) {
+    if (!dragging) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const newH = Math.min(Math.max(startH + (y - startY), 120), window.innerHeight * 0.75);
+    topSec.style.height = newH + 'px';
+    e.preventDefault();
   }
-
-  // ── Audio ──
-  let audioCtx;
-  function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function onEnd() {
+    dragging = false;
+    document.body.style.cursor = '';
   }
+  handle.addEventListener('mousedown', onStart);
+  handle.addEventListener('touchstart', onStart, {passive:false});
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('touchmove', onMove, {passive:false});
+  document.addEventListener('mouseup', onEnd);
+  document.addEventListener('touchend', onEnd);
+})();
 
-  function playBeep(freq, dur) {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-    osc.start(); osc.stop(audioCtx.currentTime + dur);
-  }
-
-  function playBuzzer() {
-    if (!audioCtx) initAudio();
-    // 長嗶聲
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.type = 'square';
-    osc.frequency.value = 440;
-    gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.8);
-    osc.start(); osc.stop(audioCtx.currentTime + 1.8);
-  }
-
-  // Init display
-  updateTimerDisplay();
+// Init
+updateTimerDisplay();
 </script>
 </body>
 </html>
