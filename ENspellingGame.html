@@ -72,6 +72,32 @@
     }
     #history-btn:hover { background:#2a2a3e; color:var(--gold); border-color:var(--gold-dim); }
 
+    /* Font size controls */
+    .font-ctrl-group {
+      display:flex; align-items:center; gap:5px;
+      background:#111120; border:1px solid #2a2a3e;
+      border-radius:10px; padding:3px 8px;
+    }
+    .font-ctrl-label {
+      font-size:0.65rem; color:#666;
+      font-family:'Noto Sans TC',sans-serif;
+      white-space:nowrap; letter-spacing:0.05em;
+    }
+    .font-ctrl-btn {
+      width:26px; height:26px; border-radius:6px;
+      border:1px solid #333; background:#1a1a28;
+      color:#bbb; font-size:1rem; font-weight:900;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition:all 0.12s; padding:0; line-height:1;
+      font-family:'Orbitron',sans-serif;
+    }
+    .font-ctrl-btn:hover { background:#2a2a40; color:white; border-color:#555; }
+    .font-ctrl-btn:active { transform:scale(0.88); }
+    .font-ctrl-val {
+      font-family:'Orbitron',sans-serif; font-size:0.7rem;
+      color:var(--gold); min-width:28px; text-align:center;
+    }
+
     /* ── TIMER SECTION (resizable) ── */
     #top-section {
       height: var(--top-h);
@@ -206,8 +232,8 @@
       font-weight:900; line-height:1; letter-spacing:-0.02em;
       position:relative; z-index:2;
     }
-    #red-team  .score { color:#fff; text-shadow:0 0 30px var(--red-glow),0 4px 20px rgba(0,0,0,0.6); }
-    #blue-team .score { color:#fff; text-shadow:0 0 30px var(--blue-glow),0 4px 20px rgba(0,0,0,0.6); }
+    #red-team  .score { color:#fff; text-shadow:none; }
+    #blue-team .score { color:#fff; text-shadow:none; }
     .score.bump { animation:scoreBump 0.2s ease-out; }
     @keyframes scoreBump { 0%{transform:scale(1)} 50%{transform:scale(1.18)} 100%{transform:scale(1)} }
 
@@ -230,11 +256,7 @@
     #blue-team .btn-minus { background:rgba(0,10,80,0.5); color:#aaf; border-color:rgba(100,130,255,0.2); }
     #blue-team .btn-minus:hover { background:rgba(10,20,120,0.7); }
 
-    .team.winning .score { animation:winPulse 1.4s ease-in-out infinite; }
-    @keyframes winPulse {
-      0%,100%{text-shadow:0 0 30px rgba(255,220,50,0.3),0 4px 20px rgba(0,0,0,0.6)}
-      50%{text-shadow:0 0 60px rgba(255,220,50,0.9),0 0 100px rgba(255,200,0,0.4),0 4px 20px rgba(0,0,0,0.6)}
-    }
+    .team.winning .score { animation:none; }
 
     /* ── RESET BTN ── */
     #reset-scores-btn {
@@ -312,6 +334,20 @@
 <div id="header">
   <div id="title">🔤 英語拼單字比賽</div>
   <div id="header-right">
+    <!-- Timer font size -->
+    <div class="font-ctrl-group">
+      <span class="font-ctrl-label">計時器</span>
+      <button class="font-ctrl-btn" onclick="adjFont('timer',-1)">−</button>
+      <span class="font-ctrl-val" id="timer-font-val">100%</span>
+      <button class="font-ctrl-btn" onclick="adjFont('timer',1)">+</button>
+    </div>
+    <!-- Score font size -->
+    <div class="font-ctrl-group">
+      <span class="font-ctrl-label">分數</span>
+      <button class="font-ctrl-btn" onclick="adjFont('score',-1)">−</button>
+      <span class="font-ctrl-val" id="score-font-val">100%</span>
+      <button class="font-ctrl-btn" onclick="adjFont('score',1)">+</button>
+    </div>
     <div id="custom-time-wrap">
       <span>秒數</span>
       <input type="number" id="custom-time" value="20" min="5" max="120" onchange="setCustomTime(this.value)">
@@ -582,8 +618,33 @@ function playBuzzer() {
   document.addEventListener('touchend', onEnd);
 })();
 
+// ── Font size controls ──
+const fontScales = { timer: 100, score: 100 };
+const FONT_STEP = 5, FONT_MIN = 40, FONT_MAX = 200;
+
+// Base sizes in vw (will be multiplied by scale)
+const BASE_TIMER_VW = 12;  // vw
+const BASE_SCORE_VW = 20;  // vw
+
+function adjFont(target, dir) {
+  fontScales[target] = Math.min(FONT_MAX, Math.max(FONT_MIN, fontScales[target] + dir * FONT_STEP));
+  applyFontSizes();
+  document.getElementById(target + '-font-val').textContent = fontScales[target] + '%';
+}
+
+function applyFontSizes() {
+  const timerVW = (BASE_TIMER_VW * fontScales.timer / 100).toFixed(2);
+  document.getElementById('timer').style.fontSize = timerVW + 'vw';
+
+  const scoreVW = (BASE_SCORE_VW * fontScales.score / 100).toFixed(2);
+  document.querySelectorAll('.score').forEach(el => {
+    el.style.fontSize = scoreVW + 'vw';
+  });
+}
+
 // Init
 updateTimerDisplay();
+applyFontSizes();
 </script>
 </body>
 </html>
