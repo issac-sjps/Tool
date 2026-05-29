@@ -1,268 +1,644 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>比賽計分板</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial', sans-serif;
-            background-color: #000; /* 改為純黑背景，更像電子計分板 */
-            color: white;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none; 
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>英語拼單字比賽計分板</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #e63946;
+      --red-dark: #9b1c26;
+      --red-glow: rgba(230,57,70,0.5);
+      --blue: #1d6fc4;
+      --blue-dark: #0a3d70;
+      --blue-glow: rgba(29,111,196,0.5);
+      --gold: #FFD700;
+      --gold-dim: #b89b00;
+      --bg: #050508;
+      --panel: #0d0d14;
+      --border: #1e1e2e;
+    }
 
-        /* 上半部：計時器 */
-        #top-section {
-            flex: 0.8;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #111;
-            border-bottom: 2px solid #333;
-            padding-top: 10px;
-        }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        #timer {
-            font-size: 12vw;
-            font-weight: bold;
-            color: #FFD700;
-            line-height: 1;
-            margin-bottom: 15px;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-        }
+    body {
+      font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
+      background: var(--bg);
+      color: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+    }
 
-        .timer-controls button {
-            font-size: 1.8vw;
-            padding: 10px 25px;
-            margin: 0 5px;
-            cursor: pointer;
-            border: 1px solid #555;
-            border-radius: 8px;
-            background-color: #222;
-            color: white;
-            transition: 0.2s;
-        }
-        .timer-controls button:hover { background-color: #444; }
-        .timer-controls button:active { background-color: #666; }
+    /* ─── HEADER ─── */
+    #header {
+      background: linear-gradient(90deg, #0d0d14, #131320, #0d0d14);
+      border-bottom: 2px solid var(--border);
+      padding: 6px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
 
-        /* 下半部：計分板 */
-        #bottom-section {
-            flex: 2;
-            display: flex;
-            width: 100%;
-        }
+    #title {
+      font-size: clamp(1rem, 2.2vw, 1.6rem);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      text-shadow: 0 0 18px var(--gold-dim);
+      white-space: nowrap;
+    }
 
-        .team {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            position: relative;
-        }
+    /* Round selector */
+    #round-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(0.75rem, 1.3vw, 1rem);
+      color: #aaa;
+    }
+    #round-selector select {
+      background: #1a1a2e;
+      color: var(--gold);
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-family: inherit;
+      font-size: inherit;
+      cursor: pointer;
+    }
 
-        #red-team { background-color: #b30000; } /* 鮮明暗紅 */
-        #blue-team { background-color: #0033cc; border-left: 2px solid #111;} /* 鮮明暗藍 */
+    /* ─── TIMER SECTION ─── */
+    #top-section {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0 8px;
+      background: var(--panel);
+      border-bottom: 2px solid var(--border);
+      position: relative;
+    }
 
-        /* 可編輯的隊名輸入框 */
-        .team-name-input {
-            background: transparent;
-            border: none;
-            border-bottom: 2px dashed rgba(255,255,255,0.4); /* 虛線提示可點擊 */
-            color: white;
-            font-size: 6vw;
-            font-weight: bold;
-            text-align: center;
-            width: 70%;
-            margin-bottom: 10px;
-            font-family: inherit;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-            transition: 0.3s;
-        }
-        
-        .team-name-input:focus {
-            outline: none;
-            border-bottom: 2px solid white;
-            background: rgba(0,0,0,0.2); /* 點擊輸入時背景微暗 */
-        }
+    #timer {
+      font-size: clamp(4rem, 14vw, 10rem);
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      letter-spacing: 0.05em;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 30px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.15);
+      transition: color 0.3s, text-shadow 0.3s;
+    }
 
-        .score {
-            font-size: 25vw; /* 分數數字放更大 */
-            font-weight: bold;
-            line-height: 1;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
+    #timer.warning {
+      color: #ff9900;
+      text-shadow: 0 0 30px rgba(255,153,0,0.6), 0 0 60px rgba(255,153,0,0.3);
+      animation: pulse-warn 0.5s ease-in-out infinite alternate;
+    }
 
-        .score-controls {
-            display: flex;
-            gap: 20px;
-        }
+    #timer.danger {
+      color: #ff3333;
+      text-shadow: 0 0 30px rgba(255,50,50,0.8), 0 0 60px rgba(255,50,50,0.4);
+      animation: pulse-danger 0.3s ease-in-out infinite alternate;
+    }
 
-        .score-controls button {
-            font-size: 4vw;
-            width: 8vw;
-            height: 8vw;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.2);
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            transition: transform 0.1s, background-color 0.2s;
-        }
+    @keyframes pulse-warn {
+      from { transform: scale(1); }
+      to { transform: scale(1.03); }
+    }
+    @keyframes pulse-danger {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(1.05); opacity: 0.85; }
+    }
 
-        .score-controls button:active {
-            transform: scale(0.9);
-        }
+    /* Progress bar */
+    #progress-bar-wrap {
+      width: 80%;
+      max-width: 600px;
+      height: 6px;
+      background: #1a1a2e;
+      border-radius: 3px;
+      margin: 6px 0;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 3px;
+      transition: width 0.5s linear, background 0.5s;
+    }
 
-        /* 加減分按鈕顏色 (融入背景色系) */
-        .btn-plus { background-color: rgba(255,255,255,0.2); color: white; }
-        .btn-plus:hover { background-color: rgba(255,255,255,0.4); }
-        .btn-minus { background-color: rgba(0,0,0,0.3); color: #ccc; }
-        .btn-minus:hover { background-color: rgba(0,0,0,0.5); color: white; }
+    .timer-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 8px;
+    }
 
-    </style>
+    .timer-controls button {
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: clamp(0.7rem, 1.4vw, 1rem);
+      padding: 8px 18px;
+      cursor: pointer;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a28;
+      color: #ccc;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+    .timer-controls button:hover { background: #2a2a3e; color: white; border-color: #555; }
+    .timer-controls button:active { transform: scale(0.95); }
+    .btn-start { border-color: #3a3 !important; color: #6f6 !important; }
+    .btn-start:hover { background: #1a2e1a !important; }
+    .btn-pause { border-color: #aa6 !important; color: var(--gold) !important; }
+    .btn-reset { border-color: #555 !important; }
+
+    /* custom time input */
+    #custom-time-wrap {
+      display: flex; align-items: center; gap: 6px;
+      font-size: clamp(0.7rem, 1.2vw, 0.9rem);
+      color: #888;
+    }
+    #custom-time {
+      width: 52px;
+      background: #1a1a2e;
+      color: var(--gold);
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 4px 6px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: inherit;
+      text-align: center;
+    }
+    #custom-time:focus { outline: none; border-color: var(--gold); }
+
+    /* ─── SCOREBOARD ─── */
+    #bottom-section {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    .team {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 10px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .team::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.12;
+      background-size: 40px 40px;
+      background-image:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    }
+
+    #red-team {
+      background: linear-gradient(160deg, #1a0305, #2d0810, #150203);
+      border-right: 1px solid #111;
+    }
+    #red-team::after {
+      content: '';
+      position: absolute;
+      top: -30%; left: 50%;
+      transform: translateX(-50%);
+      width: 80%; height: 60%;
+      background: radial-gradient(ellipse, rgba(180,0,20,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    #blue-team {
+      background: linear-gradient(160deg, #010a1a, #031128, #010a18);
+      border-left: 1px solid #111;
+    }
+    #blue-team::after {
+      content: '';
+      position: absolute;
+      top: -30%; left: 50%;
+      transform: translateX(-50%);
+      width: 80%; height: 60%;
+      background: radial-gradient(ellipse, rgba(0,60,180,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Team name dropdown */
+    .team-name-select {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid rgba(255,255,255,0.25);
+      color: white;
+      font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
+      font-size: clamp(1.4rem, 4.5vw, 3.5rem);
+      font-weight: 900;
+      text-align: center;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+      padding: 0 4px;
+      transition: border-color 0.2s;
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 480px;
+      appearance: none;
+      -webkit-appearance: none;
+      text-shadow: 1px 1px 6px rgba(0,0,0,0.5);
+      text-align-last: center;
+    }
+    .team-name-select:focus { outline: none; border-bottom-color: white; }
+    .team-name-select option {
+      background: #0d0d1a;
+      font-size: 1rem;
+      color: white;
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+
+    #red-team .team-name-select { color: #ff8888; }
+    #blue-team .team-name-select { color: #88aaff; }
+
+    /* Score */
+    .score {
+      font-size: clamp(5rem, 22vw, 16rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      position: relative;
+      z-index: 2;
+      transition: transform 0.08s;
+    }
+
+    #red-team .score {
+      color: #ffffff;
+      text-shadow: 0 0 30px var(--red-glow), 0 4px 20px rgba(0,0,0,0.6);
+    }
+    #blue-team .score {
+      color: #ffffff;
+      text-shadow: 0 0 30px var(--blue-glow), 0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    .score.bump {
+      animation: scoreBump 0.2s ease-out;
+    }
+    @keyframes scoreBump {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    /* Controls */
+    .score-controls {
+      display: flex;
+      gap: 14px;
+      margin-top: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .score-controls button {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1rem, 2.8vw, 2rem);
+      width: clamp(52px, 7.5vw, 90px);
+      height: clamp(52px, 7.5vw, 90px);
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      font-weight: 900;
+      transition: transform 0.1s, background 0.15s, box-shadow 0.15s;
+      backdrop-filter: blur(4px);
+    }
+    .score-controls button:active { transform: scale(0.88) !important; }
+
+    #red-team .btn-plus  { background: rgba(200,30,50,0.55); color: #fff; box-shadow: 0 4px 16px rgba(200,30,50,0.4); }
+    #red-team .btn-plus:hover { background: rgba(220,40,60,0.8); box-shadow: 0 4px 24px rgba(220,40,60,0.6); }
+    #red-team .btn-minus { background: rgba(80,0,10,0.5); color: #faa; border-color: rgba(255,100,100,0.2); }
+    #red-team .btn-minus:hover { background: rgba(120,10,20,0.7); }
+
+    #blue-team .btn-plus  { background: rgba(20,80,200,0.55); color: #fff; box-shadow: 0 4px 16px rgba(20,80,200,0.4); }
+    #blue-team .btn-plus:hover { background: rgba(30,100,220,0.8); box-shadow: 0 4px 24px rgba(30,100,220,0.6); }
+    #blue-team .btn-minus { background: rgba(0,10,80,0.5); color: #aaf; border-color: rgba(100,130,255,0.2); }
+    #blue-team .btn-minus:hover { background: rgba(10,20,120,0.7); }
+
+    /* Win highlight */
+    .team.winning .score {
+      animation: winPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes winPulse {
+      0%, 100% { text-shadow: 0 0 30px rgba(255,220,50,0.3), 0 4px 20px rgba(0,0,0,0.6); }
+      50% { text-shadow: 0 0 60px rgba(255,220,50,0.9), 0 0 100px rgba(255,200,0,0.4), 0 4px 20px rgba(0,0,0,0.6); }
+    }
+
+    /* Divider line */
+    #divider {
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, #333, #333, transparent);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ─── RESET BUTTON ─── */
+    #reset-scores-btn {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,10,20,0.85);
+      border: 1px solid #333;
+      color: #888;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-size: 0.8rem;
+      padding: 6px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      z-index: 20;
+      transition: color 0.2s, border-color 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    #reset-scores-btn:hover { color: #ff8888; border-color: #ff4444; }
+
+    /* ─── FLASH OVERLAY (時間到) ─── */
+    #flash-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,50,50,0.15);
+      pointer-events: none;
+      z-index: 50;
+      animation: flashAnim 0.3s ease-out;
+    }
+    @keyframes flashAnim {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+  </style>
 </head>
 <body>
 
-    <div id="top-section">
-        <div id="timer">20</div>
-        <div class="timer-controls">
-            <button onclick="startTimer()">▶ 開始</button>
-            <button onclick="pauseTimer()">⏸ 暫停</button>
-            <button onclick="resetTimer()">🔄 重置 20 秒</button>
-            <button onclick="resetScores()">🗑 分數歸零</button>
-        </div>
+<!-- Flash overlay -->
+<div id="flash-overlay"></div>
+
+<!-- Header -->
+<div id="header">
+  <div id="title">🔤 英語拼單字比賽</div>
+  <div id="round-selector">
+    <span>回合</span>
+    <select id="round-select" onchange="setRound(this.value)">
+      <option value="預賽">預賽</option>
+      <option value="複賽">複賽</option>
+      <option value="準決賽">準決賽</option>
+      <option value="決賽" selected>決賽</option>
+    </select>
+  </div>
+  <div id="custom-time-wrap">
+    <span>秒數</span>
+    <input type="number" id="custom-time" value="20" min="5" max="120" onchange="setCustomTime(this.value)">
+    <span>秒</span>
+  </div>
+</div>
+
+<!-- Timer -->
+<div id="top-section">
+  <div id="timer">20</div>
+  <div id="progress-bar-wrap"><div id="progress-bar" style="width:100%"></div></div>
+  <div class="timer-controls">
+    <button class="btn-start" onclick="startTimer()">▶ 開始</button>
+    <button class="btn-pause" onclick="pauseTimer()">⏸ 暫停</button>
+    <button class="btn-reset" onclick="resetTimer()">🔄 重置</button>
+  </div>
+</div>
+
+<!-- Scores -->
+<div id="bottom-section">
+  <div class="team" id="red-team">
+    <select class="team-name-select" id="red-name-select" onchange="updateTeamLabel('red',this.value)">
+      <!-- options injected by JS -->
+    </select>
+    <div class="score" id="red-score">0</div>
+    <div class="score-controls">
+      <button class="btn-minus" onclick="changeScore('red', -1)">−1</button>
+      <button class="btn-plus"  onclick="changeScore('red',  1)">+1</button>
     </div>
+  </div>
 
-    <div id="bottom-section">
-        <div class="team" id="red-team">
-            <input type="text" class="team-name-input" value="紅 隊" maxlength="8">
-            <div class="score" id="red-score">0</div>
-            <div class="score-controls">
-                <button class="btn-minus" onclick="changeScore('red', -1)">-1</button>
-                <button class="btn-plus" onclick="changeScore('red', 1)">+1</button>
-            </div>
-        </div>
+  <div id="divider"></div>
 
-        <div class="team" id="blue-team">
-            <input type="text" class="team-name-input" value="藍 隊" maxlength="8">
-            <div class="score" id="blue-score">0</div>
-            <div class="score-controls">
-                <button class="btn-minus" onclick="changeScore('blue', -1)">-1</button>
-                <button class="btn-plus" onclick="changeScore('blue', 1)">+1</button>
-            </div>
-        </div>
+  <div class="team" id="blue-team">
+    <select class="team-name-select" id="blue-name-select" onchange="updateTeamLabel('blue',this.value)">
+      <!-- options injected by JS -->
+    </select>
+    <div class="score" id="blue-score">0</div>
+    <div class="score-controls">
+      <button class="btn-minus" onclick="changeScore('blue', -1)">−1</button>
+      <button class="btn-plus"  onclick="changeScore('blue',  1)">+1</button>
     </div>
+  </div>
+</div>
 
-    <script>
-        // --- 分數控制 ---
-        let redScore = 0;
-        let blueScore = 0;
+<button id="reset-scores-btn" onclick="resetScores()">🗑 分數歸零</button>
 
-        function changeScore(team, amount) {
-            if (team === 'red') {
-                redScore += amount;
-                if (redScore < 0) redScore = 0;
-                document.getElementById('red-score').innerText = redScore;
-            } else if (team === 'blue') {
-                blueScore += amount;
-                if (blueScore < 0) blueScore = 0;
-                document.getElementById('blue-score').innerText = blueScore;
-            }
-        }
+<script>
+  // ── Team name options ──
+  const CLASS_TEAMS = [
+    { value: '601', label: '601 班' },
+    { value: '602', label: '602 班' },
+    { value: '603', label: '603 班' },
+    { value: '604', label: '604 班' },
+    { value: '605', label: '605 班' },
+    { value: '606', label: '606 班' },
+    { value: '607', label: '607 班' },
+    { value: '608', label: '608 班' },
+    { value: 'red',  label: '紅 隊' },
+    { value: 'blue', label: '藍 隊' },
+  ];
 
-        function resetScores() {
-            if(confirm('確定要將雙方分數歸零嗎？')) {
-                redScore = 0;
-                blueScore = 0;
-                document.getElementById('red-score').innerText = redScore;
-                document.getElementById('blue-score').innerText = blueScore;
-            }
-        }
+  function buildSelects() {
+    ['red-name-select','blue-name-select'].forEach((id, idx) => {
+      const sel = document.getElementById(id);
+      CLASS_TEAMS.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.value;
+        opt.textContent = t.label;
+        sel.appendChild(opt);
+      });
+      // default: red=601, blue=602
+      sel.value = idx === 0 ? '601' : '602';
+    });
+  }
+  buildSelects();
 
-        // --- 計時器控制 ---
-        const DEFAULT_TIME = 20;
-        let timeLeft = DEFAULT_TIME;
-        let timerInterval = null;
-        let isRunning = false;
+  function updateTeamLabel(team, val) { /* just uses select display */ }
 
-        function updateTimerDisplay() {
-            document.getElementById('timer').innerText = timeLeft;
-            if(timeLeft <= 5 && timeLeft > 0) {
-                document.getElementById('timer').style.color = '#ff6666'; 
-            } else if (timeLeft === 0) {
-                document.getElementById('timer').style.color = '#ff0000'; 
-            } else {
-                document.getElementById('timer').style.color = '#FFD700'; 
-            }
-        }
+  function setRound(r) { /* cosmetic */ }
 
-        function startTimer() {
-            if (isRunning || timeLeft === 0) return; 
-            isRunning = true;
-            
-            initAudio(); 
+  // ── Scores ──
+  let scores = { red: 0, blue: 0 };
 
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                updateTimerDisplay();
+  function changeScore(team, amount) {
+    scores[team] = Math.max(0, scores[team] + amount);
+    const el = document.getElementById(team + '-score');
+    el.textContent = scores[team];
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    updateWinHighlight();
+  }
 
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    isRunning = false;
-                    playBuzzer(); 
-                }
-            }, 1000);
-        }
+  function updateWinHighlight() {
+    const rt = document.getElementById('red-team');
+    const bt = document.getElementById('blue-team');
+    rt.classList.toggle('winning', scores.red > scores.blue);
+    bt.classList.toggle('winning', scores.blue > scores.red);
+  }
 
-        function pauseTimer() {
-            clearInterval(timerInterval);
-            isRunning = false;
-        }
+  function resetScores() {
+    if (!confirm('確定要將雙方分數歸零嗎？')) return;
+    scores.red = scores.blue = 0;
+    document.getElementById('red-score').textContent = '0';
+    document.getElementById('blue-score').textContent = '0';
+    updateWinHighlight();
+  }
 
-        function resetTimer() {
-            pauseTimer();
-            timeLeft = DEFAULT_TIME;
-            updateTimerDisplay();
-        }
+  // ── Timer ──
+  let DEFAULT_TIME = 20;
+  let timeLeft = DEFAULT_TIME;
+  let timerInterval = null;
+  let isRunning = false;
 
-        // --- 聲音產生器 (Web Audio API) ---
-        let audioCtx;
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
+  function setCustomTime(v) {
+    v = Math.max(5, Math.min(120, parseInt(v) || 20));
+    document.getElementById('custom-time').value = v;
+    DEFAULT_TIME = v;
+    if (!isRunning) { timeLeft = v; updateTimerDisplay(); }
+  }
 
-        function playBuzzer() {
-            if (!audioCtx) initAudio();
-            
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.type = 'square';
-            oscillator.frequency.value = 450; // 微調音高
-            
-            gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
-            
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 1.5); 
-        }
-    </script>
+  function updateTimerDisplay() {
+    const el = document.getElementById('timer');
+    el.textContent = timeLeft;
+    const pct = (timeLeft / DEFAULT_TIME) * 100;
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = pct + '%';
+    el.classList.remove('warning','danger');
+    if (timeLeft === 0) {
+      el.classList.add('danger');
+      bar.style.background = '#ff3333';
+    } else if (timeLeft <= 5) {
+      el.classList.add('danger');
+      bar.style.background = '#ff4400';
+    } else if (timeLeft <= Math.ceil(DEFAULT_TIME * 0.3)) {
+      el.classList.add('warning');
+      bar.style.background = '#ff9900';
+    } else {
+      bar.style.background = 'var(--gold)';
+    }
+  }
+
+  function startTimer() {
+    if (isRunning || timeLeft === 0) return;
+    isRunning = true;
+    initAudio();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 3 && timeLeft > 0) playBeep(880, 0.08);
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        triggerTimeUp();
+      }
+    }, 1000);
+  }
+
+  function pauseTimer() {
+    clearInterval(timerInterval);
+    isRunning = false;
+  }
+
+  function resetTimer() {
+    pauseTimer();
+    timeLeft = DEFAULT_TIME;
+    updateTimerDisplay();
+  }
+
+  function triggerTimeUp() {
+    // Flash overlay
+    const ov = document.getElementById('flash-overlay');
+    ov.style.display = 'block';
+    setTimeout(() => { ov.style.display = 'none'; }, 400);
+
+    playBuzzer();
+
+    // 語音「時間到囉！」× 3 次，間隔 1.5 秒
+    speakThrice('時間到囉！', 3, 1400);
+  }
+
+  function speakThrice(text, times, interval) {
+    let count = 0;
+    function speak() {
+      if (count >= times) return;
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'zh-TW';
+      utt.rate = 0.9;
+      utt.pitch = 1.1;
+      utt.volume = 1;
+      window.speechSynthesis.speak(utt);
+      count++;
+      if (count < times) setTimeout(speak, interval);
+    }
+    speak();
+  }
+
+  // ── Audio ──
+  let audioCtx;
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  function playBeep(freq, dur) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.start(); osc.stop(audioCtx.currentTime + dur);
+  }
+
+  function playBuzzer() {
+    if (!audioCtx) initAudio();
+    // 長嗶聲
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'square';
+    osc.frequency.value = 440;
+    gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.8);
+    osc.start(); osc.stop(audioCtx.currentTime + 1.8);
+  }
+
+  // Init display
+  updateTimerDisplay();
+</script>
 </body>
 </html>
