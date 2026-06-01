@@ -215,6 +215,8 @@
         <button class="color-btn" data-color="#3498DB" style="background:#3498DB"></button>
         <button class="color-btn" data-color="#2ECC71" style="background:#2ECC71"></button>
         <button class="color-btn" data-color="#F39C12" style="background:#F39C12"></button>
+        <button class="color-btn" data-color="#8E44AD" style="background:#8E44AD" title="紫色"></button>
+        <button class="color-btn" data-color="#795548" style="background:#795548" title="棕色"></button>
     </div>
     <button id="vsBtn" class="tool-btn" style="margin-left:10px">⚔️ 競賽</button>
     <button id="undoBtn" class="tool-btn" disabled style="margin-left:10px">↩️ 復原</button>
@@ -646,6 +648,13 @@ function restoreState(state) {
     img.onload = () => { mainCtx.clearRect(0,0,mainCanvas.width,mainCanvas.height); mainCtx.drawImage(img,0,0); redrawAll(); };
     img.src = state.bitmap;
     floatingObjects = JSON.parse(JSON.stringify(state.objects));
+    // 重建圖片物件的 _imgEl（JSON 序列化會丟失）
+    floatingObjects.forEach(obj => {
+        if (obj.type==='image' && obj.src) {
+            const el = new Image(); el.src = obj.src; obj._imgEl = el;
+            el.onload = () => redrawAll();
+        }
+    });
     deselectObject();
 }
 function undo() { if (undoStack.length>1) { redoStack.push(undoStack.pop()); restoreState(undoStack[undoStack.length-1]); updateUndoRedoButtons(); } }
@@ -675,6 +684,16 @@ function buildShapeObject(type, sx, sy, ex, ey, isShift, color) {
 // ════════════════════════════════════════════════
 function getHandles(obj) {
     if (obj.type === 'text') return getTextHandles(obj);
+    if (obj.type === 'image') {
+        const cos=Math.cos(obj.rotation), sin=Math.sin(obj.rotation);
+        const rot=([lx,ly])=>[obj.cx+lx*cos-ly*sin, obj.cy+lx*sin+ly*cos];
+        const hw=obj.w/2, hh=obj.h/2;
+        return {
+            corners:[rot([-hw,-hh]),rot([hw,-hh]),rot([hw,hh]),rot([-hw,hh])],
+            edges:[rot([0,-hh]),rot([0,hh]),rot([-hw,0]),rot([hw,0])],
+            rotate:rot([0,-hh-ROTATE_DIST])
+        };
+    }
     const cos=Math.cos(obj.rotation), sin=Math.sin(obj.rotation);
     const rot = ([lx,ly]) => [obj.cx+lx*cos-ly*sin, obj.cy+lx*sin+ly*cos];
     if (obj.type === 'line') {
@@ -713,6 +732,10 @@ function drawObj(ctx, obj, selected) {
         ctx.font=`900 ${obj.fontSize}px 'Segoe UI',Arial,sans-serif`;
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(obj.char,0,0);
+    } else if (obj.type==='image') {
+        if (obj._imgEl && obj._imgEl.complete) {
+            ctx.drawImage(obj._imgEl, -obj.w/2, -obj.h/2, obj.w, obj.h);
+        }
     } else if (obj.type==='line') {
         const [[x1,y1],[x2,y2]]=obj.points;
         ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
@@ -792,6 +815,7 @@ function toLocal(obj,x,y) {
 }
 function hitObj(obj,x,y) {
     if (obj.type==='text') { const [lx,ly]=toLocal(obj,x,y); const hw=obj.fontSize*.65/2,hh=obj.fontSize/2; return Math.abs(lx)<=hw+8&&Math.abs(ly)<=hh+8; }
+    if (obj.type==='image') { const [lx,ly]=toLocal(obj,x,y); return Math.abs(lx)<=obj.w/2+8&&Math.abs(ly)<=obj.h/2+8; }
     const [lx,ly]=toLocal(obj,x,y);
     if (obj.type==='line') return distPL(lx,ly,...obj.points[0],...obj.points[1])<12;
     if (obj.type==='circle') { const [rx,ry]=obj.points[0]; return lx*lx/(rx*rx)+ly*ly/(ry*ry)<=1.35; }
@@ -823,7 +847,9 @@ function hitHandlePoint(obj,x,y) {
 // ════════════════════════════════════════════════
 function selectObject(obj) {
     selectedObj = obj;
-    objLabel.textContent = obj.type==='text' ? `🔢 數字「${obj.char}」已選取` : '📐 圖形已選取';
+    objLabel.textContent = obj.type==='text' ? `🔢 數字「${obj.char}」已選取`
+                         : obj.type==='image' ? '🖼️ 圖片已選取'
+                         : '📐 圖形已選取';
     showObjectToolbar(); redrawAll();
 }
 function deselectObject() { selectedObj=null; objectToolbar.classList.remove('visible'); rotateHint.style.display='none'; }
@@ -841,6 +867,8 @@ function flattenObject(obj) {
     if (obj.type==='text') {
         mainCtx.font=`900 ${obj.fontSize}px 'Segoe UI',Arial,sans-serif`;
         mainCtx.textAlign='center'; mainCtx.textBaseline='middle'; mainCtx.fillText(obj.char,0,0);
+    } else if (obj.type==='image') {
+        if (obj._imgEl) mainCtx.drawImage(obj._imgEl, -obj.w/2, -obj.h/2, obj.w, obj.h);
     } else {
         mainCtx.beginPath();
         if      (obj.type==='line')     { const [[x1,y1],[x2,y2]]=obj.points; mainCtx.moveTo(x1,y1); mainCtx.lineTo(x2,y2); }
@@ -882,7 +910,7 @@ function onDown(e) {
         }
         const hp=hitHandlePoint(selectedObj,x,y);
         if (hp) {
-            dragState={ mode:'scale', pointerId:e.pointerId, kind:hp.kind, idx:hp.idx, startX:x, startY:y, origPoints:JSON.parse(JSON.stringify(selectedObj.points)), origFontSize:selectedObj.fontSize, origCx:selectedObj.cx, origCy:selectedObj.cy };
+            dragState={ mode:'scale', pointerId:e.pointerId, kind:hp.kind, idx:hp.idx, startX:x, startY:y, origPoints:JSON.parse(JSON.stringify(selectedObj.points||[])), origFontSize:selectedObj.fontSize, origW:selectedObj.w, origH:selectedObj.h, origCx:selectedObj.cx, origCy:selectedObj.cy };
             overlayCanvas.setPointerCapture(e.pointerId); return;
         }
         if (hitObj(selectedObj,x,y)) {
@@ -950,6 +978,22 @@ function scaleObject(obj,ds,x,y) {
         obj.fontSize=Math.max(12,Math.round((ds.origFontSize||48)*Math.max(.2,nd/(sd||1))));
         return;
     }
+    if (obj.type==='image') {
+        const [lx,ly]=toLocal(obj,x,y);
+        const origHW = ds.origW/2, origHH = ds.origH/2;
+        if (ds.kind==='corner') {
+            const scaleX = origHW ? Math.abs(lx)/origHW : 1;
+            const scaleY = origHH ? Math.abs(ly)/origHH : 1;
+            const scale = Math.max(0.05,(scaleX+scaleY)/2);
+            obj.w = Math.max(20, ds.origW*scale);
+            obj.h = Math.max(20, ds.origH*scale);
+        } else if (ds.idx===2||ds.idx===3) { // left/right
+            obj.w = Math.max(20, Math.abs(lx)*2);
+        } else { // top/bottom
+            obj.h = Math.max(20, Math.abs(ly)*2);
+        }
+        return;
+    }
     if (obj.type==='circle') { const [lx,ly]=toLocal(obj,x,y); obj.points[0]=[Math.max(10,Math.abs(lx)),Math.max(10,Math.abs(ly))]; return; }
     if (obj.type==='line') { const [lx,ly]=toLocal(obj,x,y); if (ds.idx===0) obj.points[0]=[lx,ly]; else obj.points[1]=[lx,ly]; return; }
     const [lx,ly]=toLocal(obj,x,y);
@@ -1012,7 +1056,23 @@ window.addEventListener('paste', e => {
         const item=items[idx];
         if (item.kind==='file'&&item.type.startsWith('image/')) {
             const blob=item.getAsFile(), reader=new FileReader();
-            reader.onload=ev=>{ const img=new Image(); img.onload=()=>{ mainCtx.drawImage(img,20,scrollContainer.scrollTop+20); hasDrawn=true; saveState(); redrawAll(); }; img.src=ev.target.result; };
+            reader.onload=ev=>{
+                const img=new Image();
+                img.onload=()=>{
+                    // 貼上圖片變成浮動物件，可旋轉縮放
+                    const maxW = overlayCanvas.width * 0.6;
+                    const scale = img.width > maxW ? maxW / img.width : 1;
+                    const w = img.width * scale, h = img.height * scale;
+                    const cx = overlayCanvas.width / 2;
+                    const cy = scrollContainer.scrollTop + scrollContainer.clientHeight / 2;
+                    const obj = { type:'image', _imgEl:img, src:ev.target.result,
+                                  w, h, rotation:0, cx, cy, color:'#000' };
+                    floatingObjects.push(obj);
+                    selectObject(obj);
+                    saveState(); redrawAll();
+                };
+                img.src=ev.target.result;
+            };
             reader.readAsDataURL(blob);
         }
     }
@@ -1033,6 +1093,7 @@ function flattenToTmpCtx(tmpCtx) {
         tmpCtx.strokeStyle=obj.color; tmpCtx.fillStyle=obj.color;
         tmpCtx.lineWidth=4; tmpCtx.lineCap='round'; tmpCtx.lineJoin='round'; tmpCtx.setLineDash([]);
         if (obj.type==='text') { tmpCtx.font=`900 ${obj.fontSize}px 'Segoe UI',Arial,sans-serif`; tmpCtx.textAlign='center'; tmpCtx.textBaseline='middle'; tmpCtx.fillText(obj.char,0,0); }
+        else if (obj.type==='image') { if (obj._imgEl) tmpCtx.drawImage(obj._imgEl,-obj.w/2,-obj.h/2,obj.w,obj.h); }
         else { tmpCtx.beginPath();
             if (obj.type==='line') { const [[x1,y1],[x2,y2]]=obj.points; tmpCtx.moveTo(x1,y1); tmpCtx.lineTo(x2,y2); }
             else if (obj.type==='rect') { const [tl,,br]=obj.points; tmpCtx.rect(tl[0],tl[1],br[0]-tl[0],br[1]-tl[1]); }
