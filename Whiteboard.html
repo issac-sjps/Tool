@@ -497,11 +497,14 @@ function createGhost(ch, cx, cy) {
 // 把 client 座標換算成 canvas 內部座標（含捲動補正）
 function clientToCanvas(cx, cy) {
     const rect = overlayCanvas.getBoundingClientRect();
-    // getBoundingClientRect 給的是 CSS 顯示尺寸，canvas 內部座標需乘以 DPR 比
     const scaleX = overlayCanvas.width  / rect.width;
-    const scaleY = overlayCanvas.height / rect.height;
-    const x = (cx - rect.left) * scaleX;
-    const y = (cy - rect.top)  * scaleY + scrollContainer.scrollTop;
+    // canvas CSS 顯示高度 = 容器高度（不含捲動），canvas 內部高度 = 3000px
+    // 正確換算：先把 clientY 轉成相對容器頂部的 CSS px，再加上捲動量，最後乘以縮放比
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const cssY = (cy - containerRect.top) + scrollContainer.scrollTop;
+    const cssX = (cx - containerRect.left);
+    const x = cssX * scaleX;
+    const y = cssY * scaleX; // 用同一個 scale（canvas 是正方形 width=height 時一致）
     if (x < 0 || y < 0 || x > overlayCanvas.width) return { x: null, y: null };
     return { x, y };
 }
@@ -854,13 +857,11 @@ function flattenObject(obj) {
 //  Pointer 事件（overlayCanvas 座標已是 canvas 內部座標）
 // ════════════════════════════════════════════════
 function getPos(e) {
-    const rect = overlayCanvas.getBoundingClientRect();
-    const scaleX = overlayCanvas.width  / rect.width;
-    const scaleY = overlayCanvas.height / rect.height;
-    return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top)  * scaleY + scrollContainer.scrollTop
-    };
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const scaleX = overlayCanvas.width / containerRect.width;
+    const cssX = e.clientX - containerRect.left;
+    const cssY = (e.clientY - containerRect.top) + scrollContainer.scrollTop;
+    return { x: cssX * scaleX, y: cssY * scaleX };
 }
 
 overlayCanvas.addEventListener('pointerdown',   onDown);
