@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>英語拼單字比賽計分板</title>
-  <!-- Orbitron: no slashed zero. Barlow Condensed for team names (big & clean). -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Barlow+Condensed:wght@700;900&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
+  <!-- No Google Font needed for numbers: Arial/system sans-serif has clean zero with no slash -->
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --gold: #FFD700; --gold-dim: #b89b00;
@@ -13,7 +13,7 @@
     }
     * { box-sizing:border-box; margin:0; padding:0; }
     body {
-      font-family:'Orbitron','Noto Sans TC',sans-serif;
+      font-family:'Noto Sans TC', Arial, sans-serif;
       background:var(--bg); color:white;
       height:100vh; display:flex; flex-direction:column;
       overflow:hidden; user-select:none;
@@ -49,16 +49,31 @@
       border:1px solid #333; background:#1a1a28;
       color:#bbb; font-size:1rem; font-weight:900;
       cursor:pointer; display:flex; align-items:center; justify-content:center;
-      transition:all 0.12s; padding:0; font-family:'Orbitron',sans-serif;
+      transition:all 0.12s; padding:0; font-family:Arial, sans-serif;
     }
     .font-ctrl-btn:hover { background:#2a2a40; color:white; border-color:#555; }
     .font-ctrl-btn:active { transform:scale(0.88); }
     .font-ctrl-val {
-      font-family:'Orbitron',sans-serif; font-size:0.68rem;
+      font-family:Arial, sans-serif; font-size:0.68rem;
       color:var(--gold); min-width:32px; text-align:center;
     }
 
     /* Custom time */
+    /* Quick time buttons */
+    .quick-time-group {
+      display:flex; align-items:center; gap:5px;
+    }
+    .quick-time-btn {
+      font-family:Arial, sans-serif;
+      font-size:clamp(0.65rem,1.1vw,0.85rem);
+      padding:5px 10px; cursor:pointer;
+      border:1px solid #444; border-radius:8px;
+      background:#1a1a28; color:#ccc;
+      transition:all 0.15s; white-space:nowrap;
+    }
+    .quick-time-btn:hover { background:#2a2a3e; color:white; border-color:#666; }
+    .quick-time-btn.active { background:#1a2a1a; border-color:#4a4; color:#8f8; }
+
     #custom-time-wrap {
       display:flex; align-items:center; gap:4px;
       font-size:clamp(0.65rem,1vw,0.82rem); color:#888;
@@ -66,7 +81,7 @@
     #custom-time {
       width:46px; background:#1a1a2e; color:var(--gold);
       border:1px solid #333; border-radius:6px;
-      padding:3px 4px; font-family:'Orbitron',sans-serif;
+      padding:3px 4px; font-family:Arial, sans-serif;
       font-size:inherit; text-align:center;
     }
     #custom-time:focus { outline:none; border-color:var(--gold); }
@@ -92,7 +107,7 @@
       flex-shrink:0; overflow:hidden;
     }
     #timer {
-      font-family:'Orbitron',sans-serif;
+      font-family:'Arial Black', Arial, sans-serif;
       font-size:clamp(3rem,12vw,9rem); font-weight:900;
       color:var(--gold); line-height:1; letter-spacing:0.05em;
       font-variant-numeric:tabular-nums;
@@ -182,11 +197,10 @@
 
     /* ── Score ── */
     .score {
-      font-family:'Orbitron',sans-serif;
+      font-family:'Arial Black', Arial, sans-serif;
       font-size:clamp(5rem,20vw,15rem);
       font-weight:900; line-height:1;
       letter-spacing:-0.02em;
-      font-feature-settings:"zero" 0; /* no slashed zero */
       color:#fff;
       text-shadow:none;
       position:relative; z-index:2;
@@ -197,7 +211,7 @@
     /* ── Score buttons: large for touch ── */
     .score-controls { display:flex; gap:14px; margin-top:10px; position:relative; z-index:2; }
     .score-controls button {
-      font-family:'Orbitron',sans-serif;
+      font-family:'Arial Black', Arial, sans-serif;
       font-size:clamp(1.1rem,3vw,2.2rem);
       width:clamp(60px,9vw,110px); height:clamp(60px,9vw,110px);
       border-radius:50%; border:2px solid rgba(255,255,255,0.18);
@@ -261,7 +275,7 @@
     .hist-team-block { display:flex; align-items:center; gap:8px; }
     .hist-team-name { font-weight:700; }
     .hist-score-badge {
-      display:inline-block; font-family:'Orbitron',sans-serif;
+      display:inline-block; font-family:'Arial Black', Arial, sans-serif;
       font-size:1.25rem; font-weight:900;
       padding:2px 14px; border-radius:8px;
       min-width:48px; text-align:center; line-height:1.6;
@@ -307,6 +321,12 @@
       <button class="font-ctrl-btn" onclick="adjFont('score',-1)">−</button>
       <span class="font-ctrl-val" id="score-font-val">100%</span>
       <button class="font-ctrl-btn" onclick="adjFont('score',1)">+</button>
+    </div>
+    <!-- Quick time presets -->
+    <div class="quick-time-group">
+      <button class="quick-time-btn" id="qt10" onclick="setQuickTime(10)">10秒</button>
+      <button class="quick-time-btn active" id="qt20" onclick="setQuickTime(20)">20秒</button>
+      <button class="quick-time-btn" id="qt30" onclick="setQuickTime(30)">30秒</button>
     </div>
     <!-- Custom time -->
     <div id="custom-time-wrap">
@@ -470,9 +490,22 @@ document.getElementById('history-modal').addEventListener('click', function(e){ 
 
 // ── Timer ──
 let DEFAULT_TIME=20, timeLeft=20, timerInterval=null, isRunning=false;
+function setQuickTime(v) {
+  // Update active highlight
+  [10,20,30].forEach(n => {
+    const btn = document.getElementById('qt'+n);
+    if (btn) btn.classList.toggle('active', n===v);
+  });
+  setCustomTime(v);
+}
 function setCustomTime(v) {
   v = Math.max(5, Math.min(120, parseInt(v)||20));
   document.getElementById('custom-time').value = v;
+  // Sync quick buttons
+  [10,20,30].forEach(n => {
+    const btn = document.getElementById('qt'+n);
+    if (btn) btn.classList.toggle('active', n===v);
+  });
   DEFAULT_TIME = v;
   if (!isRunning) { timeLeft=v; updateTimerDisplay(); }
 }
@@ -577,7 +610,7 @@ document.addEventListener('fullscreenchange', ()=>{
 
 // ── Font size ──
 const fontScales={timer:100,score:100};
-const FONT_STEP=5, FONT_MIN=40, FONT_MAX=400;
+const FONT_STEP=5, FONT_MIN=40, FONT_MAX=500;
 const BASE_TIMER_VW=12, BASE_SCORE_VW=20;
 function adjFont(target,dir){
   fontScales[target]=Math.min(FONT_MAX,Math.max(FONT_MIN,fontScales[target]+dir*FONT_STEP));
