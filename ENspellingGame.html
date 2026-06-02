@@ -600,6 +600,8 @@ function triggerTimeUp() {
   setTimeout(()=>{ ov.style.display='none'; },500);
   playBuzzer();
   speakRepeat("Time's up!", 3, 1300);
+  // 語音說完後自動重置，廣告機不需要手動按
+  setTimeout(()=>{ resetTimer(); }, 4500);
 }
 function speakRepeat(text, times, interval) {
   window.speechSynthesis.cancel();
