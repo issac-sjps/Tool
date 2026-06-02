@@ -248,6 +248,35 @@
     }
     @keyframes flashAnim { from{opacity:1} to{opacity:0} }
 
+    /* ═══ CUSTOM CONFIRM MODAL ═══ */
+    #confirm-modal {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.75); z-index:200;
+      align-items:center; justify-content:center;
+    }
+    #confirm-modal.open { display:flex; }
+    #confirm-box {
+      background:#0d0d18; border:1px solid #2a2a3e;
+      border-radius:16px; padding:28px 32px;
+      max-width:360px; width:88vw;
+      text-align:center;
+    }
+    #confirm-box p {
+      font-family:'Noto Sans TC',sans-serif;
+      font-size:1rem; color:#ddd; margin-bottom:22px; line-height:1.6;
+    }
+    .confirm-btns { display:flex; gap:12px; justify-content:center; }
+    .confirm-btns button {
+      font-family:'Noto Sans TC',sans-serif;
+      font-size:0.9rem; padding:9px 26px;
+      border-radius:10px; cursor:pointer;
+      border:1px solid #444; transition:all 0.15s;
+    }
+    #confirm-ok  { background:#3a0a0a; color:#ff8888; border-color:#661111; }
+    #confirm-ok:hover  { background:#550d0d; color:#ffaaaa; }
+    #confirm-cancel { background:#1a1a28; color:#aaa; }
+    #confirm-cancel:hover { background:#2a2a3e; color:white; }
+
     /* ═══ HISTORY MODAL ═══ */
     #history-modal {
       display:none; position:fixed; inset:0;
@@ -388,6 +417,17 @@
 
 <button id="reset-scores-btn" onclick="resetScores()">🗑 分數歸零 &amp; 儲存紀錄</button>
 
+<!-- Custom Confirm Modal -->
+<div id="confirm-modal">
+  <div id="confirm-box">
+    <p id="confirm-msg">確定歸零？本局紀錄將自動儲存。</p>
+    <div class="confirm-btns">
+      <button id="confirm-ok">✔ 確定</button>
+      <button id="confirm-cancel" onclick="closeConfirm()">✕ 取消</button>
+    </div>
+  </div>
+</div>
+
 <!-- History Modal -->
 <div id="history-modal">
   <div id="history-box">
@@ -419,6 +459,22 @@ function onSelectChange(side, val) {
   document.getElementById(side+'-name-text').textContent = label;
 }
 
+// ── Custom confirm (replaces browser confirm() which exits fullscreen) ──
+let _confirmCallback = null;
+function showConfirm(msg, onOk) {
+  _confirmCallback = onOk;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm() {
+  _confirmCallback = null;
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+document.getElementById('confirm-ok').addEventListener('click', ()=>{
+  document.getElementById('confirm-modal').classList.remove('open');
+  if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+});
+
 // ── Scores ──
 let scores = {red:0, blue:0};
 function changeScore(team, amount) {
@@ -436,12 +492,13 @@ function getTeamLabel(side) {
   return document.getElementById(side+'-name-text').textContent;
 }
 function resetScores() {
-  if (!confirm('確定歸零？本局紀錄將自動儲存。')) return;
-  saveRecord();
-  scores.red = scores.blue = 0;
-  document.getElementById('red-score').textContent = '0';
-  document.getElementById('blue-score').textContent = '0';
-  updateWinHighlight();
+  showConfirm('確定歸零？本局紀錄將自動儲存。', ()=>{
+    saveRecord();
+    scores.red = scores.blue = 0;
+    document.getElementById('red-score').textContent = '0';
+    document.getElementById('blue-score').textContent = '0';
+    updateWinHighlight();
+  });
 }
 
 // ── History ──
@@ -483,8 +540,9 @@ function openHistory() {
 }
 function closeHistory() { document.getElementById('history-modal').classList.remove('open'); }
 function clearHistory() {
-  if (!confirm('確定清除所有紀錄？')) return;
-  localStorage.removeItem(HIST_KEY); closeHistory();
+  showConfirm('確定清除所有紀錄？', ()=>{
+    localStorage.removeItem(HIST_KEY); closeHistory();
+  });
 }
 document.getElementById('history-modal').addEventListener('click', function(e){ if(e.target===this) closeHistory(); });
 
