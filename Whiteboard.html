@@ -435,10 +435,8 @@ function startChipDrag(e) {
 }
 function moveChipDrag(e) {
     if (!chipDrag) return;
-    // 把 ghost 中心對到滑鼠
-    const half = numFontSize * 0.4;
-    chipDrag.ghost.style.left = (e.clientX - half) + 'px';
-    chipDrag.ghost.style.top  = (e.clientY - half) + 'px';
+    chipDrag.ghost.style.left = e.clientX + 'px';
+    chipDrag.ghost.style.top  = e.clientY + 'px';
 }
 function endChipDrag(e) {
     if (!chipDrag) return;
@@ -467,9 +465,8 @@ function moveChipTouch(e) {
     e.preventDefault();
     for (const t of e.touches) {
         if (t.identifier !== chipTouch.id) continue;
-        const half = numFontSize * 0.4;
-        chipTouch.ghost.style.left = (t.clientX - half) + 'px';
-        chipTouch.ghost.style.top  = (t.clientY - half) + 'px';
+        chipTouch.ghost.style.left = t.clientX + 'px';
+        chipTouch.ghost.style.top  = t.clientY + 'px';
     }
 }
 function endChipTouch(e) {
@@ -486,12 +483,12 @@ function endChipTouch(e) {
 }
 
 function createGhost(ch, cx, cy) {
-    const half = numFontSize * 0.4;
     const el = document.createElement('div');
     el.textContent = ch;
     el.style.cssText = `position:fixed;pointer-events:none;z-index:9999;
         font-size:${numFontSize}px;font-weight:900;color:${currentColor};opacity:.8;
-        left:${cx - half}px;top:${cy - half}px;line-height:1;`;
+        left:${cx}px;top:${cy}px;line-height:1;
+        transform:translate(-50%,-50%);transform-origin:center center;`;
     document.body.appendChild(el);
     return el;
 }
@@ -603,14 +600,20 @@ cancelSelectBtn.addEventListener('click', () => { deselectObject(); redrawAll();
 // ── 翻轉邏輯 ──
 function flipObject(obj, dir) {
     if (obj.type === 'text') {
-        // 文字翻轉：加上旋轉模擬
+        if (dir === 'h') obj.rotation = Math.PI - obj.rotation;
+        else             obj.rotation = -obj.rotation;
+        return;
+    }
+    if (obj.type === 'image') {
+        // 圖片翻轉：用旋轉模擬（水平翻轉 = 旋轉180° 再垂直翻一次，視覺上等同鏡像）
         if (dir === 'h') obj.rotation = Math.PI - obj.rotation;
         else             obj.rotation = -obj.rotation;
         return;
     }
     if (obj.type === 'circle') {
-        // 橢圓翻轉：rx/ry 對調（dir 不影響圓，改旋轉即可）
-        if (dir === 'h') { const [rx,ry] = obj.points[0]; obj.points[0] = [-rx, ry]; } // 對稱
+        // 圓/橢圓：翻轉只改旋轉角度即可，rx/ry 保持正數
+        if (dir === 'h') obj.rotation = Math.PI - obj.rotation;
+        else             obj.rotation = -obj.rotation;
         return;
     }
     if (obj.type === 'line') {
@@ -619,6 +622,7 @@ function flipObject(obj, dir) {
         return;
     }
     // rect / triangle
+    if (!obj.points) return;
     if (dir === 'h') obj.points = obj.points.map(([x,y]) => [-x, y]);
     else             obj.points = obj.points.map(([x,y]) => [x, -y]);
 }
