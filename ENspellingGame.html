@@ -4,129 +4,107 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>英語拼單字比賽計分板</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
+  <!-- Orbitron: no slashed zero. Barlow Condensed for team names (big & clean). -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Barlow+Condensed:wght@700;900&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --red-glow: rgba(230,57,70,0.5);
-      --blue-glow: rgba(29,111,196,0.5);
-      --gold: #FFD700;
-      --gold-dim: #b89b00;
-      --bg: #050508;
-      --panel: #0d0d14;
-      --border: #1e1e2e;
-      --top-h: 38vh; /* draggable */
+      --gold: #FFD700; --gold-dim: #b89b00;
+      --bg: #050508; --panel: #0d0d14; --border: #1e1e2e;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing:border-box; margin:0; padding:0; }
     body {
-      font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
-      background: var(--bg);
-      color: white;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      user-select: none;
+      font-family:'Orbitron','Noto Sans TC',sans-serif;
+      background:var(--bg); color:white;
+      height:100vh; display:flex; flex-direction:column;
+      overflow:hidden; user-select:none;
     }
 
-    /* ── HEADER ── */
+    /* ═══ HEADER ═══ */
     #header {
-      background: linear-gradient(90deg,#0d0d14,#131320,#0d0d14);
-      border-bottom: 2px solid var(--border);
-      padding: 5px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-shrink: 0;
-      z-index: 30;
+      background:linear-gradient(90deg,#0d0d14,#131320,#0d0d14);
+      border-bottom:2px solid var(--border);
+      padding:4px 12px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:8px; flex-shrink:0; z-index:30; flex-wrap:wrap;
     }
     #title {
-      font-size: clamp(0.85rem,2vw,1.4rem);
-      font-weight: 900;
-      letter-spacing: 0.12em;
-      color: var(--gold);
-      text-shadow: 0 0 18px var(--gold-dim);
-      white-space: nowrap;
+      font-size:clamp(0.8rem,1.8vw,1.3rem); font-weight:900;
+      letter-spacing:0.12em; color:var(--gold);
+      text-shadow:0 0 18px var(--gold-dim); white-space:nowrap;
     }
-    #header-right { display:flex; align-items:center; gap:10px; }
-    #custom-time-wrap {
-      display:flex; align-items:center; gap:5px;
-      font-size:clamp(0.7rem,1.1vw,0.85rem); color:#888;
-    }
-    #custom-time {
-      width:48px; background:#1a1a2e; color:var(--gold);
-      border:1px solid #333; border-radius:6px;
-      padding:3px 5px; font-family:'Orbitron',sans-serif;
-      font-size:inherit; text-align:center;
-    }
-    #custom-time:focus { outline:none; border-color:var(--gold); }
-
-    /* History button */
-    #history-btn {
-      font-family:'Noto Sans TC',sans-serif;
-      font-size:clamp(0.7rem,1.1vw,0.85rem);
-      padding:5px 14px; cursor:pointer;
-      border:1px solid #555; border-radius:8px;
-      background:#1a1a28; color:#aaa;
-      transition:all 0.15s; white-space:nowrap;
-    }
-    #history-btn:hover { background:#2a2a3e; color:var(--gold); border-color:var(--gold-dim); }
+    #header-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
     /* Font size controls */
     .font-ctrl-group {
-      display:flex; align-items:center; gap:5px;
+      display:flex; align-items:center; gap:4px;
       background:#111120; border:1px solid #2a2a3e;
-      border-radius:10px; padding:3px 8px;
+      border-radius:10px; padding:3px 7px;
     }
     .font-ctrl-label {
-      font-size:0.65rem; color:#666;
-      font-family:'Noto Sans TC',sans-serif;
-      white-space:nowrap; letter-spacing:0.05em;
+      font-size:0.62rem; color:#666;
+      font-family:'Noto Sans TC',sans-serif; white-space:nowrap;
     }
     .font-ctrl-btn {
       width:26px; height:26px; border-radius:6px;
       border:1px solid #333; background:#1a1a28;
       color:#bbb; font-size:1rem; font-weight:900;
       cursor:pointer; display:flex; align-items:center; justify-content:center;
-      transition:all 0.12s; padding:0; line-height:1;
-      font-family:'Orbitron',sans-serif;
+      transition:all 0.12s; padding:0; font-family:'Orbitron',sans-serif;
     }
     .font-ctrl-btn:hover { background:#2a2a40; color:white; border-color:#555; }
     .font-ctrl-btn:active { transform:scale(0.88); }
     .font-ctrl-val {
-      font-family:'Orbitron',sans-serif; font-size:0.7rem;
-      color:var(--gold); min-width:28px; text-align:center;
+      font-family:'Orbitron',sans-serif; font-size:0.68rem;
+      color:var(--gold); min-width:32px; text-align:center;
     }
 
-    /* ── TIMER SECTION (resizable) ── */
+    /* Custom time */
+    #custom-time-wrap {
+      display:flex; align-items:center; gap:4px;
+      font-size:clamp(0.65rem,1vw,0.82rem); color:#888;
+    }
+    #custom-time {
+      width:46px; background:#1a1a2e; color:var(--gold);
+      border:1px solid #333; border-radius:6px;
+      padding:3px 4px; font-family:'Orbitron',sans-serif;
+      font-size:inherit; text-align:center;
+    }
+    #custom-time:focus { outline:none; border-color:var(--gold); }
+
+    /* Icon buttons in header */
+    .hdr-btn {
+      font-family:'Noto Sans TC',sans-serif;
+      font-size:clamp(0.65rem,1vw,0.82rem);
+      padding:5px 12px; cursor:pointer;
+      border:1px solid #555; border-radius:8px;
+      background:#1a1a28; color:#aaa;
+      transition:all 0.15s; white-space:nowrap;
+    }
+    .hdr-btn:hover { background:#2a2a3e; color:var(--gold); border-color:var(--gold-dim); }
+    #fullscreen-btn { font-size:1rem; padding:5px 10px; }
+
+    /* ═══ TIMER ═══ */
     #top-section {
-      height: var(--top-h);
-      min-height: 120px;
-      max-height: 75vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 0 6px;
-      background: var(--panel);
-      position: relative;
-      flex-shrink: 0;
-      overflow: hidden;
+      height:38vh; min-height:110px; max-height:75vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:8px 0 6px; background:var(--panel);
+      flex-shrink:0; overflow:hidden;
     }
     #timer {
-      font-size: clamp(3rem,12vw,9rem);
-      font-weight: 900;
-      color: var(--gold);
-      line-height: 1;
-      letter-spacing: 0.05em;
-      font-variant-numeric: tabular-nums;
-      text-shadow: 0 0 30px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.15);
-      transition: color 0.3s;
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(3rem,12vw,9rem); font-weight:900;
+      color:var(--gold); line-height:1; letter-spacing:0.05em;
+      font-variant-numeric:tabular-nums;
+      /* slashed-zero off — Orbitron default is no slash */
+      font-feature-settings:"zero" 0;
+      text-shadow:0 0 30px rgba(255,215,0,0.4);
+      transition:color 0.3s;
     }
-    #timer.warning { color:#ff9900; text-shadow:0 0 30px rgba(255,153,0,0.6); animation:pulse-warn 0.5s ease-in-out infinite alternate; }
-    #timer.danger  { color:#ff3333; text-shadow:0 0 30px rgba(255,50,50,0.8); animation:pulse-danger 0.3s ease-in-out infinite alternate; }
-    @keyframes pulse-warn  { from{transform:scale(1)} to{transform:scale(1.03)} }
-    @keyframes pulse-danger{ from{transform:scale(1);opacity:1} to{transform:scale(1.05);opacity:0.85} }
+    #timer.warning { color:#ff9900; animation:pulse-warn 0.5s ease-in-out infinite alternate; }
+    #timer.danger  { color:#ff3333; animation:pulse-danger 0.3s ease-in-out infinite alternate; }
+    @keyframes pulse-warn   { from{transform:scale(1)} to{transform:scale(1.03)} }
+    @keyframes pulse-danger { from{transform:scale(1);opacity:1} to{transform:scale(1.05);opacity:0.85} }
 
     #progress-bar-wrap {
       width:78%; max-width:580px; height:5px;
@@ -148,135 +126,115 @@
     .btn-start:hover { background:#1a2e1a!important; }
     .btn-pause { border-color:#aa6!important; color:var(--gold)!important; }
 
-    /* ── DRAG HANDLE ── */
+    /* ═══ DRAG HANDLE ═══ */
     #drag-handle {
-      height: 10px;
-      background: linear-gradient(180deg, #1e1e2e, #111);
-      cursor: ns-resize;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 20;
-      transition: background 0.15s;
+      height:14px; background:linear-gradient(180deg,#1e1e2e,#111);
+      cursor:ns-resize; display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; z-index:20; transition:background 0.15s;
     }
-    #drag-handle:hover { background: #2a2a40; }
-    #drag-handle::after {
-      content: '⠿';
-      color: #444;
-      font-size: 14px;
-      letter-spacing: 3px;
-    }
+    #drag-handle:hover { background:#2a2a40; }
+    #drag-handle::after { content:'⠿'; color:#444; font-size:13px; letter-spacing:3px; }
 
-    /* ── SCOREBOARD ── */
-    #bottom-section {
-      flex: 1;
-      display: flex;
-      min-height: 0;
-      position: relative;
-    }
+    /* ═══ SCOREBOARD ═══ */
+    #bottom-section { flex:1; display:flex; min-height:0; position:relative; }
     .team {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 10px 16px;
-      position: relative;
-      overflow: hidden;
+      flex:1; display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:10px 8px 14px; position:relative; overflow:hidden;
     }
     .team::before {
-      content:''; position:absolute; inset:0; opacity:0.08;
+      content:''; position:absolute; inset:0; opacity:0.07;
       background-size:40px 40px;
       background-image:
-        linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+        linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);
     }
     #red-team  { background:linear-gradient(160deg,#1a0305,#2d0810,#150203); }
     #blue-team { background:linear-gradient(160deg,#010a1a,#031128,#010a18); }
-    #red-team::after {
-      content:''; position:absolute; top:-30%; left:50%;
-      transform:translateX(-50%); width:80%; height:60%;
-      background:radial-gradient(ellipse,rgba(180,0,20,0.18) 0%,transparent 70%);
-      pointer-events:none;
-    }
-    #blue-team::after {
-      content:''; position:absolute; top:-30%; left:50%;
-      transform:translateX(-50%); width:80%; height:60%;
-      background:radial-gradient(ellipse,rgba(0,60,180,0.18) 0%,transparent 70%);
-      pointer-events:none;
-    }
 
-    /* No vertical divider line — removed */
-
-    .team-name-select {
-      background:transparent; border:none;
-      border-bottom:2px solid rgba(255,255,255,0.2);
-      font-family:'Orbitron','Noto Sans TC',sans-serif;
-      font-size:clamp(1.2rem,4vw,3rem);
-      font-weight:900; text-align:center; cursor:pointer;
-      letter-spacing:0.1em; margin-bottom:4px; padding:0 4px;
-      transition:border-color 0.2s; position:relative; z-index:2;
-      width:90%; max-width:460px;
-      appearance:none; -webkit-appearance:none;
-      text-align-last:center;
+    /* ── Team name: big button-style selector ── */
+    .team-name-wrap {
+      position:relative; z-index:3;
+      width:92%; max-width:500px; margin-bottom:6px;
     }
-    .team-name-select:focus { outline:none; border-bottom-color:white; }
-    .team-name-select option { background:#0d0d1a; font-size:1rem; color:white; font-family:'Noto Sans TC',sans-serif; }
-    #red-team  .team-name-select { color:#ff8888; }
-    #blue-team .team-name-select { color:#88aaff; }
+    /* Hidden native select overlaid for touch */
+    .team-name-select-native {
+      position:absolute; inset:0; opacity:0;
+      cursor:pointer; font-size:16px; /* prevents zoom on iOS */
+      z-index:5; width:100%; height:100%;
+    }
+    /* Visual display button */
+    .team-name-display {
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      background:rgba(255,255,255,0.06);
+      border:2px solid rgba(255,255,255,0.18);
+      border-radius:16px; padding:10px 20px;
+      font-family:'Barlow Condensed','Noto Sans TC',sans-serif;
+      font-size:clamp(1.8rem,6vw,5rem);
+      font-weight:900; letter-spacing:0.06em;
+      cursor:pointer; transition:border-color 0.2s, background 0.2s;
+      min-height:60px;
+    }
+    .team-name-display:hover { background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.4); }
+    .team-name-display .arrow { font-size:0.4em; opacity:0.5; }
+    #red-team  .team-name-display { color:#ff9090; }
+    #blue-team .team-name-display { color:#90b0ff; }
 
+    /* ── Score ── */
     .score {
-      font-size:clamp(4.5rem,20vw,15rem);
-      font-weight:900; line-height:1; letter-spacing:-0.02em;
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(5rem,20vw,15rem);
+      font-weight:900; line-height:1;
+      letter-spacing:-0.02em;
+      font-feature-settings:"zero" 0; /* no slashed zero */
+      color:#fff;
+      text-shadow:none;
       position:relative; z-index:2;
     }
-    #red-team  .score { color:#fff; text-shadow:none; }
-    #blue-team .score { color:#fff; text-shadow:none; }
     .score.bump { animation:scoreBump 0.2s ease-out; }
     @keyframes scoreBump { 0%{transform:scale(1)} 50%{transform:scale(1.18)} 100%{transform:scale(1)} }
 
-    .score-controls { display:flex; gap:12px; margin-top:8px; position:relative; z-index:2; }
+    /* ── Score buttons: large for touch ── */
+    .score-controls { display:flex; gap:14px; margin-top:10px; position:relative; z-index:2; }
     .score-controls button {
       font-family:'Orbitron',sans-serif;
-      font-size:clamp(0.9rem,2.5vw,1.8rem);
-      width:clamp(48px,7vw,84px); height:clamp(48px,7vw,84px);
-      border-radius:50%; border:2px solid rgba(255,255,255,0.15);
+      font-size:clamp(1.1rem,3vw,2.2rem);
+      width:clamp(60px,9vw,110px); height:clamp(60px,9vw,110px);
+      border-radius:50%; border:2px solid rgba(255,255,255,0.18);
       cursor:pointer; font-weight:900;
-      transition:transform 0.1s,background 0.15s,box-shadow 0.15s;
+      transition:transform 0.1s,background 0.15s;
+      /* bigger tap target */
+      -webkit-tap-highlight-color:transparent;
     }
     .score-controls button:active { transform:scale(0.88)!important; }
-    #red-team  .btn-plus  { background:rgba(200,30,50,0.55); color:#fff; box-shadow:0 4px 16px rgba(200,30,50,0.4); }
-    #red-team  .btn-plus:hover { background:rgba(220,40,60,0.8); }
-    #red-team  .btn-minus { background:rgba(80,0,10,0.5); color:#faa; border-color:rgba(255,100,100,0.2); }
-    #red-team  .btn-minus:hover { background:rgba(120,10,20,0.7); }
-    #blue-team .btn-plus  { background:rgba(20,80,200,0.55); color:#fff; box-shadow:0 4px 16px rgba(20,80,200,0.4); }
-    #blue-team .btn-plus:hover { background:rgba(30,100,220,0.8); }
-    #blue-team .btn-minus { background:rgba(0,10,80,0.5); color:#aaf; border-color:rgba(100,130,255,0.2); }
-    #blue-team .btn-minus:hover { background:rgba(10,20,120,0.7); }
+    #red-team  .btn-plus  { background:rgba(210,35,55,0.65); color:#fff; }
+    #red-team  .btn-plus:hover  { background:rgba(230,50,70,0.9); }
+    #red-team  .btn-minus { background:rgba(90,5,15,0.55); color:#fbb; }
+    #red-team  .btn-minus:hover { background:rgba(130,15,25,0.8); }
+    #blue-team .btn-plus  { background:rgba(25,85,210,0.65); color:#fff; }
+    #blue-team .btn-plus:hover  { background:rgba(35,105,230,0.9); }
+    #blue-team .btn-minus { background:rgba(5,15,90,0.55); color:#bbf; }
+    #blue-team .btn-minus:hover { background:rgba(15,25,130,0.8); }
 
-    .team.winning .score { animation:none; }
-
-    /* ── RESET BTN ── */
+    /* ═══ RESET BTN ═══ */
     #reset-scores-btn {
       position:fixed; bottom:10px; left:50%; transform:translateX(-50%);
       background:rgba(10,10,20,0.88); border:1px solid #333;
       color:#888; font-family:'Noto Sans TC',sans-serif;
-      font-size:0.78rem; padding:5px 16px; border-radius:20px;
+      font-size:0.78rem; padding:6px 18px; border-radius:20px;
       cursor:pointer; z-index:20; transition:color 0.2s,border-color 0.2s;
-      backdrop-filter:blur(4px);
+      backdrop-filter:blur(4px); white-space:nowrap;
     }
     #reset-scores-btn:hover { color:#ff8888; border-color:#ff4444; }
 
-    /* ── FLASH ── */
+    /* ═══ FLASH ═══ */
     #flash-overlay {
       display:none; position:fixed; inset:0;
       background:rgba(255,50,50,0.15); pointer-events:none; z-index:50;
     }
     @keyframes flashAnim { from{opacity:1} to{opacity:0} }
 
-    /* ── HISTORY MODAL ── */
+    /* ═══ HISTORY MODAL ═══ */
     #history-modal {
       display:none; position:fixed; inset:0;
       background:rgba(0,0,0,0.82); z-index:100;
@@ -285,47 +243,37 @@
     #history-modal.open { display:flex; }
     #history-box {
       background:#0d0d18; border:1px solid #2a2a3e;
-      border-radius:16px; padding:28px 32px;
+      border-radius:16px; padding:26px 28px;
       max-width:600px; width:92vw; max-height:80vh;
       overflow-y:auto; position:relative;
     }
     #history-box h2 {
       font-family:'Noto Sans TC',sans-serif;
-      font-size:1.2rem; color:var(--gold); margin-bottom:16px;
+      font-size:1.15rem; color:var(--gold); margin-bottom:14px;
       border-bottom:1px solid #2a2a3e; padding-bottom:10px;
     }
     .hist-entry {
       border:1px solid #1e1e2e; border-radius:10px;
-      padding:12px 16px; margin-bottom:10px;
-      background:#111120;
+      padding:12px 16px; margin-bottom:10px; background:#111120;
     }
     .hist-date { font-size:0.72rem; color:#555; margin-bottom:6px; font-family:'Noto Sans TC',sans-serif; }
-    .hist-teams {
-      display:flex; gap:12px; align-items:center;
-      font-size:clamp(0.85rem,1.8vw,1.05rem); font-weight:700;
-      font-family:'Noto Sans TC',sans-serif;
-    }
+    .hist-teams { display:flex; gap:12px; align-items:center; font-size:clamp(0.85rem,1.8vw,1.05rem); font-weight:700; font-family:'Noto Sans TC',sans-serif; }
     .hist-team-block { display:flex; align-items:center; gap:8px; }
     .hist-team-name { font-weight:700; }
     .hist-score-badge {
-      display:inline-block;
-      font-family:'Orbitron',sans-serif;
+      display:inline-block; font-family:'Orbitron',sans-serif;
       font-size:1.25rem; font-weight:900;
       padding:2px 14px; border-radius:8px;
       min-width:48px; text-align:center; line-height:1.6;
     }
-    .hist-red  .hist-team-name { color:#ff7777; }
+    .hist-red  .hist-team-name  { color:#ff7777; }
     .hist-red  .hist-score-badge { background:rgba(180,20,30,0.35); color:#fff; border:1px solid rgba(255,80,80,0.3); }
-    .hist-blue .hist-team-name { color:#7799ff; }
+    .hist-blue .hist-team-name  { color:#7799ff; }
     .hist-blue .hist-score-badge { background:rgba(20,60,180,0.35); color:#fff; border:1px solid rgba(80,130,255,0.3); }
-    .hist-vs   { color:#333; font-size:0.8rem; padding:0 2px; }
+    .hist-vs   { color:#333; font-size:0.8rem; }
     .hist-winner { font-size:0.72rem; margin-top:6px; color:#aaa; font-family:'Noto Sans TC',sans-serif; }
     .hist-winner span { color:var(--gold); }
-    #history-close {
-      position:absolute; top:14px; right:18px;
-      background:none; border:none; color:#666;
-      font-size:1.4rem; cursor:pointer;
-    }
+    #history-close { position:absolute; top:14px; right:18px; background:none; border:none; color:#666; font-size:1.4rem; cursor:pointer; }
     #history-close:hover { color:white; }
     #history-empty { color:#444; font-family:'Noto Sans TC',sans-serif; font-size:0.9rem; text-align:center; padding:20px 0; }
     #history-clear-btn {
@@ -346,30 +294,32 @@
 <div id="header">
   <div id="title">🔤 英語拼單字比賽</div>
   <div id="header-right">
-    <!-- Timer font size -->
+    <!-- Timer font -->
     <div class="font-ctrl-group">
       <span class="font-ctrl-label">計時器</span>
       <button class="font-ctrl-btn" onclick="adjFont('timer',-1)">−</button>
       <span class="font-ctrl-val" id="timer-font-val">100%</span>
       <button class="font-ctrl-btn" onclick="adjFont('timer',1)">+</button>
     </div>
-    <!-- Score font size -->
+    <!-- Score font -->
     <div class="font-ctrl-group">
       <span class="font-ctrl-label">分數</span>
       <button class="font-ctrl-btn" onclick="adjFont('score',-1)">−</button>
       <span class="font-ctrl-val" id="score-font-val">100%</span>
       <button class="font-ctrl-btn" onclick="adjFont('score',1)">+</button>
     </div>
+    <!-- Custom time -->
     <div id="custom-time-wrap">
-      <span>秒數</span>
-      <input type="number" id="custom-time" value="20" min="5" max="120" onchange="setCustomTime(this.value)">
       <span>秒</span>
+      <input type="number" id="custom-time" value="20" min="5" max="120" onchange="setCustomTime(this.value)">
     </div>
-    <button id="history-btn" onclick="openHistory()">📋 歷史紀錄</button>
+    <button class="hdr-btn" onclick="openHistory()">📋 紀錄</button>
+    <!-- Fullscreen -->
+    <button class="hdr-btn" id="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
   </div>
 </div>
 
-<!-- Timer (resizable) -->
+<!-- Timer -->
 <div id="top-section">
   <div id="timer">20</div>
   <div id="progress-bar-wrap"><div id="progress-bar" style="width:100%"></div></div>
@@ -386,7 +336,13 @@
 <!-- Scores -->
 <div id="bottom-section">
   <div class="team" id="red-team">
-    <select class="team-name-select" id="red-name-select"></select>
+    <div class="team-name-wrap">
+      <div class="team-name-display" id="red-name-display">
+        <span id="red-name-text">601</span>
+        <span class="arrow">▼</span>
+      </div>
+      <select class="team-name-select-native" id="red-name-select" onchange="onSelectChange('red',this.value)"></select>
+    </div>
     <div class="score" id="red-score">0</div>
     <div class="score-controls">
       <button class="btn-minus" onclick="changeScore('red',-1)">−1</button>
@@ -395,7 +351,13 @@
   </div>
 
   <div class="team" id="blue-team">
-    <select class="team-name-select" id="blue-name-select"></select>
+    <div class="team-name-wrap">
+      <div class="team-name-display" id="blue-name-display">
+        <span id="blue-name-text">602</span>
+        <span class="arrow">▼</span>
+      </div>
+      <select class="team-name-select-native" id="blue-name-select" onchange="onSelectChange('blue',this.value)"></select>
+    </div>
     <div class="score" id="blue-score">0</div>
     <div class="score-controls">
       <button class="btn-minus" onclick="changeScore('blue',-1)">−1</button>
@@ -419,19 +381,23 @@
 <script>
 // ── Team options ──
 const CLASS_TEAMS = [
-  {v:'601',l:'601 班'},{v:'602',l:'602 班'},{v:'603',l:'603 班'},
-  {v:'604',l:'604 班'},{v:'605',l:'605 班'},{v:'606',l:'606 班'},
-  {v:'607',l:'607 班'},{v:'608',l:'608 班'},
-  {v:'red',l:'紅 隊'},{v:'blue',l:'藍 隊'},
+  {v:'601',l:'601'},{v:'602',l:'602'},{v:'603',l:'603'},
+  {v:'604',l:'604'},{v:'605',l:'605'},{v:'606',l:'606'},
+  {v:'607',l:'607'},{v:'608',l:'608'},
+  {v:'red',l:'紅隊'},{v:'blue',l:'藍隊'},
 ];
-['red-name-select','blue-name-select'].forEach((id,i) => {
-  const sel = document.getElementById(id);
+['red','blue'].forEach((side,i) => {
+  const sel = document.getElementById(side+'-name-select');
   CLASS_TEAMS.forEach(t => {
     const o = document.createElement('option');
     o.value = t.v; o.textContent = t.l; sel.appendChild(o);
   });
   sel.value = i===0 ? '601' : '602';
 });
+function onSelectChange(side, val) {
+  const label = CLASS_TEAMS.find(t=>t.v===val)?.l || val;
+  document.getElementById(side+'-name-text').textContent = label;
+}
 
 // ── Scores ──
 let scores = {red:0, blue:0};
@@ -446,15 +412,11 @@ function updateWinHighlight() {
   document.getElementById('red-team').classList.toggle('winning', scores.red > scores.blue);
   document.getElementById('blue-team').classList.toggle('winning', scores.blue > scores.red);
 }
-
 function getTeamLabel(side) {
-  const sel = document.getElementById(side+'-name-select');
-  return sel.options[sel.selectedIndex].text;
+  return document.getElementById(side+'-name-text').textContent;
 }
-
 function resetScores() {
   if (!confirm('確定歸零？本局紀錄將自動儲存。')) return;
-  // Save record
   saveRecord();
   scores.red = scores.blue = 0;
   document.getElementById('red-score').textContent = '0';
@@ -462,33 +424,25 @@ function resetScores() {
   updateWinHighlight();
 }
 
-// ── History (localStorage) ──
+// ── History ──
 const HIST_KEY = 'spelling_history';
 function saveRecord() {
-  const redLabel  = getTeamLabel('red');
-  const blueLabel = getTeamLabel('blue');
+  const rl = getTeamLabel('red'), bl = getTeamLabel('blue');
   const rs = scores.red, bs = scores.blue;
   let winner = '平手';
-  if (rs > bs) winner = redLabel;
-  else if (bs > rs) winner = blueLabel;
-  const entry = {
-    time: new Date().toLocaleString('zh-TW'),
-    red: {label:redLabel, score:rs},
-    blue:{label:blueLabel, score:bs},
-    winner
-  };
+  if (rs>bs) winner = rl; else if (bs>rs) winner = bl;
+  const entry = { time:new Date().toLocaleString('zh-TW'), red:{label:rl,score:rs}, blue:{label:bl,score:bs}, winner };
   const hist = JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
   hist.unshift(entry);
   localStorage.setItem(HIST_KEY, JSON.stringify(hist.slice(0,50)));
 }
-
 function openHistory() {
   const hist = JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
   const list = document.getElementById('history-list');
-  if (hist.length === 0) {
+  if (!hist.length) {
     list.innerHTML = '<div id="history-empty">尚無比賽紀錄</div>';
   } else {
-    list.innerHTML = hist.map((e,i) => `
+    list.innerHTML = hist.map(e => `
       <div class="hist-entry">
         <div class="hist-date">${e.time}</div>
         <div class="hist-teams">
@@ -510,21 +464,17 @@ function openHistory() {
 function closeHistory() { document.getElementById('history-modal').classList.remove('open'); }
 function clearHistory() {
   if (!confirm('確定清除所有紀錄？')) return;
-  localStorage.removeItem(HIST_KEY);
-  closeHistory();
+  localStorage.removeItem(HIST_KEY); closeHistory();
 }
-// close on backdrop click
-document.getElementById('history-modal').addEventListener('click', function(e){
-  if (e.target === this) closeHistory();
-});
+document.getElementById('history-modal').addEventListener('click', function(e){ if(e.target===this) closeHistory(); });
 
 // ── Timer ──
-let DEFAULT_TIME = 20, timeLeft = 20, timerInterval = null, isRunning = false;
+let DEFAULT_TIME=20, timeLeft=20, timerInterval=null, isRunning=false;
 function setCustomTime(v) {
   v = Math.max(5, Math.min(120, parseInt(v)||20));
   document.getElementById('custom-time').value = v;
   DEFAULT_TIME = v;
-  if (!isRunning) { timeLeft = v; updateTimerDisplay(); }
+  if (!isRunning) { timeLeft=v; updateTimerDisplay(); }
 }
 function updateTimerDisplay() {
   const el = document.getElementById('timer');
@@ -533,134 +483,112 @@ function updateTimerDisplay() {
   const bar = document.getElementById('progress-bar');
   bar.style.width = pct+'%';
   el.classList.remove('warning','danger');
-  if (timeLeft === 0) { el.classList.add('danger'); bar.style.background='#ff3333'; }
-  else if (timeLeft <= 5) { el.classList.add('danger'); bar.style.background='#ff4400'; }
-  else if (timeLeft <= Math.ceil(DEFAULT_TIME*0.3)) { el.classList.add('warning'); bar.style.background='#ff9900'; }
-  else bar.style.background = 'var(--gold)';
+  if (timeLeft===0)                                    { el.classList.add('danger'); bar.style.background='#ff3333'; }
+  else if (timeLeft<=5)                                { el.classList.add('danger'); bar.style.background='#ff4400'; }
+  else if (timeLeft<=Math.ceil(DEFAULT_TIME*0.3))      { el.classList.add('warning'); bar.style.background='#ff9900'; }
+  else                                                   bar.style.background='var(--gold)';
 }
 function startTimer() {
-  if (isRunning || timeLeft===0) return;
-  isRunning = true; initAudio();
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    updateTimerDisplay();
-    if (timeLeft<=3 && timeLeft>0) playBeep(880, 0.08);
+  if (isRunning||timeLeft===0) return;
+  isRunning=true; initAudio();
+  timerInterval = setInterval(()=>{
+    timeLeft--; updateTimerDisplay();
+    if (timeLeft<=3&&timeLeft>0) playBeep(880,0.08);
     if (timeLeft<=0) { clearInterval(timerInterval); isRunning=false; triggerTimeUp(); }
-  }, 1000);
+  },1000);
 }
 function pauseTimer() { clearInterval(timerInterval); isRunning=false; }
-function resetTimer() { pauseTimer(); timeLeft=DEFAULT_TIME; updateTimerDisplay(); }
+function resetTimer()  { pauseTimer(); timeLeft=DEFAULT_TIME; updateTimerDisplay(); }
 
 function triggerTimeUp() {
   const ov = document.getElementById('flash-overlay');
-  ov.style.display='block';
-  ov.style.animation='none'; void ov.offsetWidth;
+  ov.style.display='block'; ov.style.animation='none'; void ov.offsetWidth;
   ov.style.animation='flashAnim 0.4s ease-out forwards';
-  setTimeout(()=>{ ov.style.display='none'; }, 500);
+  setTimeout(()=>{ ov.style.display='none'; },500);
   playBuzzer();
-  // English speech x3: "Time's up!"
   speakRepeat("Time's up!", 3, 1300);
 }
-
 function speakRepeat(text, times, interval) {
-  // Cancel any ongoing speech
   window.speechSynthesis.cancel();
-  let count = 0;
+  let count=0;
   function go() {
-    if (count >= times) return;
+    if (count>=times) return;
     const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'en-US';
-    utt.rate = 0.88;
-    utt.pitch = 1.05;
-    utt.volume = 1;
+    utt.lang='en-US'; utt.rate=0.88; utt.pitch=1.05; utt.volume=1;
     window.speechSynthesis.speak(utt);
     count++;
-    if (count < times) setTimeout(go, interval);
+    if (count<times) setTimeout(go, interval);
   }
   go();
 }
 
 // ── Audio ──
 let audioCtx;
-function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-}
-function playBeep(freq, dur) {
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+function playBeep(freq,dur) {
   if (!audioCtx) return;
-  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
   o.type='sine'; o.frequency.value=freq;
-  g.gain.setValueAtTime(0.35, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+  g.gain.setValueAtTime(0.35,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
   o.start(); o.stop(audioCtx.currentTime+dur);
 }
 function playBuzzer() {
   if (!audioCtx) initAudio();
-  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
   o.type='square'; o.frequency.value=440;
-  g.gain.setValueAtTime(0.5, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+1.8);
+  g.gain.setValueAtTime(0.5,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+1.8);
   o.start(); o.stop(audioCtx.currentTime+1.8);
 }
 
-// ── Drag handle to resize top/bottom ──
-(function() {
-  const handle = document.getElementById('drag-handle');
-  const topSec = document.getElementById('top-section');
-  let dragging = false, startY = 0, startH = 0;
+// ── Fullscreen ──
+function toggleFullscreen() {
+  const btn = document.getElementById('fullscreen-btn');
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().then(()=>{ btn.textContent='✕ 離開全螢幕'; btn.title='離開全螢幕'; });
+  } else {
+    document.exitFullscreen().then(()=>{ btn.textContent='⛶'; btn.title='全螢幕'; });
+  }
+}
+document.addEventListener('fullscreenchange', ()=>{
+  const btn = document.getElementById('fullscreen-btn');
+  if (!document.fullscreenElement) { btn.textContent='⛶'; }
+  else { btn.textContent='✕ 離開全螢幕'; }
+});
 
-  function onStart(e) {
-    dragging = true;
-    startY = e.touches ? e.touches[0].clientY : e.clientY;
-    startH = topSec.getBoundingClientRect().height;
-    document.body.style.cursor = 'ns-resize';
-    e.preventDefault();
-  }
-  function onMove(e) {
-    if (!dragging) return;
-    const y = e.touches ? e.touches[0].clientY : e.clientY;
-    const newH = Math.min(Math.max(startH + (y - startY), 120), window.innerHeight * 0.75);
-    topSec.style.height = newH + 'px';
-    e.preventDefault();
-  }
-  function onEnd() {
-    dragging = false;
-    document.body.style.cursor = '';
-  }
-  handle.addEventListener('mousedown', onStart);
-  handle.addEventListener('touchstart', onStart, {passive:false});
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('touchmove', onMove, {passive:false});
-  document.addEventListener('mouseup', onEnd);
-  document.addEventListener('touchend', onEnd);
+// ── Drag handle ──
+(function(){
+  const handle=document.getElementById('drag-handle');
+  const topSec=document.getElementById('top-section');
+  let dragging=false, startY=0, startH=0;
+  function onStart(e){ dragging=true; startY=e.touches?e.touches[0].clientY:e.clientY; startH=topSec.getBoundingClientRect().height; document.body.style.cursor='ns-resize'; e.preventDefault(); }
+  function onMove(e){ if(!dragging)return; const y=e.touches?e.touches[0].clientY:e.clientY; const newH=Math.min(Math.max(startH+(y-startY),110),window.innerHeight*0.75); topSec.style.height=newH+'px'; e.preventDefault(); }
+  function onEnd(){ dragging=false; document.body.style.cursor=''; }
+  handle.addEventListener('mousedown',onStart);
+  handle.addEventListener('touchstart',onStart,{passive:false});
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',onEnd);
+  document.addEventListener('touchend',onEnd);
 })();
 
-// ── Font size controls ──
-const fontScales = { timer: 100, score: 100 };
-const FONT_STEP = 5, FONT_MIN = 40, FONT_MAX = 200;
-
-// Base sizes in vw (will be multiplied by scale)
-const BASE_TIMER_VW = 12;  // vw
-const BASE_SCORE_VW = 20;  // vw
-
-function adjFont(target, dir) {
-  fontScales[target] = Math.min(FONT_MAX, Math.max(FONT_MIN, fontScales[target] + dir * FONT_STEP));
+// ── Font size ──
+const fontScales={timer:100,score:100};
+const FONT_STEP=5, FONT_MIN=40, FONT_MAX=400;
+const BASE_TIMER_VW=12, BASE_SCORE_VW=20;
+function adjFont(target,dir){
+  fontScales[target]=Math.min(FONT_MAX,Math.max(FONT_MIN,fontScales[target]+dir*FONT_STEP));
   applyFontSizes();
-  document.getElementById(target + '-font-val').textContent = fontScales[target] + '%';
+  document.getElementById(target+'-font-val').textContent=fontScales[target]+'%';
+}
+function applyFontSizes(){
+  document.getElementById('timer').style.fontSize=(BASE_TIMER_VW*fontScales.timer/100).toFixed(2)+'vw';
+  document.querySelectorAll('.score').forEach(el=>{ el.style.fontSize=(BASE_SCORE_VW*fontScales.score/100).toFixed(2)+'vw'; });
 }
 
-function applyFontSizes() {
-  const timerVW = (BASE_TIMER_VW * fontScales.timer / 100).toFixed(2);
-  document.getElementById('timer').style.fontSize = timerVW + 'vw';
-
-  const scoreVW = (BASE_SCORE_VW * fontScales.score / 100).toFixed(2);
-  document.querySelectorAll('.score').forEach(el => {
-    el.style.fontSize = scoreVW + 'vw';
-  });
-}
-
-// Init
 updateTimerDisplay();
 applyFontSizes();
 </script>
