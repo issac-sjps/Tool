@@ -566,6 +566,7 @@ function setCustomTime(v) {
   });
   DEFAULT_TIME = v;
   if (!isRunning) { timeLeft=v; updateTimerDisplay(); }
+  saveSettings();
 }
 function updateTimerDisplay() {
   const el = document.getElementById('timer');
@@ -667,19 +668,52 @@ document.addEventListener('fullscreenchange', ()=>{
 })();
 
 // ── Font size ──
+const SETTINGS_KEY = 'spelling_settings';
 const fontScales={timer:100,score:100};
 const FONT_STEP=5, FONT_MIN=40, FONT_MAX=500;
 const BASE_TIMER_VW=12, BASE_SCORE_VW=20;
+
+function saveSettings() {
+  const s = {
+    timerScale: fontScales.timer,
+    scoreScale: fontScales.score,
+    defaultTime: DEFAULT_TIME,
+  };
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}');
+    if (s.timerScale) fontScales.timer = s.timerScale;
+    if (s.scoreScale) fontScales.score = s.scoreScale;
+    if (s.defaultTime) {
+      DEFAULT_TIME = s.defaultTime;
+      timeLeft = s.defaultTime;
+      document.getElementById('custom-time').value = s.defaultTime;
+      [10,20,30].forEach(n => {
+        const btn = document.getElementById('qt'+n);
+        if (btn) btn.classList.toggle('active', n===s.defaultTime);
+      });
+    }
+    // Sync font display labels
+    document.getElementById('timer-font-val').textContent = fontScales.timer+'%';
+    document.getElementById('score-font-val').textContent = fontScales.score+'%';
+  } catch(e) {}
+}
+
 function adjFont(target,dir){
   fontScales[target]=Math.min(FONT_MAX,Math.max(FONT_MIN,fontScales[target]+dir*FONT_STEP));
   applyFontSizes();
   document.getElementById(target+'-font-val').textContent=fontScales[target]+'%';
+  saveSettings();
 }
 function applyFontSizes(){
   document.getElementById('timer').style.fontSize=(BASE_TIMER_VW*fontScales.timer/100).toFixed(2)+'vw';
   document.querySelectorAll('.score').forEach(el=>{ el.style.fontSize=(BASE_SCORE_VW*fontScales.score/100).toFixed(2)+'vw'; });
 }
 
+loadSettings();
 updateTimerDisplay();
 applyFontSizes();
 </script>
