@@ -139,6 +139,21 @@
     .timer-controls button:active { transform:scale(0.95); }
     .btn-start { border-color:#3a3!important; color:#6f6!important; }
     .btn-start:hover { background:#1a2e1a!important; }
+    .btn-start.fired {
+      background:#1a4a1a!important;
+      border-color:#6f6!important;
+      color:#fff!important;
+      box-shadow:0 0 14px rgba(80,255,80,0.5);
+      transform:scale(0.95);
+    }
+    /* Timer flash green on start */
+    #timer.started {
+      animation:timerStartFlash 0.4s ease-out!important;
+    }
+    @keyframes timerStartFlash {
+      0%   { color:#88ff88; transform:scale(1.08); }
+      100% { color:var(--gold); transform:scale(1); }
+    }
     .btn-pause { border-color:#aa6!important; color:var(--gold)!important; }
 
     /* ═══ DRAG HANDLE ═══ */
@@ -584,6 +599,21 @@ function startTimer() {
   if (isRunning) return;
   if (timeLeft <= 0) { resetTimer(); return; }
   isRunning=true; initAudio();
+
+  // 視覺回饋：按鈕閃 + 計時器數字跳綠
+  const startBtn = document.querySelector('.btn-start');
+  startBtn.classList.add('fired');
+  setTimeout(()=> startBtn.classList.remove('fired'), 300);
+
+  const timerEl = document.getElementById('timer');
+  timerEl.classList.remove('started');
+  void timerEl.offsetWidth;
+  timerEl.classList.add('started');
+  setTimeout(()=> timerEl.classList.remove('started'), 400);
+
+  // 短嗶聲確認
+  playBeep(660, 0.12);
+
   timerInterval = setInterval(()=>{
     timeLeft--; updateTimerDisplay();
     if (timeLeft<=3&&timeLeft>0) playBeep(880,0.08);
