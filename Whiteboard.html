@@ -494,16 +494,12 @@ function createGhost(ch, cx, cy) {
 }
 
 // 把 client 座標換算成 canvas 內部座標（含捲動補正）
+// 與 getPos() 完全一致，避免兩套邏輯造成累積偏差
 function clientToCanvas(cx, cy) {
-    const rect = overlayCanvas.getBoundingClientRect();
-    const scaleX = overlayCanvas.width  / rect.width;
-    // canvas CSS 顯示高度 = 容器高度（不含捲動），canvas 內部高度 = 3000px
-    // 正確換算：先把 clientY 轉成相對容器頂部的 CSS px，再加上捲動量，最後乘以縮放比
     const containerRect = scrollContainer.getBoundingClientRect();
-    const cssY = (cy - containerRect.top) + scrollContainer.scrollTop;
-    const cssX = (cx - containerRect.left);
-    const x = cssX * scaleX;
-    const y = cssY * scaleX; // 用同一個 scale（canvas 是正方形 width=height 時一致）
+    const scaleX = overlayCanvas.width / containerRect.width;
+    const x = (cx - containerRect.left) * scaleX;
+    const y = ((cy - containerRect.top) + scrollContainer.scrollTop) * scaleX;
     if (x < 0 || y < 0 || x > overlayCanvas.width) return { x: null, y: null };
     return { x, y };
 }
