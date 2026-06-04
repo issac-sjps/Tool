@@ -814,19 +814,18 @@
         </div>
       </div>
 
-      <!-- Playback -->
-      <div class="playback-row">
-        <button class="btn-play" id="playBtn" onclick="togglePlay('original')" title="播放原聲">▶</button>
-        <button class="btn-play-fx" id="playFxBtn" onclick="togglePlay('fx')" title="套用效果後試聽">
-          ✨
-        </button>
-        <div class="play-progress-wrap">
-          <div class="play-bar-bg">
-            <div class="play-bar-fill" id="playFill"></div>
+      <!-- 原聲播放列 -->
+      <div style="margin-bottom:4px;">
+        <div style="font-size:11px; color:var(--text3); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">▶ 原聲試聽</div>
+        <div class="playback-row">
+          <button class="btn-play" id="playBtn" onclick="togglePlay('original')" title="播放原聲">▶</button>
+          <div class="play-progress-wrap">
+            <div class="play-bar-bg">
+              <div class="play-bar-fill" id="playFill"></div>
+            </div>
           </div>
-          <div id="playModeLabel" style="font-size:11px; color:var(--text3); margin-top:4px; min-height:14px;"></div>
+          <div class="play-time" id="playTime" style="min-width:120px; text-align:right;">0:00.0</div>
         </div>
-        <div class="play-time" id="playTime" style="min-width:120px; text-align:right;">0:00.0</div>
       </div>
     </div>
 
@@ -889,6 +888,23 @@
           <button class="vocal-btn" id="vocalRemoveBtn" onclick="setVocalMode('remove')">
             🎵 去除人聲（伴奏）
           </button>
+        </div>
+      </div>
+
+      <!-- 效果試聽播放列 -->
+      <div style="background:linear-gradient(135deg,rgba(124,108,240,0.06),rgba(78,205,196,0.06)); border:1px solid rgba(78,205,196,0.2); border-radius:14px; padding:14px 16px; margin-bottom:20px;">
+        <div style="font-size:11px; color:var(--accent2); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">✨ 效果試聽</div>
+        <div class="playback-row" style="margin-bottom:0;">
+          <button class="btn-play" id="playFxBtn" onclick="togglePlay('fx')"
+            style="background:linear-gradient(135deg,rgba(124,108,240,0.5),rgba(78,205,196,0.5)); border:1.5px solid rgba(78,205,196,0.4);"
+            title="套用效果後試聽">▶</button>
+          <div class="play-progress-wrap">
+            <div class="play-bar-bg">
+              <div class="play-bar-fill" id="playFxFill" style="background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+            </div>
+            <div id="playModeLabel" style="font-size:11px; color:var(--text3); margin-top:4px; min-height:14px;"></div>
+          </div>
+          <div class="play-time" id="playFxTime" style="min-width:120px; text-align:right;">0:00.0</div>
         </div>
       </div>
 
@@ -1039,8 +1055,10 @@ function updateEndLabel() {
 function updateSelectedDuration() {
   const dur = Math.max(0, getEndSec() - getStartSec());
   $('selectedDuration').textContent = `⏱ 已選 ${formatTimeDetailed(dur)}`;
-  // 沒在播放時，右下角也顯示已選秒數
-  if (!isPlaying) $('playTime').textContent = formatTimeDetailed(dur);
+  if (!isPlaying) {
+    $('playTime').textContent = formatTimeDetailed(dur);
+    $('playFxTime').textContent = formatTimeDetailed(dur);
+  }
 }
 function updateRangeFill() {
   const s = parseFloat($('startHandle').value);
@@ -1215,72 +1233,58 @@ function startPlay(mode) {
   const s = getStartSec(), e = getEndSec();
   const selDur = e - s;
 
-  let playBuf;
-  let playOffset = 0;
-
   if (mode === 'fx') {
-    // 檢查去人聲但單聲道
     if (opts.vocalRemove && audioBuffer.numberOfChannels < 2) {
       alert('去人聲需要立體聲音頻，此檔案是單聲道，無法預聽去人聲效果。');
       return;
     }
-    const hasAnyFx = opts.fadeIn || opts.fadeOut || opts.vocalRemove;
-    if (!hasAnyFx) {
-      // 沒開任何效果，提示一下
-      $('playModeLabel').textContent = '⚠ 未開啟任何效果，播放原聲';
-      setTimeout(() => { $('playModeLabel').textContent = ''; }, 2000);
-    }
-    playBuf = buildFxBuffer();   // 已渲染好的效果 buffer，從頭播
-    playOffset = 0;
+  }
+
+  let playBuf;
+  if (mode === 'fx') {
+    playBuf = buildFxBuffer();
     const fxLabels = getActiveEffectLabels();
-    $('playModeLabel').textContent = fxLabels.length
-      ? '✨ 效果試聽：' + fxLabels.join(' · ')
-      : '✨ 效果試聽（無效果開啟）';
-    $('playFxBtn').classList.add('active');
+    $('playModeLabel').textContent = fxLabels.length ? fxLabels.join(' · ') : '無效果開啟';
+    $('playFxBtn').textContent = '⏸';
     $('playBtn').textContent = '▶';
   } else {
     playBuf = audioBuffer;
-    playOffset = s;
-    $('playModeLabel').textContent = '▶ 原聲試聽';
-    $('playFxBtn').classList.remove('active');
+    $('playModeLabel').textContent = '';
     $('playBtn').textContent = '⏸';
+    $('playFxBtn').textContent = '▶';
   }
 
   sourceNode = audioCtx.createBufferSource();
   sourceNode.buffer = playBuf;
   sourceNode.connect(audioCtx.destination);
-
-  if (mode === 'fx') {
-    sourceNode.start(0, 0, selDur);
-  } else {
-    sourceNode.start(0, s, selDur);
-  }
+  sourceNode.start(0, mode === 'fx' ? 0 : s, selDur);
 
   sourceNode.onended = () => {
     isPlaying = false;
     $('playBtn').textContent = '▶';
-    $('playFxBtn').classList.remove('active');
-    $('playFxBtn').textContent = '✨';
+    $('playFxBtn').textContent = '▶';
     cancelAnimationFrame(playbackRAF);
-    $('playFill').style.width = '100%';
-    $('playTime').textContent = formatTimeDetailed(selDur) + ' / ' + formatTimeDetailed(selDur);
-    setTimeout(() => {
-      $('playFill').style.width = '0%';
-      $('playModeLabel').textContent = '';
-      const dur = Math.max(0, getEndSec() - getStartSec());
-      $('playTime').textContent = formatTimeDetailed(dur);
-    }, 800);
+    // 滿格再歸零
+    if (mode === 'fx') {
+      $('playFxFill').style.width = '100%';
+      $('playFxTime').textContent = formatTimeDetailed(selDur) + ' / ' + formatTimeDetailed(selDur);
+      setTimeout(() => {
+        $('playFxFill').style.width = '0%';
+        $('playFxTime').textContent = formatTimeDetailed(selDur);
+        $('playModeLabel').textContent = '';
+      }, 800);
+    } else {
+      $('playFill').style.width = '100%';
+      $('playTime').textContent = formatTimeDetailed(selDur) + ' / ' + formatTimeDetailed(selDur);
+      setTimeout(() => {
+        $('playFill').style.width = '0%';
+        $('playTime').textContent = formatTimeDetailed(selDur);
+      }, 800);
+    }
   };
 
   startTime = audioCtx.currentTime;
   isPlaying = true;
-  if (mode === 'fx') {
-    $('playFxBtn').textContent = '⏸';
-    $('playBtn').textContent = '▶';
-  } else {
-    $('playBtn').textContent = '⏸';
-    $('playFxBtn').textContent = '✨';
-  }
   updatePlayback();
 }
 
@@ -1288,13 +1292,14 @@ function stopPlay() {
   if (sourceNode) { try { sourceNode.stop(); } catch(e){} }
   isPlaying = false;
   $('playBtn').textContent = '▶';
-  $('playFxBtn').classList.remove('active');
-  $('playFxBtn').textContent = '✨';
+  $('playFxBtn').textContent = '▶';
   $('playModeLabel').textContent = '';
   cancelAnimationFrame(playbackRAF);
   $('playFill').style.width = '0%';
+  $('playFxFill').style.width = '0%';
   const dur = Math.max(0, getEndSec() - getStartSec());
   $('playTime').textContent = formatTimeDetailed(dur);
+  $('playFxTime').textContent = formatTimeDetailed(dur);
 }
 
 function updatePlayback() {
@@ -1303,8 +1308,15 @@ function updatePlayback() {
   const selDur = e - s;
   const elapsed = audioCtx.currentTime - startTime;
   const pct = Math.min(100, (elapsed / selDur) * 100);
-  $('playFill').style.width = pct + '%';
-  $('playTime').textContent = formatTimeDetailed(Math.min(elapsed, selDur)) + ' / ' + formatTimeDetailed(selDur);
+  const timeStr = formatTimeDetailed(Math.min(elapsed, selDur)) + ' / ' + formatTimeDetailed(selDur);
+
+  if (currentPlayMode === 'fx') {
+    $('playFxFill').style.width = pct + '%';
+    $('playFxTime').textContent = timeStr;
+  } else {
+    $('playFill').style.width = pct + '%';
+    $('playTime').textContent = timeStr;
+  }
   if (elapsed < selDur) playbackRAF = requestAnimationFrame(updatePlayback);
 }
 
