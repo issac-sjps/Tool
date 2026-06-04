@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>音頻剪輯器 — 線上免費剪輯音樂</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c26;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --accent: #7c6cf0;
+    --accent2: #4ecdc4;
+    --text: #f0f0f5;
+    --text2: #9090a0;
+    --text3: #5a5a70;
+    --wave1: #7c6cf0;
+    --wave2: #4ecdc4;
+    --danger: #ff6b6b;
+  }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,108,240,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,108,240,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  body::after {
+    content: '';
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,108,240,0.06) 0%, transparent 70%);
+    top: -200px; left: -200px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow2 {
+    position: fixed;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(78,205,196,0.05) 0%, transparent 70%);
+    bottom: -150px; right: -150px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Header */
+  header {
+    padding: 32px 0 0;
+    text-align: center;
+  }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 100px;
+    padding: 6px 16px 6px 10px;
+    margin-bottom: 28px;
+    font-size: 12px;
+    color: var(--accent2);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent2);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--text2);
+    margin-bottom: 48px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 1.5px dashed var(--border2);
+    border-radius: 20px;
+    padding: 56px 32px;
+    text-align: center;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .upload-zone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(124,108,240,0.05), rgba(78,205,196,0.05));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .upload-zone:hover::before, .upload-zone.drag-over::before {
+    opacity: 1;
+  }
+
+  .upload-icon {
+    width: 64px; height: 64px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .upload-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .upload-sub {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 20px;
+  }
+
+  .upload-formats {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .format-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--border2);
+    color: var(--text3);
+  }
+
+  #fileInput { display: none; }
+
+  /* Editor panel */
+  #editor {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .panel-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+
+  .file-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, rgba(124,108,240,0.3), rgba(78,205,196,0.3));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .file-name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+  }
+
+  .file-duration {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    margin-top: 2px;
+  }
+
+  .btn-change {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .btn-change:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  /* Waveform */
+  .waveform-wrap {
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  #waveformCanvas {
+    width: 100%;
+    height: 120px;
+    display: block;
+    border-radius: 12px;
+    cursor: crosshair;
+  }
+
+  /* Range slider track */
+  .range-track-wrap {
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  .range-times {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+
+  .range-inputs {
+    position: relative;
+    height: 36px;
+    display: flex;
+    align-items: center;
+  }
+
+  .range-fill {
+    position: absolute;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 100px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .range-bg {
+    position: absolute;
+    height: 4px;
+    width: 100%;
+    background: var(--surface2);
+    border-radius: 100px;
+  }
+
+  input[type=range].range-handle {
+    position: absolute;
+    width: 100%;
+    -webkit-appearance: none;
+    background: transparent;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  input[type=range].range-handle::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--accent);
+    cursor: pointer;
+    pointer-events: all;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: transform 0.1s;
+  }
+
+  input[type=range].range-handle.end-handle::-webkit-slider-thumb {
+    border-color: var(--accent2);
+  }
+
+  input[type=range].range-handle::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  /* Time inputs */
+  .time-inputs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .time-input-group {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .time-input-group:focus-within {
+    border-color: var(--accent);
+  }
+
+  .time-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 4px;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .time-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+  }
+
+  /* Playback */
+  .playback-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .btn-play {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+
+  .btn-play:hover { transform: scale(1.08); }
+  .btn-play:active { transform: scale(0.95); }
+
+  .play-progress-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  .play-bar-bg {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 100px;
+  }
+
+  .play-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 100px;
+    transition: width 0.1s linear;
+  }
+
+  .play-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+
+  /* Options */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .option-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .option-card.active {
+    border-color: var(--accent);
+  }
+
+  .option-label {
+    font-size: 14px;
+  }
+
+  .option-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* Toggle */
+  .toggle {
+    width: 38px; height: 22px;
+    background: var(--border2);
+    border-radius: 100px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle.on { background: var(--accent); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+
+  .toggle.on::after { transform: translateX(16px); }
+
+  /* Format select */
+  .format-section {
+    margin-top: 12px;
+  }
+
+  .format-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .format-chip {
+    padding: 7px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border2);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.2s;
+    background: transparent;
+  }
+
+  .format-chip.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .format-chip:hover:not(.selected) {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  /* Action buttons */
+  .actions-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .btn-main {
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-extract {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+  }
+
+  .btn-extract:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-extract:active { transform: translateY(0); }
+
+  .btn-remove {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border2);
+  }
+
+  .btn-remove:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Selected duration badge */
+  .duration-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(78,205,196,0.1);
+    border: 1px solid rgba(78,205,196,0.2);
+    color: var(--accent2);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Download result */
+  #downloadArea {
+    display: none;
+    background: var(--surface);
+    border: 1px solid rgba(78,205,196,0.3);
+    border-radius: 20px;
+    padding: 24px;
+    margin-top: 16px;
+    text-align: center;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .success-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+
+  .download-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .download-sub {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 20px;
+  }
+
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    padding: 14px 32px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Noto Sans TC', sans-serif;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-download:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 0 32px;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: none;
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Section label */
+  .section-label {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 500px) {
+    .time-inputs-row, .options-grid, .actions-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow2"></div>
+
+<div class="container">
+  <header>
+    <div class="logo-badge">
+      <div class="logo-dot"></div>
+      音頻工具 · AUDIO CUTTER
+    </div>
+    <h1>線上<em>剪輯</em>你的音樂</h1>
+    <p class="subtitle">免費、快速、不需安裝 — 直接在瀏覽器完成</p>
+  </header>
+
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">🎵</div>
+    <div class="upload-title">拖放音頻文件，或點擊選擇</div>
+    <div class="upload-sub">支援所有常見音頻格式，最大 200MB</div>
+    <div class="upload-formats">
+      <span class="format-tag">MP3</span>
+      <span class="format-tag">WAV</span>
+      <span class="format-tag">OGG</span>
+      <span class="format-tag">FLAC</span>
+      <span class="format-tag">AAC</span>
+      <span class="format-tag">M4A</span>
+    </div>
+    <input type="file" id="fileInput" accept="audio/*">
+  </div>
+
+  <!-- Editor -->
+  <div id="editor">
+    <!-- File info -->
+    <div class="panel">
+      <div class="file-info">
+        <div class="file-icon">🎵</div>
+        <div>
+          <div class="file-name" id="fileName">audio.mp3</div>
+          <div class="file-duration" id="fileDuration">00:00</div>
+        </div>
+        <button class="btn-change" onclick="document.getElementById('fileInput').click()">換一個檔案</button>
+      </div>
+
+      <!-- Waveform -->
+      <div class="waveform-wrap">
+        <canvas id="waveformCanvas"></canvas>
+      </div>
+
+      <!-- Range sliders -->
+      <div class="range-track-wrap">
+        <div class="range-times">
+          <span id="startTimeLabel">開始：00:00</span>
+          <span id="selectedDuration" class="duration-badge">⏱ 已選 00:00</span>
+          <span id="endTimeLabel">結束：00:00</span>
+        </div>
+        <div class="range-inputs">
+          <div class="range-bg"></div>
+          <div class="range-fill" id="rangeFill"></div>
+          <input type="range" class="range-handle" id="startHandle" min="0" max="100" value="0" step="0.1">
+          <input type="range" class="range-handle end-handle" id="endHandle" min="0" max="100" value="100" step="0.1">
+        </div>
+      </div>
+
+      <!-- Time inputs -->
+      <div class="time-inputs-row">
+        <div class="time-input-group">
+          <div class="time-label">開始時間</div>
+          <input type="text" class="time-value" id="startInput" value="0:00.0" placeholder="0:00.0">
+        </div>
+        <div class="time-input-group">
+          <div class="time-label">結束時間</div>
+          <input type="text" class="time-value" id="endInput" value="0:00.0" placeholder="0:00.0">
+        </div>
+      </div>
+
+      <!-- Playback -->
+      <div class="playback-row">
+        <button class="btn-play" id="playBtn" onclick="togglePlay()">▶</button>
+        <div class="play-progress-wrap">
+          <div class="play-bar-bg">
+            <div class="play-bar-fill" id="playFill"></div>
+          </div>
+        </div>
+        <div class="play-time" id="playTime">0:00</div>
+      </div>
+    </div>
+
+    <!-- Options -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">選項與格式</div>
+      </div>
+
+      <div class="section-label">效果</div>
+      <div class="options-grid" style="margin-bottom: 20px;">
+        <div class="option-card" id="fadeInCard" onclick="toggleOpt('fadeIn')">
+          <div>
+            <div class="option-label">淡入</div>
+            <div class="option-sub">開頭漸強</div>
+          </div>
+          <div class="toggle" id="fadeInToggle"></div>
+        </div>
+        <div class="option-card" id="fadeOutCard" onclick="toggleOpt('fadeOut')">
+          <div>
+            <div class="option-label">淡出</div>
+            <div class="option-sub">結尾漸弱</div>
+          </div>
+          <div class="toggle" id="fadeOutToggle"></div>
+        </div>
+      </div>
+
+      <div class="section-label">輸出格式</div>
+      <div class="format-chips">
+        <button class="format-chip selected" data-fmt="mp3" onclick="selectFmt(this)">MP3</button>
+        <button class="format-chip" data-fmt="wav" onclick="selectFmt(this)">WAV</button>
+        <button class="format-chip" data-fmt="ogg" onclick="selectFmt(this)">OGG</button>
+        <button class="format-chip" data-fmt="flac" onclick="selectFmt(this)">FLAC</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-row">
+      <button class="btn-main btn-extract" id="extractBtn" onclick="processAudio('extract')">
+        <span>✂️</span> 提取選取片段
+      </button>
+      <button class="btn-main btn-remove" onclick="processAudio('remove')">
+        <span>🗑</span> 刪除選取片段
+      </button>
+    </div>
+
+    <!-- Download result -->
+    <div id="downloadArea">
+      <div class="success-icon">✅</div>
+      <div class="download-title">剪輯完成！</div>
+      <div class="download-sub" id="downloadInfo">已準備好下載</div>
+      <a id="downloadLink" class="btn-download" download>
+        ⬇ 下載音頻檔案
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    完全在你的瀏覽器中處理 · 檔案不會上傳到任何伺服器 · 完全私密
+  </footer>
+</div>
+
+<audio id="audioPlayer"></audio>
+
+<script>
+let audioBuffer = null;
+let audioCtx = null;
+let sourceNode = null;
+let isPlaying = false;
+let startTime = 0;
+let playStartOffset = 0;
+let playbackRAF = null;
+let totalDuration = 0;
+let opts = { fadeIn: false, fadeOut: false };
+let selectedFormat = 'mp3';
+let originalFile = null;
+
+const $ = id => document.getElementById(id);
+
+// Drag & drop
+const uploadZone = $('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('audio/')) loadFile(f);
+});
+
+$('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+function loadFile(file) {
+  originalFile = file;
+  $('fileName').textContent = file.name;
+  uploadZone.style.display = 'none';
+  $('editor').style.display = 'block';
+  $('downloadArea').style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.decodeAudioData(e.target.result.slice(0), buf => {
+      audioBuffer = buf;
+      totalDuration = buf.duration;
+      $('fileDuration').textContent = formatTime(totalDuration);
+      $('endInput').value = formatTimeDetailed(totalDuration);
+      updateEndLabel();
+      updateStartLabel();
+      updateRangeFill();
+      drawWaveform(buf);
+      stopPlay();
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2,'0');
+  return `${m}:${sec}`;
+}
+
+function formatTimeDetailed(s) {
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(1).padStart(4,'0');
+  return `${m}:${sec}`;
+}
+
+function parseTime(str) {
+  const parts = str.split(':');
+  if (parts.length === 2) {
+    return parseFloat(parts[0]) * 60 + parseFloat(parts[1]);
+  }
+  return parseFloat(str) || 0;
+}
+
+function getStartSec() {
+  return (parseFloat($('startHandle').value) / 100) * totalDuration;
+}
+function getEndSec() {
+  return (parseFloat($('endHandle').value) / 100) * totalDuration;
+}
+
+function updateStartLabel() {
+  const s = getStartSec();
+  $('startTimeLabel').textContent = `開始：${formatTimeDetailed(s)}`;
+  $('startInput').value = formatTimeDetailed(s);
+  updateSelectedDuration();
+}
+function updateEndLabel() {
+  const s = getEndSec();
+  $('endTimeLabel').textContent = `結束：${formatTimeDetailed(s)}`;
+  $('endInput').value = formatTimeDetailed(s);
+  updateSelectedDuration();
+}
+function updateSelectedDuration() {
+  const dur = Math.max(0, getEndSec() - getStartSec());
+  $('selectedDuration').textContent = `⏱ 已選 ${formatTimeDetailed(dur)}`;
+}
+function updateRangeFill() {
+  const s = parseFloat($('startHandle').value);
+  const e = parseFloat($('endHandle').value);
+  const fill = $('rangeFill');
+  fill.style.left = s + '%';
+  fill.style.width = (e - s) + '%';
+}
+
+$('startHandle').addEventListener('input', () => {
+  if (parseFloat($('startHandle').value) >= parseFloat($('endHandle').value))
+    $('startHandle').value = parseFloat($('endHandle').value) - 0.1;
+  updateStartLabel(); updateRangeFill(); drawWaveformSelection();
+});
+$('endHandle').addEventListener('input', () => {
+  if (parseFloat($('endHandle').value) <= parseFloat($('startHandle').value))
+    $('endHandle').value = parseFloat($('startHandle').value) + 0.1;
+  updateEndLabel(); updateRangeFill(); drawWaveformSelection();
+});
+
+$('startInput').addEventListener('change', () => {
+  let s = parseTime($('startInput').value);
+  s = Math.max(0, Math.min(s, totalDuration - 0.1));
+  $('startHandle').value = (s / totalDuration) * 100;
+  updateStartLabel(); updateRangeFill(); drawWaveformSelection();
+});
+$('endInput').addEventListener('change', () => {
+  let e = parseTime($('endInput').value);
+  e = Math.max(0.1, Math.min(e, totalDuration));
+  $('endHandle').value = (e / totalDuration) * 100;
+  updateEndLabel(); updateRangeFill(); drawWaveformSelection();
+});
+
+function drawWaveform(buf) {
+  const canvas = $('waveformCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 120 * dpr;
+  ctx.scale(dpr, dpr);
+  const w = canvas.offsetWidth, h = 120;
+  const data = buf.getChannelData(0);
+  const step = Math.ceil(data.length / w);
+  ctx.fillStyle = '#13131a';
+  ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < w; i++) {
+    let max = 0;
+    for (let j = 0; j < step; j++) max = Math.max(max, Math.abs(data[i * step + j] || 0));
+    const barH = max * h * 0.85;
+    const y = (h - barH) / 2;
+    const prog = i / w;
+    ctx.fillStyle = `rgba(124,108,240,0.5)`;
+    ctx.fillRect(i, y, 1, barH);
+  }
+  drawWaveformSelection();
+}
+
+function drawWaveformSelection() {
+  if (!audioBuffer) return;
+  const canvas = $('waveformCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth, h = 120;
+  const data = audioBuffer.getChannelData(0);
+  const step = Math.ceil(data.length / w);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#13131a';
+  ctx.fillRect(0, 0, w, h);
+  const sP = parseFloat($('startHandle').value) / 100;
+  const eP = parseFloat($('endHandle').value) / 100;
+  for (let i = 0; i < w; i++) {
+    let max = 0;
+    for (let j = 0; j < step; j++) max = Math.max(max, Math.abs(data[i * step + j] || 0));
+    const barH = max * h * 0.85;
+    const y = (h - barH) / 2;
+    const prog = i / w;
+    if (prog >= sP && prog <= eP) {
+      const t = (prog - sP) / (eP - sP);
+      const r = Math.round(124 + (78 - 124) * t);
+      const g = Math.round(108 + (205 - 108) * t);
+      const b = Math.round(240 + (196 - 240) * t);
+      ctx.fillStyle = `rgba(${r},${g},${b},0.9)`;
+    } else {
+      ctx.fillStyle = 'rgba(124,108,240,0.2)';
+    }
+    ctx.fillRect(i, y, 1, barH);
+  }
+  // markers
+  ctx.strokeStyle = '#7c6cf0';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(sP * w, 0); ctx.lineTo(sP * w, h); ctx.stroke();
+  ctx.strokeStyle = '#4ecdc4';
+  ctx.beginPath(); ctx.moveTo(eP * w, 0); ctx.lineTo(eP * w, h); ctx.stroke();
+}
+
+// Playback
+function togglePlay() {
+  if (!audioBuffer) return;
+  if (isPlaying) stopPlay();
+  else startPlay();
+}
+
+function startPlay() {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const s = getStartSec(), e = getEndSec();
+  sourceNode = audioCtx.createBufferSource();
+  sourceNode.buffer = audioBuffer;
+  sourceNode.connect(audioCtx.destination);
+  sourceNode.start(0, s, e - s);
+  sourceNode.onended = () => { isPlaying = false; $('playBtn').textContent = '▶'; cancelAnimationFrame(playbackRAF); $('playFill').style.width = '0%'; };
+  startTime = audioCtx.currentTime;
+  playStartOffset = s;
+  isPlaying = true;
+  $('playBtn').textContent = '⏸';
+  updatePlayback();
+}
+
+function stopPlay() {
+  if (sourceNode) { try { sourceNode.stop(); } catch(e){} }
+  isPlaying = false;
+  $('playBtn').textContent = '▶';
+  cancelAnimationFrame(playbackRAF);
+  $('playFill').style.width = '0%';
+  $('playTime').textContent = formatTime(getStartSec());
+}
+
+function updatePlayback() {
+  if (!isPlaying) return;
+  const s = getStartSec(), e = getEndSec();
+  const elapsed = audioCtx.currentTime - startTime;
+  const cur = playStartOffset + elapsed;
+  const pct = Math.min(100, ((cur - s) / (e - s)) * 100);
+  $('playFill').style.width = pct + '%';
+  $('playTime').textContent = formatTime(cur);
+  if (cur < e) playbackRAF = requestAnimationFrame(updatePlayback);
+}
+
+// Options
+function toggleOpt(key) {
+  opts[key] = !opts[key];
+  $(`${key}Toggle`).classList.toggle('on', opts[key]);
+  $(`${key}Card`).classList.toggle('active', opts[key]);
+}
+
+function selectFmt(el) {
+  document.querySelectorAll('.format-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedFormat = el.dataset.fmt;
+}
+
+// Process
+function processAudio(mode) {
+  if (!audioBuffer) return;
+  const btn = $('extractBtn');
+  btn.innerHTML = '<div class="spinner" style="display:block"></div> 處理中...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    try {
+      const sampleRate = audioBuffer.sampleRate;
+      const channels = audioBuffer.numberOfChannels;
+      const startSec = getStartSec();
+      const endSec = getEndSec();
+
+      let offsetStart, offsetEnd;
+      if (mode === 'extract') {
+        offsetStart = Math.floor(startSec * sampleRate);
+        offsetEnd = Math.floor(endSec * sampleRate);
+      } else {
+        // remove mode: keep [0, start] + [end, total]
+        // We'll create a new buffer with the two segments joined
+      }
+
+      let newBuf;
+      if (mode === 'extract') {
+        const len = offsetEnd - offsetStart;
+        newBuf = audioCtx.createBuffer(channels, len, sampleRate);
+        for (let c = 0; c < channels; c++) {
+          const orig = audioBuffer.getChannelData(c);
+          const dest = newBuf.getChannelData(c);
+          for (let i = 0; i < len; i++) {
+            let sample = orig[offsetStart + i] || 0;
+            // fade in
+            if (opts.fadeIn && i < sampleRate * 0.5) sample *= i / (sampleRate * 0.5);
+            // fade out
+            if (opts.fadeOut && i > len - sampleRate * 0.5) sample *= (len - i) / (sampleRate * 0.5);
+            dest[i] = sample;
+          }
+        }
+      } else {
+        // remove: join start segment + end segment
+        const s1 = Math.floor(startSec * sampleRate);
+        const e1 = Math.floor(endSec * sampleRate);
+        const totalSamples = audioBuffer.length;
+        const newLen = s1 + (totalSamples - e1);
+        newBuf = audioCtx.createBuffer(channels, newLen, sampleRate);
+        for (let c = 0; c < channels; c++) {
+          const orig = audioBuffer.getChannelData(c);
+          const dest = newBuf.getChannelData(c);
+          for (let i = 0; i < s1; i++) dest[i] = orig[i];
+          for (let i = e1; i < totalSamples; i++) dest[s1 + (i - e1)] = orig[i];
+        }
+      }
+
+      // Encode to WAV (browser-compatible)
+      const wavBlob = encodeWAV(newBuf);
+      const url = URL.createObjectURL(wavBlob);
+      const link = $('downloadLink');
+      const baseName = ($('fileName').textContent || 'audio').replace(/\.[^.]+$/, '');
+      link.href = url;
+      link.download = `${baseName}_剪輯.wav`;
+      $('downloadInfo').textContent = `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式`;
+      $('downloadArea').style.display = 'block';
+      $('downloadArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch(err) {
+      alert('處理時發生錯誤：' + err.message);
+    } finally {
+      btn.innerHTML = '<span>✂️</span> 提取選取片段';
+      btn.disabled = false;
+    }
+  }, 50);
+}
+
+function encodeWAV(buffer) {
+  const numCh = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const numSamples = buffer.length;
+  const bitsPerSample = 16;
+  const blockAlign = numCh * (bitsPerSample / 8);
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = numSamples * blockAlign;
+  const wavBuf = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(wavBuf);
+
+  function writeStr(offset, str) {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  }
+
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numCh, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (let i = 0; i < numSamples; i++) {
+    for (let c = 0; c < numCh; c++) {
+      const s = Math.max(-1, Math.min(1, buffer.getChannelData(c)[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+  return new Blob([wavBuf], { type: 'audio/wav' });
+}
+
+// Waveform click to set start/end
+$('waveformCanvas').addEventListener('click', e => {
+  if (!audioBuffer) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = ((e.clientX - rect.left) / rect.width) * 100;
+  const mid = (parseFloat($('startHandle').value) + parseFloat($('endHandle').value)) / 2;
+  if (pct < mid) {
+    $('startHandle').value = Math.min(pct, parseFloat($('endHandle').value) - 0.1);
+    updateStartLabel();
+  } else {
+    $('endHandle').value = Math.max(pct, parseFloat($('startHandle').value) + 0.1);
+    updateEndLabel();
+  }
+  updateRangeFill();
+  drawWaveformSelection();
+});
+</script>
+</body>
+</html>
