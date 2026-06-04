@@ -438,8 +438,25 @@
     transition: transform 0.2s, opacity 0.2s;
   }
 
-  .btn-play:hover { transform: scale(1.08); }
-  .btn-play:active { transform: scale(0.95); }
+  .btn-play-fx {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .btn-play-fx:hover { border-color: var(--accent2); transform: scale(1.08); }
+  .btn-play-fx:active { transform: scale(0.95); }
+  .btn-play-fx.active {
+    background: linear-gradient(135deg, rgba(78,205,196,0.3), rgba(124,108,240,0.3));
+    border-color: var(--accent2);
+  }
 
   .play-progress-wrap {
     flex: 1;
@@ -781,11 +798,15 @@
 
       <!-- Playback -->
       <div class="playback-row">
-        <button class="btn-play" id="playBtn" onclick="togglePlay()">▶</button>
+        <button class="btn-play" id="playBtn" onclick="togglePlay('original')" title="播放原聲">▶</button>
+        <button class="btn-play-fx" id="playFxBtn" onclick="togglePlay('fx')" title="套用效果後試聽">
+          ✨
+        </button>
         <div class="play-progress-wrap">
           <div class="play-bar-bg">
             <div class="play-bar-fill" id="playFill"></div>
           </div>
+          <div id="playModeLabel" style="font-size:11px; color:var(--text3); margin-top:4px; min-height:14px;"></div>
         </div>
         <div class="play-time" id="playTime" style="min-width:120px; text-align:right;">0:00.0</div>
       </div>
@@ -1079,33 +1100,138 @@ function drawWaveformSelection() {
 }
 
 // Playback
-function togglePlay() {
+let currentPlayMode = 'original'; // 'original' | 'fx'
+
+function togglePlay(mode) {
   if (!audioBuffer) return;
-  if (isPlaying) stopPlay();
-  else startPlay();
+  if (isPlaying) {
+    // 如果點的是同一個模式 → 停止；不同模式 → 切換
+    if (currentPlayMode === mode) { stopPlay(); return; }
+    stopPlay();
+  }
+  startPlay(mode);
 }
 
-function startPlay() {
+function buildFxBuffer() {
+  // 把選取範圍套用所有效果，渲染成新的 AudioBuffer
+  const sampleRate = audioBuffer.sampleRate;
+  const channels = audioBuffer.numberOfChannels;
+  const s = getStartSec(), e = getEndSec();
+  const offsetStart = Math.floor(s * sampleRate);
+  const offsetEnd   = Math.floor(e * sampleRate);
+  const len = offsetEnd - offsetStart;
+
+  const useVocal = opts.vocalRemove && channels >= 2;
+  const outCh = useVocal ? 1 : channels;
+  const buf = audioCtx.createBuffer(outCh, len, sampleRate);
+
+  if (useVocal) {
+    const L = audioBuffer.getChannelData(0);
+    const R = audioBuffer.getChannelData(1);
+    const dest = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      let v = (L[offsetStart + i] || 0) - (R[offsetStart + i] || 0);
+      if (opts.fadeIn  && i < sampleRate * 0.5) v *= i / (sampleRate * 0.5);
+      if (opts.fadeOut && i > len - sampleRate * 0.5) v *= (len - i) / (sampleRate * 0.5);
+      dest[i] = v;
+    }
+  } else {
+    for (let c = 0; c < channels; c++) {
+      const orig = audioBuffer.getChannelData(c);
+      const dest = buf.getChannelData(c);
+      for (let i = 0; i < len; i++) {
+        let v = orig[offsetStart + i] || 0;
+        if (opts.fadeIn  && i < sampleRate * 0.5) v *= i / (sampleRate * 0.5);
+        if (opts.fadeOut && i > len - sampleRate * 0.5) v *= (len - i) / (sampleRate * 0.5);
+        dest[i] = v;
+      }
+    }
+  }
+  return buf;
+}
+
+function getActiveEffectLabels() {
+  const labels = [];
+  if (opts.fadeIn)      labels.push('淡入');
+  if (opts.fadeOut)     labels.push('淡出');
+  if (opts.vocalRemove) labels.push('去人聲');
+  return labels;
+}
+
+function startPlay(mode) {
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  currentPlayMode = mode;
   const s = getStartSec(), e = getEndSec();
   const selDur = e - s;
+
+  let playBuf;
+  let playOffset = 0;
+
+  if (mode === 'fx') {
+    // 檢查去人聲但單聲道
+    if (opts.vocalRemove && audioBuffer.numberOfChannels < 2) {
+      alert('去人聲需要立體聲音頻，此檔案是單聲道，無法預聽去人聲效果。');
+      return;
+    }
+    const hasAnyFx = opts.fadeIn || opts.fadeOut || opts.vocalRemove;
+    if (!hasAnyFx) {
+      // 沒開任何效果，提示一下
+      $('playModeLabel').textContent = '⚠ 未開啟任何效果，播放原聲';
+      setTimeout(() => { $('playModeLabel').textContent = ''; }, 2000);
+    }
+    playBuf = buildFxBuffer();   // 已渲染好的效果 buffer，從頭播
+    playOffset = 0;
+    const fxLabels = getActiveEffectLabels();
+    $('playModeLabel').textContent = fxLabels.length
+      ? '✨ 效果試聽：' + fxLabels.join(' · ')
+      : '✨ 效果試聽（無效果開啟）';
+    $('playFxBtn').classList.add('active');
+    $('playBtn').textContent = '▶';
+  } else {
+    playBuf = audioBuffer;
+    playOffset = s;
+    $('playModeLabel').textContent = '▶ 原聲試聽';
+    $('playFxBtn').classList.remove('active');
+    $('playBtn').textContent = '⏸';
+  }
+
   sourceNode = audioCtx.createBufferSource();
-  sourceNode.buffer = audioBuffer;
+  sourceNode.buffer = playBuf;
   sourceNode.connect(audioCtx.destination);
-  sourceNode.start(0, s, selDur);
+
+  if (mode === 'fx') {
+    sourceNode.start(0, 0, selDur);
+  } else {
+    sourceNode.start(0, s, selDur);
+  }
+
   sourceNode.onended = () => {
     isPlaying = false;
     $('playBtn').textContent = '▶';
+    $('playFxBtn').classList.remove('active');
+    $('playFxBtn').textContent = '✨';
     cancelAnimationFrame(playbackRAF);
     $('playFill').style.width = '100%';
     $('playTime').textContent = formatTimeDetailed(selDur) + ' / ' + formatTimeDetailed(selDur);
-    setTimeout(() => { $('playFill').style.width = '0%'; $('playTime').textContent = '0:00.0'; }, 800);
+    setTimeout(() => {
+      $('playFill').style.width = '0%';
+      $('playModeLabel').textContent = '';
+      const dur = Math.max(0, getEndSec() - getStartSec());
+      $('playTime').textContent = formatTimeDetailed(dur);
+    }, 800);
   };
+
   startTime = audioCtx.currentTime;
-  playStartOffset = s;
   isPlaying = true;
-  $('playBtn').textContent = '⏸';
+  if (mode === 'fx') {
+    $('playFxBtn').textContent = '⏸';
+    $('playBtn').textContent = '▶';
+  } else {
+    $('playBtn').textContent = '⏸';
+    $('playFxBtn').textContent = '✨';
+  }
   updatePlayback();
 }
 
@@ -1113,6 +1239,9 @@ function stopPlay() {
   if (sourceNode) { try { sourceNode.stop(); } catch(e){} }
   isPlaying = false;
   $('playBtn').textContent = '▶';
+  $('playFxBtn').classList.remove('active');
+  $('playFxBtn').textContent = '✨';
+  $('playModeLabel').textContent = '';
   cancelAnimationFrame(playbackRAF);
   $('playFill').style.width = '0%';
   const dur = Math.max(0, getEndSec() - getStartSec());
@@ -1146,6 +1275,13 @@ function selectFmt(el) {
 // Process
 function processAudio(mode) {
   if (!audioBuffer) return;
+
+  // 去人聲需要立體聲，單聲道直接提示
+  if (opts.vocalRemove && audioBuffer.numberOfChannels < 2) {
+    alert('去人聲需要立體聲（2聲道）音頻\n\n這個檔案是單聲道，無法使用去人聲功能。\n請關閉去人聲選項後再處理。');
+    return;
+  }
+
   const btn = $('extractBtn');
   btn.innerHTML = '<div class="spinner" style="display:block"></div> 處理中...';
   btn.disabled = true;
@@ -1157,57 +1293,87 @@ function processAudio(mode) {
       const startSec = getStartSec();
       const endSec = getEndSec();
 
-      let offsetStart, offsetEnd;
-      if (mode === 'extract') {
-        offsetStart = Math.floor(startSec * sampleRate);
-        offsetEnd = Math.floor(endSec * sampleRate);
-      } else {
-        // remove mode: keep [0, start] + [end, total]
-        // We'll create a new buffer with the two segments joined
-      }
-
       let newBuf;
+
       if (mode === 'extract') {
+        const offsetStart = Math.floor(startSec * sampleRate);
+        const offsetEnd   = Math.floor(endSec   * sampleRate);
         const len = offsetEnd - offsetStart;
-        newBuf = audioCtx.createBuffer(channels, len, sampleRate);
-        for (let c = 0; c < channels; c++) {
-          const orig = audioBuffer.getChannelData(c);
-          const dest = newBuf.getChannelData(c);
+        // 去人聲時輸出單聲道（L-R），否則保留原聲道數
+        const outChannels = opts.vocalRemove ? 1 : channels;
+        newBuf = audioCtx.createBuffer(outChannels, len, sampleRate);
+
+        if (opts.vocalRemove) {
+          // 左右聲道相減 → 消除中央人聲，保留偏側的伴奏
+          const L = audioBuffer.getChannelData(0);
+          const R = audioBuffer.getChannelData(1);
+          const dest = newBuf.getChannelData(0);
           for (let i = 0; i < len; i++) {
-            let sample = orig[offsetStart + i] || 0;
-            // fade in
-            if (opts.fadeIn && i < sampleRate * 0.5) sample *= i / (sampleRate * 0.5);
-            // fade out
+            let sample = (L[offsetStart + i] || 0) - (R[offsetStart + i] || 0);
+            if (opts.fadeIn  && i < sampleRate * 0.5) sample *= i / (sampleRate * 0.5);
             if (opts.fadeOut && i > len - sampleRate * 0.5) sample *= (len - i) / (sampleRate * 0.5);
             dest[i] = sample;
           }
+        } else {
+          for (let c = 0; c < channels; c++) {
+            const orig = audioBuffer.getChannelData(c);
+            const dest = newBuf.getChannelData(c);
+            for (let i = 0; i < len; i++) {
+              let sample = orig[offsetStart + i] || 0;
+              if (opts.fadeIn  && i < sampleRate * 0.5) sample *= i / (sampleRate * 0.5);
+              if (opts.fadeOut && i > len - sampleRate * 0.5) sample *= (len - i) / (sampleRate * 0.5);
+              dest[i] = sample;
+            }
+          }
         }
+
       } else {
-        // remove: join start segment + end segment
+        // remove mode: keep [0, start] + [end, total]
         const s1 = Math.floor(startSec * sampleRate);
-        const e1 = Math.floor(endSec * sampleRate);
+        const e1 = Math.floor(endSec   * sampleRate);
         const totalSamples = audioBuffer.length;
         const newLen = s1 + (totalSamples - e1);
-        newBuf = audioCtx.createBuffer(channels, newLen, sampleRate);
-        for (let c = 0; c < channels; c++) {
-          const orig = audioBuffer.getChannelData(c);
-          const dest = newBuf.getChannelData(c);
-          for (let i = 0; i < s1; i++) dest[i] = orig[i];
-          for (let i = e1; i < totalSamples; i++) dest[s1 + (i - e1)] = orig[i];
+        const outChannels = opts.vocalRemove ? 1 : channels;
+        newBuf = audioCtx.createBuffer(outChannels, newLen, sampleRate);
+
+        if (opts.vocalRemove) {
+          const L = audioBuffer.getChannelData(0);
+          const R = audioBuffer.getChannelData(1);
+          const dest = newBuf.getChannelData(0);
+          for (let i = 0; i < s1; i++)
+            dest[i] = (L[i] || 0) - (R[i] || 0);
+          for (let i = e1; i < totalSamples; i++)
+            dest[s1 + (i - e1)] = (L[i] || 0) - (R[i] || 0);
+        } else {
+          for (let c = 0; c < channels; c++) {
+            const orig = audioBuffer.getChannelData(c);
+            const dest = newBuf.getChannelData(c);
+            for (let i = 0; i < s1; i++) dest[i] = orig[i];
+            for (let i = e1; i < totalSamples; i++) dest[s1 + (i - e1)] = orig[i];
+          }
         }
       }
 
-      // Encode to WAV (browser-compatible)
+      // 決定檔名後綴
+      const suffixes = [];
+      if (opts.vocalRemove) suffixes.push('去人聲');
+      const isVideo = originalFile && originalFile.type.startsWith('video/');
+      if (isVideo) suffixes.push('提取音頻');
+      if (suffixes.length === 0) suffixes.push('剪輯');
+
       const wavBlob = encodeWAV(newBuf);
       const url = URL.createObjectURL(wavBlob);
       const link = $('downloadLink');
       const baseName = ($('fileName').textContent || 'audio').replace(/\.[^.]+$/, '');
-      const isVideo = originalFile && originalFile.type.startsWith('video/');
       link.href = url;
-      link.download = `${baseName}_${isVideo ? '提取音頻' : '剪輯'}.wav`;
-      $('downloadInfo').textContent = `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式${isVideo ? ' (從影片提取)' : ''}`;
+      link.download = `${baseName}_${suffixes.join('_')}.wav`;
+      $('downloadInfo').textContent =
+        `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式` +
+        (opts.vocalRemove ? ' · 已去除人聲' : '') +
+        (isVideo ? ' · 從影片提取' : '');
       $('downloadArea').style.display = 'block';
       $('downloadArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
     } catch(err) {
       alert('處理時發生錯誤：' + err.message);
     } finally {
