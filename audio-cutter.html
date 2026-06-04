@@ -714,7 +714,7 @@
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
     <div class="upload-icon">🎬</div>
     <div class="upload-title">拖放音頻或影片文件，或點擊選擇</div>
-    <div class="upload-sub">支援音頻 & 影片格式，最大 500MB · 影片將自動提取聲音</div>
+    <div class="upload-sub">支援音頻 & 影片格式 · 影片將自動提取聲音</div>
     <div class="upload-formats">
       <span class="format-tag">MP3</span>
       <span class="format-tag">WAV</span>
@@ -787,7 +787,7 @@
             <div class="play-bar-fill" id="playFill"></div>
           </div>
         </div>
-        <div class="play-time" id="playTime">0:00</div>
+        <div class="play-time" id="playTime" style="min-width:120px; text-align:right;">0:00.0</div>
       </div>
     </div>
 
@@ -813,15 +813,25 @@
           </div>
           <div class="toggle" id="fadeOutToggle"></div>
         </div>
+        <div class="option-card" id="vocalRemoveCard" onclick="toggleOpt('vocalRemove')" style="grid-column: 1 / -1;">
+          <div>
+            <div class="option-label">🎤 去除人聲（KTV 伴奏模式）</div>
+            <div class="option-sub">左右聲道相減，消除中央人聲 · 立體聲效果佳，單聲道無效</div>
+          </div>
+          <div class="toggle" id="vocalRemoveToggle"></div>
+        </div>
       </div>
 
-      <div class="section-label">輸出格式</div>
+      <div class="section-label" style="display:flex; align-items:center; gap:8px;">
+        輸出格式
+        <span id="mp3Note" style="font-size:11px; color:var(--accent2); display:none;">· 需載入 MP3 編碼器，稍慢</span>
+      </div>
       <div class="format-chips">
         <button class="format-chip selected" data-fmt="mp3" onclick="selectFmt(this)">MP3</button>
         <button class="format-chip" data-fmt="wav" onclick="selectFmt(this)">WAV</button>
         <button class="format-chip" data-fmt="ogg" onclick="selectFmt(this)">OGG</button>
-        <button class="format-chip" data-fmt="flac" onclick="selectFmt(this)">FLAC</button>
       </div>
+      <div style="font-size:11px; color:var(--text3); margin-top:8px;">WMA / FLAC / AAC 上傳後可轉存為上述格式</div>
     </div>
 
     <!-- Actions -->
@@ -959,6 +969,8 @@ function updateEndLabel() {
 function updateSelectedDuration() {
   const dur = Math.max(0, getEndSec() - getStartSec());
   $('selectedDuration').textContent = `⏱ 已選 ${formatTimeDetailed(dur)}`;
+  // 沒在播放時，右下角也顯示已選秒數
+  if (!isPlaying) $('playTime').textContent = formatTimeDetailed(dur);
 }
 function updateRangeFill() {
   const s = parseFloat($('startHandle').value);
@@ -968,15 +980,28 @@ function updateRangeFill() {
   fill.style.width = (e - s) + '%';
 }
 
+// ── 預快取波形 peaks，避免每次重繪都重算 ──
+let cachedPeaks = null;
+let waveformRAFPending = false;
+
+function scheduleWaveformRedraw() {
+  if (waveformRAFPending) return;
+  waveformRAFPending = true;
+  requestAnimationFrame(() => {
+    waveformRAFPending = false;
+    drawWaveformSelection();
+  });
+}
+
 $('startHandle').addEventListener('input', () => {
   if (parseFloat($('startHandle').value) >= parseFloat($('endHandle').value))
     $('startHandle').value = parseFloat($('endHandle').value) - 0.1;
-  updateStartLabel(); updateRangeFill(); drawWaveformSelection();
+  updateStartLabel(); updateRangeFill(); scheduleWaveformRedraw();
 });
 $('endHandle').addEventListener('input', () => {
   if (parseFloat($('endHandle').value) <= parseFloat($('startHandle').value))
     $('endHandle').value = parseFloat($('startHandle').value) + 0.1;
-  updateEndLabel(); updateRangeFill(); drawWaveformSelection();
+  updateEndLabel(); updateRangeFill(); scheduleWaveformRedraw();
 });
 
 $('startInput').addEventListener('change', () => {
@@ -992,51 +1017,50 @@ $('endInput').addEventListener('change', () => {
   updateEndLabel(); updateRangeFill(); drawWaveformSelection();
 });
 
+function buildPeaks(buf, width) {
+  const data = buf.getChannelData(0);
+  const step = Math.ceil(data.length / width);
+  const peaks = new Float32Array(width);
+  for (let i = 0; i < width; i++) {
+    let max = 0;
+    const base = i * step;
+    for (let j = 0; j < step; j++) {
+      const v = Math.abs(data[base + j] || 0);
+      if (v > max) max = v;
+    }
+    peaks[i] = max;
+  }
+  return peaks;
+}
+
 function drawWaveform(buf) {
   const canvas = $('waveformCanvas');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = canvas.offsetWidth * dpr;
-  canvas.height = 120 * dpr;
-  ctx.scale(dpr, dpr);
   const w = canvas.offsetWidth, h = 120;
-  const data = buf.getChannelData(0);
-  const step = Math.ceil(data.length / w);
-  ctx.fillStyle = '#13131a';
-  ctx.fillRect(0, 0, w, h);
-  for (let i = 0; i < w; i++) {
-    let max = 0;
-    for (let j = 0; j < step; j++) max = Math.max(max, Math.abs(data[i * step + j] || 0));
-    const barH = max * h * 0.85;
-    const y = (h - barH) / 2;
-    const prog = i / w;
-    ctx.fillStyle = `rgba(124,108,240,0.5)`;
-    ctx.fillRect(i, y, 1, barH);
-  }
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  // 只算一次 peaks 並快取
+  cachedPeaks = buildPeaks(buf, w);
   drawWaveformSelection();
 }
 
 function drawWaveformSelection() {
-  if (!audioBuffer) return;
+  if (!cachedPeaks) return;
   const canvas = $('waveformCanvas');
-  const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.offsetWidth, h = 120;
-  const data = audioBuffer.getChannelData(0);
-  const step = Math.ceil(data.length / w);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#13131a';
   ctx.fillRect(0, 0, w, h);
   const sP = parseFloat($('startHandle').value) / 100;
   const eP = parseFloat($('endHandle').value) / 100;
   for (let i = 0; i < w; i++) {
-    let max = 0;
-    for (let j = 0; j < step; j++) max = Math.max(max, Math.abs(data[i * step + j] || 0));
-    const barH = max * h * 0.85;
+    const barH = cachedPeaks[i] * h * 0.85;
     const y = (h - barH) / 2;
     const prog = i / w;
     if (prog >= sP && prog <= eP) {
-      const t = (prog - sP) / (eP - sP);
+      const t = (eP > sP) ? (prog - sP) / (eP - sP) : 0;
       const r = Math.round(124 + (78 - 124) * t);
       const g = Math.round(108 + (205 - 108) * t);
       const b = Math.round(240 + (196 - 240) * t);
@@ -1065,11 +1089,19 @@ function startPlay() {
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const s = getStartSec(), e = getEndSec();
+  const selDur = e - s;
   sourceNode = audioCtx.createBufferSource();
   sourceNode.buffer = audioBuffer;
   sourceNode.connect(audioCtx.destination);
-  sourceNode.start(0, s, e - s);
-  sourceNode.onended = () => { isPlaying = false; $('playBtn').textContent = '▶'; cancelAnimationFrame(playbackRAF); $('playFill').style.width = '0%'; };
+  sourceNode.start(0, s, selDur);
+  sourceNode.onended = () => {
+    isPlaying = false;
+    $('playBtn').textContent = '▶';
+    cancelAnimationFrame(playbackRAF);
+    $('playFill').style.width = '100%';
+    $('playTime').textContent = formatTimeDetailed(selDur) + ' / ' + formatTimeDetailed(selDur);
+    setTimeout(() => { $('playFill').style.width = '0%'; $('playTime').textContent = '0:00.0'; }, 800);
+  };
   startTime = audioCtx.currentTime;
   playStartOffset = s;
   isPlaying = true;
@@ -1083,18 +1115,19 @@ function stopPlay() {
   $('playBtn').textContent = '▶';
   cancelAnimationFrame(playbackRAF);
   $('playFill').style.width = '0%';
-  $('playTime').textContent = formatTime(getStartSec());
+  const dur = Math.max(0, getEndSec() - getStartSec());
+  $('playTime').textContent = formatTimeDetailed(dur);
 }
 
 function updatePlayback() {
   if (!isPlaying) return;
   const s = getStartSec(), e = getEndSec();
+  const selDur = e - s;
   const elapsed = audioCtx.currentTime - startTime;
-  const cur = playStartOffset + elapsed;
-  const pct = Math.min(100, ((cur - s) / (e - s)) * 100);
+  const pct = Math.min(100, (elapsed / selDur) * 100);
   $('playFill').style.width = pct + '%';
-  $('playTime').textContent = formatTime(cur);
-  if (cur < e) playbackRAF = requestAnimationFrame(updatePlayback);
+  $('playTime').textContent = formatTimeDetailed(Math.min(elapsed, selDur)) + ' / ' + formatTimeDetailed(selDur);
+  if (elapsed < selDur) playbackRAF = requestAnimationFrame(updatePlayback);
 }
 
 // Options
