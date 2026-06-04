@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>音頻剪輯器 — 線上免費剪輯音樂</title>
+<title>音頻剪輯器 — 剪輯音樂 / 從影片提取聲音</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -706,15 +706,15 @@
       <div class="logo-dot"></div>
       音頻工具 · AUDIO CUTTER
     </div>
-    <h1>線上<em>剪輯</em>你的音樂</h1>
-    <p class="subtitle">免費、快速、不需安裝 — 直接在瀏覽器完成</p>
+    <h1>線上<em>剪輯</em>音樂 / 提取影片聲音</h1>
+    <p class="subtitle">音頻剪輯 · 從影片萃取聲音 · 免費、快速、完全在瀏覽器完成</p>
   </header>
 
   <!-- Upload -->
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-    <div class="upload-icon">🎵</div>
-    <div class="upload-title">拖放音頻文件，或點擊選擇</div>
-    <div class="upload-sub">支援所有常見音頻格式，最大 200MB</div>
+    <div class="upload-icon">🎬</div>
+    <div class="upload-title">拖放音頻或影片文件，或點擊選擇</div>
+    <div class="upload-sub">支援音頻 & 影片格式，最大 500MB · 影片將自動提取聲音</div>
     <div class="upload-formats">
       <span class="format-tag">MP3</span>
       <span class="format-tag">WAV</span>
@@ -722,8 +722,13 @@
       <span class="format-tag">FLAC</span>
       <span class="format-tag">AAC</span>
       <span class="format-tag">M4A</span>
+      <span class="format-tag" style="color: var(--accent2); border-color: rgba(78,205,196,0.4);">MP4</span>
+      <span class="format-tag" style="color: var(--accent2); border-color: rgba(78,205,196,0.4);">MOV</span>
+      <span class="format-tag" style="color: var(--accent2); border-color: rgba(78,205,196,0.4);">AVI</span>
+      <span class="format-tag" style="color: var(--accent2); border-color: rgba(78,205,196,0.4);">MKV</span>
+      <span class="format-tag" style="color: var(--accent2); border-color: rgba(78,205,196,0.4);">WEBM</span>
     </div>
-    <input type="file" id="fileInput" accept="audio/*">
+    <input type="file" id="fileInput" accept="audio/*,video/*">
   </div>
 
   <!-- Editor -->
@@ -731,10 +736,13 @@
     <!-- File info -->
     <div class="panel">
       <div class="file-info">
-        <div class="file-icon">🎵</div>
+        <div class="file-icon" id="fileIcon">🎵</div>
         <div>
           <div class="file-name" id="fileName">audio.mp3</div>
-          <div class="file-duration" id="fileDuration">00:00</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="file-duration" id="fileDuration">00:00</div>
+            <div id="videoBadge" style="display:none; font-size:11px; background:rgba(78,205,196,0.12); border:1px solid rgba(78,205,196,0.3); color:var(--accent2); padding:2px 8px; border-radius:100px; font-family:'Space Mono',monospace;">影片 → 音頻</div>
+          </div>
         </div>
         <button class="btn-change" onclick="document.getElementById('fileInput').click()">換一個檔案</button>
       </div>
@@ -867,7 +875,7 @@ uploadZone.addEventListener('drop', e => {
   e.preventDefault();
   uploadZone.classList.remove('drag-over');
   const f = e.dataTransfer.files[0];
-  if (f && f.type.startsWith('audio/')) loadFile(f);
+  if (f && (f.type.startsWith('audio/') || f.type.startsWith('video/'))) loadFile(f);
 });
 
 $('fileInput').addEventListener('change', e => {
@@ -876,14 +884,21 @@ $('fileInput').addEventListener('change', e => {
 
 function loadFile(file) {
   originalFile = file;
+  const isVideo = file.type.startsWith('video/');
   $('fileName').textContent = file.name;
+  $('fileIcon').textContent = isVideo ? '🎬' : '🎵';
+  $('videoBadge').style.display = isVideo ? 'inline-block' : 'none';
   uploadZone.style.display = 'none';
   $('editor').style.display = 'block';
   $('downloadArea').style.display = 'none';
 
+  // Show loading state
+  $('fileDuration').textContent = '讀取中...';
+
   const reader = new FileReader();
   reader.onload = e => {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // decodeAudioData works on both audio and video files (extracts audio track)
     audioCtx.decodeAudioData(e.target.result.slice(0), buf => {
       audioBuffer = buf;
       totalDuration = buf.duration;
@@ -894,6 +909,9 @@ function loadFile(file) {
       updateRangeFill();
       drawWaveform(buf);
       stopPlay();
+    }, err => {
+      $('fileDuration').textContent = '讀取失敗';
+      alert('無法讀取此檔案的音頻軌道。\n請確認檔案包含音頻，或嘗試其他格式。\n\n錯誤：' + (err?.message || err));
     });
   };
   reader.readAsArrayBuffer(file);
@@ -1151,9 +1169,10 @@ function processAudio(mode) {
       const url = URL.createObjectURL(wavBlob);
       const link = $('downloadLink');
       const baseName = ($('fileName').textContent || 'audio').replace(/\.[^.]+$/, '');
+      const isVideo = originalFile && originalFile.type.startsWith('video/');
       link.href = url;
-      link.download = `${baseName}_剪輯.wav`;
-      $('downloadInfo').textContent = `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式`;
+      link.download = `${baseName}_${isVideo ? '提取音頻' : '剪輯'}.wav`;
+      $('downloadInfo').textContent = `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式${isVideo ? ' (從影片提取)' : ''}`;
       $('downloadArea').style.display = 'block';
       $('downloadArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch(err) {
