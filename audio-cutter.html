@@ -438,7 +438,25 @@
     transition: transform 0.2s, opacity 0.2s;
   }
 
-  .btn-play-fx {
+  .vocal-btn {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .vocal-btn:hover { border-color: var(--accent); color: var(--text); }
+  .vocal-btn--active {
+    background: linear-gradient(135deg, rgba(124,108,240,0.2), rgba(78,205,196,0.2));
+    border-color: var(--accent);
+    color: var(--text);
+  }
     width: 48px; height: 48px;
     border-radius: 50%;
     background: var(--surface2);
@@ -819,27 +837,58 @@
       </div>
 
       <div class="section-label">效果</div>
-      <div class="options-grid" style="margin-bottom: 20px;">
-        <div class="option-card" id="fadeInCard" onclick="toggleOpt('fadeIn')">
-          <div>
-            <div class="option-label">淡入</div>
-            <div class="option-sub">開頭漸強</div>
+
+      <!-- 淡入 -->
+      <div class="option-card" id="fadeInCard" onclick="toggleOpt('fadeIn')" style="margin-bottom:8px;">
+        <div>
+          <div class="option-label">淡入</div>
+          <div class="option-sub">開頭漸強</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div id="fadeInSecWrap" style="display:none; align-items:center; gap:4px;" onclick="event.stopPropagation()">
+            <input type="number" id="fadeInSec" value="1" min="0.1" max="30" step="0.1"
+              style="width:52px; background:var(--surface); border:1px solid var(--border2); color:var(--text);
+                     border-radius:6px; padding:3px 6px; font-size:13px; font-family:'Space Mono',monospace; text-align:center;"
+              oninput="opts.fadeInSec=parseFloat(this.value)||1">
+            <span style="font-size:11px; color:var(--text3);">秒</span>
           </div>
           <div class="toggle" id="fadeInToggle"></div>
         </div>
-        <div class="option-card" id="fadeOutCard" onclick="toggleOpt('fadeOut')">
-          <div>
-            <div class="option-label">淡出</div>
-            <div class="option-sub">結尾漸弱</div>
+      </div>
+
+      <!-- 淡出 -->
+      <div class="option-card" id="fadeOutCard" onclick="toggleOpt('fadeOut')" style="margin-bottom:16px;">
+        <div>
+          <div class="option-label">淡出</div>
+          <div class="option-sub">結尾漸弱</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div id="fadeOutSecWrap" style="display:none; align-items:center; gap:4px;" onclick="event.stopPropagation()">
+            <input type="number" id="fadeOutSec" value="1" min="0.1" max="30" step="0.1"
+              style="width:52px; background:var(--surface); border:1px solid var(--border2); color:var(--text);
+                     border-radius:6px; padding:3px 6px; font-size:13px; font-family:'Space Mono',monospace; text-align:center;"
+              oninput="opts.fadeOutSec=parseFloat(this.value)||1">
+            <span style="font-size:11px; color:var(--text3);">秒</span>
           </div>
           <div class="toggle" id="fadeOutToggle"></div>
         </div>
-        <div class="option-card" id="vocalRemoveCard" onclick="toggleOpt('vocalRemove')" style="grid-column: 1 / -1;">
+      </div>
+
+      <!-- 去人聲：比較模式按鈕組 -->
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:20px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
           <div>
             <div class="option-label">🎤 去除人聲（KTV 伴奏模式）</div>
-            <div class="option-sub">左右聲道相減，消除中央人聲 · 立體聲效果佳，單聲道無效</div>
+            <div class="option-sub">左右聲道相減 · 立體聲效果佳，單聲道無效</div>
           </div>
-          <div class="toggle" id="vocalRemoveToggle"></div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="vocal-btn vocal-btn--active" id="vocalOrigBtn" onclick="setVocalMode('original')">
+            🎤 含人聲（原聲）
+          </button>
+          <button class="vocal-btn" id="vocalRemoveBtn" onclick="setVocalMode('remove')">
+            🎵 去除人聲（伴奏）
+          </button>
         </div>
       </div>
 
@@ -892,7 +941,7 @@ let startTime = 0;
 let playStartOffset = 0;
 let playbackRAF = null;
 let totalDuration = 0;
-let opts = { fadeIn: false, fadeOut: false };
+let opts = { fadeIn: false, fadeOut: false, vocalRemove: false, fadeInSec: 1, fadeOutSec: 1, vocalMode: 'original' };
 let selectedFormat = 'mp3';
 let originalFile = null;
 
@@ -1113,7 +1162,6 @@ function togglePlay(mode) {
 }
 
 function buildFxBuffer() {
-  // 把選取範圍套用所有效果，渲染成新的 AudioBuffer
   const sampleRate = audioBuffer.sampleRate;
   const channels = audioBuffer.numberOfChannels;
   const s = getStartSec(), e = getEndSec();
@@ -1121,30 +1169,31 @@ function buildFxBuffer() {
   const offsetEnd   = Math.floor(e * sampleRate);
   const len = offsetEnd - offsetStart;
 
+  const fadeInSamples  = Math.min(Math.floor((opts.fadeInSec  || 1) * sampleRate), Math.floor(len / 2));
+  const fadeOutSamples = Math.min(Math.floor((opts.fadeOutSec || 1) * sampleRate), Math.floor(len / 2));
+
   const useVocal = opts.vocalRemove && channels >= 2;
   const outCh = useVocal ? 1 : channels;
   const buf = audioCtx.createBuffer(outCh, len, sampleRate);
+
+  function applyFade(v, i) {
+    if (opts.fadeIn  && i < fadeInSamples)          v *= i / fadeInSamples;
+    if (opts.fadeOut && i > len - fadeOutSamples)    v *= (len - i) / fadeOutSamples;
+    return v;
+  }
 
   if (useVocal) {
     const L = audioBuffer.getChannelData(0);
     const R = audioBuffer.getChannelData(1);
     const dest = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) {
-      let v = (L[offsetStart + i] || 0) - (R[offsetStart + i] || 0);
-      if (opts.fadeIn  && i < sampleRate * 0.5) v *= i / (sampleRate * 0.5);
-      if (opts.fadeOut && i > len - sampleRate * 0.5) v *= (len - i) / (sampleRate * 0.5);
-      dest[i] = v;
-    }
+    for (let i = 0; i < len; i++)
+      dest[i] = applyFade((L[offsetStart + i] || 0) - (R[offsetStart + i] || 0), i);
   } else {
     for (let c = 0; c < channels; c++) {
       const orig = audioBuffer.getChannelData(c);
       const dest = buf.getChannelData(c);
-      for (let i = 0; i < len; i++) {
-        let v = orig[offsetStart + i] || 0;
-        if (opts.fadeIn  && i < sampleRate * 0.5) v *= i / (sampleRate * 0.5);
-        if (opts.fadeOut && i > len - sampleRate * 0.5) v *= (len - i) / (sampleRate * 0.5);
-        dest[i] = v;
-      }
+      for (let i = 0; i < len; i++)
+        dest[i] = applyFade(orig[offsetStart + i] || 0, i);
     }
   }
   return buf;
@@ -1264,6 +1313,16 @@ function toggleOpt(key) {
   opts[key] = !opts[key];
   $(`${key}Toggle`).classList.toggle('on', opts[key]);
   $(`${key}Card`).classList.toggle('active', opts[key]);
+  // 顯示/隱藏秒數輸入框
+  if (key === 'fadeIn')  { const w = $('fadeInSecWrap');  if(w) w.style.display = opts.fadeIn  ? 'flex' : 'none'; }
+  if (key === 'fadeOut') { const w = $('fadeOutSecWrap'); if(w) w.style.display = opts.fadeOut ? 'flex' : 'none'; }
+}
+
+function setVocalMode(mode) {
+  opts.vocalMode = mode;
+  opts.vocalRemove = (mode === 'remove');
+  $('vocalOrigBtn').classList.toggle('vocal-btn--active', mode === 'original');
+  $('vocalRemoveBtn').classList.toggle('vocal-btn--active', mode === 'remove');
 }
 
 function selectFmt(el) {
@@ -1299,31 +1358,30 @@ function processAudio(mode) {
         const offsetStart = Math.floor(startSec * sampleRate);
         const offsetEnd   = Math.floor(endSec   * sampleRate);
         const len = offsetEnd - offsetStart;
-        // 去人聲時輸出單聲道（L-R），否則保留原聲道數
+        const fadeInSmp  = Math.min(Math.floor((opts.fadeInSec  || 1) * sampleRate), Math.floor(len / 2));
+        const fadeOutSmp = Math.min(Math.floor((opts.fadeOutSec || 1) * sampleRate), Math.floor(len / 2));
+
+        const applyFade = (v, i) => {
+          if (opts.fadeIn  && i < fadeInSmp)           v *= i / fadeInSmp;
+          if (opts.fadeOut && i > len - fadeOutSmp)     v *= (len - i) / fadeOutSmp;
+          return v;
+        };
+
         const outChannels = opts.vocalRemove ? 1 : channels;
         newBuf = audioCtx.createBuffer(outChannels, len, sampleRate);
 
         if (opts.vocalRemove) {
-          // 左右聲道相減 → 消除中央人聲，保留偏側的伴奏
           const L = audioBuffer.getChannelData(0);
           const R = audioBuffer.getChannelData(1);
           const dest = newBuf.getChannelData(0);
-          for (let i = 0; i < len; i++) {
-            let sample = (L[offsetStart + i] || 0) - (R[offsetStart + i] || 0);
-            if (opts.fadeIn  && i < sampleRate * 0.5) sample *= i / (sampleRate * 0.5);
-            if (opts.fadeOut && i > len - sampleRate * 0.5) sample *= (len - i) / (sampleRate * 0.5);
-            dest[i] = sample;
-          }
+          for (let i = 0; i < len; i++)
+            dest[i] = applyFade((L[offsetStart + i] || 0) - (R[offsetStart + i] || 0), i);
         } else {
           for (let c = 0; c < channels; c++) {
             const orig = audioBuffer.getChannelData(c);
             const dest = newBuf.getChannelData(c);
-            for (let i = 0; i < len; i++) {
-              let sample = orig[offsetStart + i] || 0;
-              if (opts.fadeIn  && i < sampleRate * 0.5) sample *= i / (sampleRate * 0.5);
-              if (opts.fadeOut && i > len - sampleRate * 0.5) sample *= (len - i) / (sampleRate * 0.5);
-              dest[i] = sample;
-            }
+            for (let i = 0; i < len; i++)
+              dest[i] = applyFade(orig[offsetStart + i] || 0, i);
           }
         }
 
