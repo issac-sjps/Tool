@@ -438,7 +438,25 @@
     transition: transform 0.2s, opacity 0.2s;
   }
 
-  .vocal-btn {
+  .delete-mode-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .delete-mode-btn:hover { border-color: var(--danger); color: var(--text); }
+  .delete-mode-btn--active {
+    background: rgba(255,107,107,0.1);
+    border-color: var(--danger);
+    color: var(--text);
+  }
     flex: 1;
     padding: 9px 12px;
     border-radius: 10px;
@@ -845,6 +863,27 @@
         </div>
       </div>
 
+      <!-- 刪除選取片段（放在範圍旁） -->
+      <div style="background:rgba(255,107,107,0.05); border:1px solid rgba(255,107,107,0.15); border-radius:14px; padding:14px 16px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div style="font-size:13px; font-weight:500; color:var(--text);">🗑 刪除選取片段</div>
+            <div style="font-size:11px; color:var(--text3); margin-top:2px;">刪除後，兩端剩餘音樂的處理方式：</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="delete-mode-btn delete-mode-btn--active" id="deleteMergeBtn" onclick="setDeleteMode('merge')">
+              🔗 刪除並合併（無縫銜接）
+            </button>
+            <button class="delete-mode-btn" id="deleteSilenceBtn" onclick="setDeleteMode('silence')">
+              ⬜ 刪除並留空白（靜音）
+            </button>
+          </div>
+        </div>
+        <button class="btn-main btn-remove" style="width:100%; margin-top:12px; padding:12px;" id="deleteBtn" onclick="processAudio('remove')">
+          <span>🗑</span> 執行刪除
+        </button>
+      </div>
+
       <!-- Time inputs -->
       <div class="time-inputs-row">
         <div class="time-input-group">
@@ -969,7 +1008,10 @@
         <div style="font-size:11px; color:var(--text3); margin-top:10px;">提示：「人聲 Mid」調高可增強人聲，調低可弱化人聲；「低音 Bass」調高可增強鼓聲與低頻</div>
       </div>
       <div style="background:linear-gradient(135deg,rgba(124,108,240,0.06),rgba(78,205,196,0.06)); border:1px solid rgba(78,205,196,0.2); border-radius:14px; padding:14px 16px; margin-bottom:20px;">
-        <div style="font-size:11px; color:var(--accent2); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">✨ 效果試聽</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div style="font-size:11px; color:var(--accent2); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.08em;">✨ 效果試聽</div>
+          <div id="fxTagsWrap" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;"></div>
+        </div>
         <div class="playback-row" style="margin-bottom:0;">
           <button class="btn-play" id="playFxBtn" onclick="togglePlay('fx')"
             style="background:linear-gradient(135deg,rgba(124,108,240,0.5),rgba(78,205,196,0.5)); border:1.5px solid rgba(78,205,196,0.4);"
@@ -997,13 +1039,10 @@
       <div style="font-size:11px; color:var(--text3); margin-top:8px;">WMA / FLAC / AAC 上傳後可轉存為上述格式</div>
     </div>
 
-    <!-- Actions -->
-    <div class="actions-row">
-      <button class="btn-main btn-extract" id="extractBtn" onclick="processAudio('extract')">
+    <!-- Actions: 只剩提取 -->
+    <div style="margin-bottom:16px;">
+      <button class="btn-main btn-extract" style="width:100%;" id="extractBtn" onclick="processAudio('extract')">
         <span>✂️</span> 提取選取片段
-      </button>
-      <button class="btn-main btn-remove" onclick="processAudio('remove')">
-        <span>🗑</span> 刪除選取片段
       </button>
     </div>
 
@@ -1013,9 +1052,17 @@
       <div class="download-title">處理完成！</div>
       <div class="download-sub" id="downloadInfo">已準備好下載</div>
       <div id="downloadEffectsSummary" style="display:none; margin-bottom:16px; font-size:13px; color:var(--text2); background:var(--surface2); border-radius:10px; padding:10px 16px; text-align:left; line-height:1.8;"></div>
-      <a id="downloadLink" class="btn-download" download>
-        ⬇ 下載音頻檔案
-      </a>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <a id="downloadOrigLink" class="btn-download" download style="background:var(--surface2); border:1.5px solid var(--border2); color:var(--text); text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border-radius:12px; font-size:14px; font-family:'Noto Sans TC',sans-serif; transition:all 0.2s;">
+          ⬇ 下載原版
+        </a>
+        <a id="downloadFxLink" class="btn-download" download style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+          ✨ 下載特效版
+        </a>
+      </div>
+      <div style="font-size:11px; color:var(--text3); margin-top:10px; text-align:center;">
+        原版 = 僅剪取，無效果 ／ 特效版 = 套用目前所有效果設定
+      </div>
     </div>
   </div>
 
@@ -1036,6 +1083,7 @@ let playStartOffset = 0;
 let playbackRAF = null;
 let totalDuration = 0;
 let opts = { fadeIn: false, fadeOut: false, vocalRemove: false, fadeInSec: 1, fadeOutSec: 1, vocalMode: 'original' };
+let deleteMode = 'merge'; // 'merge' | 'silence'
 let eqValues = { bass: 0, lowmid: 0, mid: 0, treble: 0 };
 // EQ frequency bands
 const EQ_BANDS = {
@@ -1067,8 +1115,8 @@ function updateEQ(key, val) {
   eqValues[key] = parseFloat(val);
   const sign = val >= 0 ? '+' : '';
   $(`${key}Val`).textContent = `${sign}${parseFloat(val).toFixed(1)} dB`;
-  // 即時更新正在播放的節點
   if (eqNodes[key]) eqNodes[key].gain.value = eqValues[key];
+  updateFxTags();
 }
 
 function resetEQ() {
@@ -1365,7 +1413,48 @@ function buildFxBuffer() {
   return buf;
 }
 
-function getActiveEffectLabels() {
+// 建立原版 buffer（無效果，僅剪輯或刪除）
+function buildOrigBuffer(mode, startSec, endSec) {
+  const sampleRate = audioBuffer.sampleRate;
+  const channels = audioBuffer.numberOfChannels;
+  if (mode === 'extract') {
+    const s = Math.floor(startSec * sampleRate);
+    const e = Math.floor(endSec * sampleRate);
+    const len = e - s;
+    const buf = audioCtx.createBuffer(channels, len, sampleRate);
+    for (let c = 0; c < channels; c++) {
+      const orig = audioBuffer.getChannelData(c);
+      const dest = buf.getChannelData(c);
+      for (let i = 0; i < len; i++) dest[i] = orig[s + i] || 0;
+    }
+    return buf;
+  } else {
+    const s1 = Math.floor(startSec * sampleRate);
+    const e1 = Math.floor(endSec * sampleRate);
+    const total = audioBuffer.length;
+    if (deleteMode === 'silence') {
+      const buf = audioCtx.createBuffer(channels, total, sampleRate);
+      for (let c = 0; c < channels; c++) {
+        const orig = audioBuffer.getChannelData(c);
+        const dest = buf.getChannelData(c);
+        for (let i = 0; i < total; i++) dest[i] = (i >= s1 && i < e1) ? 0 : orig[i];
+      }
+      return buf;
+    } else {
+      const newLen = s1 + (total - e1);
+      const buf = audioCtx.createBuffer(channels, newLen, sampleRate);
+      for (let c = 0; c < channels; c++) {
+        const orig = audioBuffer.getChannelData(c);
+        const dest = buf.getChannelData(c);
+        for (let i = 0; i < s1; i++) dest[i] = orig[i];
+        for (let i = e1; i < total; i++) dest[s1 + (i - e1)] = orig[i];
+      }
+      return buf;
+    }
+  }
+}
+
+
   const labels = [];
   if (opts.fadeIn)      labels.push(`淡入 ${opts.fadeInSec}s`);
   if (opts.fadeOut)     labels.push(`淡出 ${opts.fadeOutSec}s`);
@@ -1490,9 +1579,9 @@ function toggleOpt(key) {
   opts[key] = !opts[key];
   $(`${key}Toggle`).classList.toggle('on', opts[key]);
   $(`${key}Card`).classList.toggle('active', opts[key]);
-  // 顯示/隱藏秒數輸入框
   if (key === 'fadeIn')  { const w = $('fadeInSecWrap');  if(w) w.style.display = opts.fadeIn  ? 'flex' : 'none'; }
   if (key === 'fadeOut') { const w = $('fadeOutSecWrap'); if(w) w.style.display = opts.fadeOut ? 'flex' : 'none'; }
+  updateFxTags();
 }
 
 function setVocalMode(mode) {
@@ -1500,6 +1589,27 @@ function setVocalMode(mode) {
   opts.vocalRemove = (mode === 'remove');
   $('vocalOrigBtn').classList.toggle('vocal-btn--active', mode === 'original');
   $('vocalRemoveBtn').classList.toggle('vocal-btn--active', mode === 'remove');
+  updateFxTags();
+}
+
+function setDeleteMode(mode) {
+  deleteMode = mode;
+  $('deleteMergeBtn').classList.toggle('delete-mode-btn--active', mode === 'merge');
+  $('deleteSilenceBtn').classList.toggle('delete-mode-btn--active', mode === 'silence');
+}
+
+// 即時更新效果試聽區的標籤
+function updateFxTags() {
+  const wrap = $('fxTagsWrap');
+  if (!wrap) return;
+  const labels = getActiveEffectLabels();
+  if (!labels.length) {
+    wrap.innerHTML = '<span style="font-size:11px; color:var(--text3);">未開啟任何效果</span>';
+    return;
+  }
+  wrap.innerHTML = labels.map(l =>
+    `<span style="font-size:11px; background:rgba(124,108,240,0.15); border:1px solid rgba(124,108,240,0.3); color:var(--accent); padding:2px 8px; border-radius:100px;">${l}</span>`
+  ).join('');
 }
 
 function selectFmt(el) {
@@ -1563,57 +1673,82 @@ function processAudio(mode) {
         }
 
       } else {
-        // remove mode: keep [0, start] + [end, total]
+        // remove mode
         const s1 = Math.floor(startSec * sampleRate);
         const e1 = Math.floor(endSec   * sampleRate);
         const totalSamples = audioBuffer.length;
-        const newLen = s1 + (totalSamples - e1);
         const outChannels = opts.vocalRemove ? 1 : channels;
-        newBuf = audioCtx.createBuffer(outChannels, newLen, sampleRate);
 
-        if (opts.vocalRemove) {
-          const L = audioBuffer.getChannelData(0);
-          const R = audioBuffer.getChannelData(1);
-          const dest = newBuf.getChannelData(0);
-          for (let i = 0; i < s1; i++)
-            dest[i] = (L[i] || 0) - (R[i] || 0);
-          for (let i = e1; i < totalSamples; i++)
-            dest[s1 + (i - e1)] = (L[i] || 0) - (R[i] || 0);
-        } else {
-          for (let c = 0; c < channels; c++) {
-            const orig = audioBuffer.getChannelData(c);
+        if (deleteMode === 'silence') {
+          // 保留全長，中間填靜音
+          newBuf = audioCtx.createBuffer(outChannels, totalSamples, sampleRate);
+          for (let c = 0; c < outChannels; c++) {
+            const srcCh = Math.min(c, channels - 1);
+            const orig = audioBuffer.getChannelData(srcCh);
             const dest = newBuf.getChannelData(c);
-            for (let i = 0; i < s1; i++) dest[i] = orig[i];
-            for (let i = e1; i < totalSamples; i++) dest[s1 + (i - e1)] = orig[i];
+            for (let i = 0; i < totalSamples; i++) {
+              if (i >= s1 && i < e1) dest[i] = 0; // 靜音
+              else dest[i] = opts.vocalRemove && channels >= 2
+                ? (audioBuffer.getChannelData(0)[i] || 0) - (audioBuffer.getChannelData(1)[i] || 0)
+                : orig[i];
+            }
+          }
+        } else {
+          // merge: 刪除並拼接
+          const newLen = s1 + (totalSamples - e1);
+          newBuf = audioCtx.createBuffer(outChannels, newLen, sampleRate);
+          if (opts.vocalRemove && channels >= 2) {
+            const L = audioBuffer.getChannelData(0);
+            const R = audioBuffer.getChannelData(1);
+            const dest = newBuf.getChannelData(0);
+            for (let i = 0; i < s1; i++) dest[i] = (L[i]||0)-(R[i]||0);
+            for (let i = e1; i < totalSamples; i++) dest[s1+(i-e1)] = (L[i]||0)-(R[i]||0);
+          } else {
+            for (let c = 0; c < channels; c++) {
+              const orig = audioBuffer.getChannelData(c);
+              const dest = newBuf.getChannelData(c);
+              for (let i = 0; i < s1; i++) dest[i] = orig[i];
+              for (let i = e1; i < totalSamples; i++) dest[s1+(i-e1)] = orig[i];
+            }
           }
         }
       }
 
-      // 決定檔名後綴
-      const suffixes = [];
-      if (opts.vocalRemove) suffixes.push('去人聲');
-      const isVideo = originalFile && originalFile.type.startsWith('video/');
-      if (isVideo) suffixes.push('提取音頻');
-      if (suffixes.length === 0) suffixes.push('剪輯');
-
-      const wavBlob = encodeWAV(newBuf);
-      const url = URL.createObjectURL(wavBlob);
-      const link = $('downloadLink');
       const baseName = ($('fileName').textContent || 'audio').replace(/\.[^.]+$/, '');
-      link.href = url;
-      link.download = `${baseName}_${suffixes.join('_')}.wav`;
+      const isVideo = originalFile && originalFile.type.startsWith('video/');
+      const isDelete = (mode === 'remove');
+      const modeLabel = isDelete ? (deleteMode === 'silence' ? '刪除留空' : '刪除合併') : '剪輯';
+
+      // ── 原版（無效果）──
+      const origBuf = buildOrigBuffer(mode, startSec, endSec);
+      const origBlob = encodeWAV(origBuf);
+      const origUrl = URL.createObjectURL(origBlob);
+      const origLink = $('downloadOrigLink');
+      origLink.href = origUrl;
+      origLink.download = `${baseName}_${modeLabel}_原版.wav`;
+
+      // ── 特效版 ──
+      const fxBlob = encodeWAV(newBuf);
+      const fxUrl = URL.createObjectURL(fxBlob);
+      const fxLink = $('downloadFxLink');
+      fxLink.href = fxUrl;
+      fxLink.download = `${baseName}_${modeLabel}_特效版.wav`;
+
       $('downloadInfo').textContent = `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式`;
 
-      // 顯示效果清單
+      // 效果清單
       const fxLabels = getActiveEffectLabels();
       const summaryEl = $('downloadEffectsSummary');
+      summaryEl.style.display = 'block';
       if (fxLabels.length) {
-        summaryEl.style.display = 'block';
-        summaryEl.innerHTML = '<strong style="color:var(--accent2);">已套用效果：</strong><br>' +
-          fxLabels.map(l => `✓ ${l}`).join('<br>');
+        summaryEl.innerHTML = '<strong style="color:var(--accent2);">特效版已套用：</strong><br>' +
+          fxLabels.map(l => `✓ ${l}`).join('<br>') +
+          '<br><span style="color:var(--text3);">原版 = 僅剪輯，無效果</span>';
       } else {
-        summaryEl.style.display = 'block';
-        summaryEl.innerHTML = '此檔案為<strong>原聲</strong>，未套用任何效果';
+        summaryEl.innerHTML = '⚠ 未開啟任何效果，原版與特效版內容相同';
+      }
+      if (isDelete) {
+        summaryEl.innerHTML += `<br><span style="color:var(--text3);">刪除模式：${deleteMode === 'silence' ? '⬜ 留空白（靜音）' : '🔗 合併（無縫銜接）'}</span>`;
       }
 
       $('downloadArea').style.display = 'block';
