@@ -1455,6 +1455,7 @@ function buildOrigBuffer(mode, startSec, endSec) {
 }
 
 
+function getActiveEffectLabels() {
   const labels = [];
   if (opts.fadeIn)      labels.push(`淡入 ${opts.fadeInSec}s`);
   if (opts.fadeOut)     labels.push(`淡出 ${opts.fadeOutSec}s`);
