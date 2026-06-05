@@ -714,7 +714,50 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Section label */
+  /* EQ */
+  .eq-band { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .eq-label { font-size:11px; color:var(--text3); }
+  .eq-val { font-family:'Space Mono',monospace; font-size:12px; color:var(--accent2); min-width:50px; }
+  .eq-slider {
+    -webkit-appearance: none;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 6px;
+    height: 80px;
+    background: var(--surface);
+    border-radius: 100px;
+    outline: none;
+    cursor: pointer;
+  }
+  .eq-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+  .eq-slider::-webkit-slider-runnable-track {
+    background: var(--surface2);
+    border-radius: 100px;
+    width: 6px;
+  }
+
+  /* Seekable progress bar */
+  .play-bar-bg { cursor: pointer; position: relative; }
+  .play-bar-bg:hover .play-bar-fill { opacity: 0.85; }
+  .play-seek-thumb {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--accent);
+    pointer-events: none;
+    display: none;
+    margin-left: -6px;
+  }
+  .play-bar-bg:hover .play-seek-thumb { display: block; }
   .section-label {
     font-size: 12px;
     color: var(--text3);
@@ -820,8 +863,9 @@
         <div class="playback-row">
           <button class="btn-play" id="playBtn" onclick="togglePlay('original')" title="播放原聲">▶</button>
           <div class="play-progress-wrap">
-            <div class="play-bar-bg">
+            <div class="play-bar-bg" id="seekBarOrig" onclick="seekTo('original',event)" onmousemove="hoverSeek('seekThumbOrig','playFill',event)" onmouseleave="hideSeekThumb('seekThumbOrig')">
               <div class="play-bar-fill" id="playFill"></div>
+              <div class="play-seek-thumb" id="seekThumbOrig"></div>
             </div>
           </div>
           <div class="play-time" id="playTime" style="min-width:120px; text-align:right;">0:00.0</div>
@@ -891,7 +935,39 @@
         </div>
       </div>
 
-      <!-- 效果試聽播放列 -->
+      <!-- EQ 均衡器 -->
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <div>
+            <div class="option-label">🎛 均衡器（EQ）</div>
+            <div class="option-sub">調整各頻段音量</div>
+          </div>
+          <button onclick="resetEQ()" style="background:transparent; border:1px solid var(--border2); color:var(--text3); font-size:11px; padding:4px 10px; border-radius:100px; cursor:pointer; font-family:'Noto Sans TC',sans-serif;">重置</button>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; text-align:center;">
+          <div class="eq-band">
+            <div class="eq-label">低音 Bass</div>
+            <div class="eq-val" id="bassVal">0 dB</div>
+            <input type="range" class="eq-slider" id="bassSlider" min="-12" max="12" value="0" step="0.5" oninput="updateEQ('bass',this.value)">
+          </div>
+          <div class="eq-band">
+            <div class="eq-label">中低 Low-Mid</div>
+            <div class="eq-val" id="lowmidVal">0 dB</div>
+            <input type="range" class="eq-slider" id="lowmidSlider" min="-12" max="12" value="0" step="0.5" oninput="updateEQ('lowmid',this.value)">
+          </div>
+          <div class="eq-band">
+            <div class="eq-label">人聲 Mid</div>
+            <div class="eq-val" id="midVal">0 dB</div>
+            <input type="range" class="eq-slider" id="midSlider" min="-12" max="12" value="0" step="0.5" oninput="updateEQ('mid',this.value)">
+          </div>
+          <div class="eq-band">
+            <div class="eq-label">高音 Treble</div>
+            <div class="eq-val" id="trebleVal">0 dB</div>
+            <input type="range" class="eq-slider" id="trebleSlider" min="-12" max="12" value="0" step="0.5" oninput="updateEQ('treble',this.value)">
+          </div>
+        </div>
+        <div style="font-size:11px; color:var(--text3); margin-top:10px;">提示：「人聲 Mid」調高可增強人聲，調低可弱化人聲；「低音 Bass」調高可增強鼓聲與低頻</div>
+      </div>
       <div style="background:linear-gradient(135deg,rgba(124,108,240,0.06),rgba(78,205,196,0.06)); border:1px solid rgba(78,205,196,0.2); border-radius:14px; padding:14px 16px; margin-bottom:20px;">
         <div style="font-size:11px; color:var(--accent2); font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">✨ 效果試聽</div>
         <div class="playback-row" style="margin-bottom:0;">
@@ -899,8 +975,9 @@
             style="background:linear-gradient(135deg,rgba(124,108,240,0.5),rgba(78,205,196,0.5)); border:1.5px solid rgba(78,205,196,0.4);"
             title="套用效果後試聽">▶</button>
           <div class="play-progress-wrap">
-            <div class="play-bar-bg">
+            <div class="play-bar-bg" id="seekBarFx" onclick="seekTo('fx',event)" onmousemove="hoverSeek('seekThumbFx','playFxFill',event)" onmouseleave="hideSeekThumb('seekThumbFx')">
               <div class="play-bar-fill" id="playFxFill" style="background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+              <div class="play-seek-thumb" id="seekThumbFx" style="border-color:var(--accent2);"></div>
             </div>
             <div id="playModeLabel" style="font-size:11px; color:var(--text3); margin-top:4px; min-height:14px;"></div>
           </div>
@@ -933,8 +1010,9 @@
     <!-- Download result -->
     <div id="downloadArea">
       <div class="success-icon">✅</div>
-      <div class="download-title">剪輯完成！</div>
+      <div class="download-title">處理完成！</div>
       <div class="download-sub" id="downloadInfo">已準備好下載</div>
+      <div id="downloadEffectsSummary" style="display:none; margin-bottom:16px; font-size:13px; color:var(--text2); background:var(--surface2); border-radius:10px; padding:10px 16px; text-align:left; line-height:1.8;"></div>
       <a id="downloadLink" class="btn-download" download>
         ⬇ 下載音頻檔案
       </a>
@@ -958,6 +1036,76 @@ let playStartOffset = 0;
 let playbackRAF = null;
 let totalDuration = 0;
 let opts = { fadeIn: false, fadeOut: false, vocalRemove: false, fadeInSec: 1, fadeOutSec: 1, vocalMode: 'original' };
+let eqValues = { bass: 0, lowmid: 0, mid: 0, treble: 0 };
+// EQ frequency bands
+const EQ_BANDS = {
+  bass:   { type: 'lowshelf',  freq: 100 },
+  lowmid: { type: 'peaking',   freq: 400 },
+  mid:    { type: 'peaking',   freq: 2500 },
+  treble: { type: 'highshelf', freq: 8000 },
+};
+let eqNodes = {}; // created when audioCtx exists
+
+function createEQNodes() {
+  eqNodes = {};
+  for (const [key, cfg] of Object.entries(EQ_BANDS)) {
+    const f = audioCtx.createBiquadFilter();
+    f.type = cfg.type;
+    f.frequency.value = cfg.freq;
+    f.gain.value = eqValues[key];
+    eqNodes[key] = f;
+  }
+  // chain: bass → lowmid → mid → treble
+  const chain = Object.values(eqNodes);
+  for (let i = 0; i < chain.length - 1; i++) chain[i].connect(chain[i+1]);
+}
+
+function getEQInput()  { return Object.values(eqNodes)[0]; }
+function getEQOutput() { return Object.values(eqNodes)[Object.values(eqNodes).length - 1]; }
+
+function updateEQ(key, val) {
+  eqValues[key] = parseFloat(val);
+  const sign = val >= 0 ? '+' : '';
+  $(`${key}Val`).textContent = `${sign}${parseFloat(val).toFixed(1)} dB`;
+  // 即時更新正在播放的節點
+  if (eqNodes[key]) eqNodes[key].gain.value = eqValues[key];
+}
+
+function resetEQ() {
+  for (const key of Object.keys(eqValues)) {
+    eqValues[key] = 0;
+    $(`${key}Slider`).value = 0;
+    $(`${key}Val`).textContent = '0 dB';
+    if (eqNodes[key]) eqNodes[key].gain.value = 0;
+  }
+}
+
+// ── 進度條拖曳 / 點擊跳轉 ──
+function seekTo(mode, e) {
+  if (!audioBuffer || !isPlaying) return;
+  if (currentPlayMode !== mode) return;
+  const bar = e.currentTarget;
+  const rect = bar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const selDur = getEndSec() - getStartSec();
+  const seekSec = pct * selDur;
+  // restart from seek position
+  if (sourceNode) { try { sourceNode.stop(); } catch(ex){} }
+  startPlayFrom(mode, seekSec);
+}
+
+function hoverSeek(thumbId, fillId, e) {
+  const bar = e.currentTarget;
+  const rect = bar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const thumb = $(thumbId);
+  thumb.style.display = 'block';
+  thumb.style.left = (pct * rect.width) + 'px';
+}
+
+function hideSeekThumb(thumbId) {
+  $(thumbId).style.display = 'none';
+}
 let selectedFormat = 'mp3';
 let originalFile = null;
 
@@ -1219,19 +1367,28 @@ function buildFxBuffer() {
 
 function getActiveEffectLabels() {
   const labels = [];
-  if (opts.fadeIn)      labels.push('淡入');
-  if (opts.fadeOut)     labels.push('淡出');
+  if (opts.fadeIn)      labels.push(`淡入 ${opts.fadeInSec}s`);
+  if (opts.fadeOut)     labels.push(`淡出 ${opts.fadeOutSec}s`);
   if (opts.vocalRemove) labels.push('去人聲');
+  const eqActive = Object.entries(eqValues).filter(([,v]) => v !== 0);
+  if (eqActive.length) {
+    const eqNames = { bass:'低音', lowmid:'中低', mid:'人聲', treble:'高音' };
+    labels.push('EQ: ' + eqActive.map(([k,v]) => `${eqNames[k]}${v>0?'+':''}${v}dB`).join(' '));
+  }
   return labels;
 }
 
-function startPlay(mode) {
+function startPlay(mode) { startPlayFrom(mode, 0); }
+
+function startPlayFrom(mode, offsetSec) {
   if (!audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
   currentPlayMode = mode;
   const s = getStartSec(), e = getEndSec();
   const selDur = e - s;
+  const remaining = selDur - offsetSec;
+  if (remaining <= 0) return;
 
   if (mode === 'fx') {
     if (opts.vocalRemove && audioBuffer.numberOfChannels < 2) {
@@ -1240,15 +1397,20 @@ function startPlay(mode) {
     }
   }
 
-  let playBuf;
+  // 建立 EQ 節點鏈
+  createEQNodes();
+
+  let playBuf, bufOffset;
   if (mode === 'fx') {
     playBuf = buildFxBuffer();
+    bufOffset = offsetSec;
     const fxLabels = getActiveEffectLabels();
     $('playModeLabel').textContent = fxLabels.length ? fxLabels.join(' · ') : '無效果開啟';
     $('playFxBtn').textContent = '⏸';
     $('playBtn').textContent = '▶';
   } else {
     playBuf = audioBuffer;
+    bufOffset = s + offsetSec;
     $('playModeLabel').textContent = '';
     $('playBtn').textContent = '⏸';
     $('playFxBtn').textContent = '▶';
@@ -1256,15 +1418,19 @@ function startPlay(mode) {
 
   sourceNode = audioCtx.createBufferSource();
   sourceNode.buffer = playBuf;
-  sourceNode.connect(audioCtx.destination);
-  sourceNode.start(0, mode === 'fx' ? 0 : s, selDur);
+  // 路由：source → EQ鏈 → destination
+  sourceNode.connect(getEQInput());
+  getEQOutput().connect(audioCtx.destination);
+  sourceNode.start(0, bufOffset, remaining);
+
+  // 記錄播放起始，考慮 seek offset
+  startTime = audioCtx.currentTime - offsetSec;
 
   sourceNode.onended = () => {
     isPlaying = false;
     $('playBtn').textContent = '▶';
     $('playFxBtn').textContent = '▶';
     cancelAnimationFrame(playbackRAF);
-    // 滿格再歸零
     if (mode === 'fx') {
       $('playFxFill').style.width = '100%';
       $('playFxTime').textContent = formatTimeDetailed(selDur) + ' / ' + formatTimeDetailed(selDur);
@@ -1283,7 +1449,6 @@ function startPlay(mode) {
     }
   };
 
-  startTime = audioCtx.currentTime;
   isPlaying = true;
   updatePlayback();
 }
@@ -1437,10 +1602,20 @@ function processAudio(mode) {
       const baseName = ($('fileName').textContent || 'audio').replace(/\.[^.]+$/, '');
       link.href = url;
       link.download = `${baseName}_${suffixes.join('_')}.wav`;
-      $('downloadInfo').textContent =
-        `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式` +
-        (opts.vocalRemove ? ' · 已去除人聲' : '') +
-        (isVideo ? ' · 從影片提取' : '');
+      $('downloadInfo').textContent = `時長：${formatTimeDetailed(newBuf.duration)} · WAV 格式`;
+
+      // 顯示效果清單
+      const fxLabels = getActiveEffectLabels();
+      const summaryEl = $('downloadEffectsSummary');
+      if (fxLabels.length) {
+        summaryEl.style.display = 'block';
+        summaryEl.innerHTML = '<strong style="color:var(--accent2);">已套用效果：</strong><br>' +
+          fxLabels.map(l => `✓ ${l}`).join('<br>');
+      } else {
+        summaryEl.style.display = 'block';
+        summaryEl.innerHTML = '此檔案為<strong>原聲</strong>，未套用任何效果';
+      }
+
       $('downloadArea').style.display = 'block';
       $('downloadArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
