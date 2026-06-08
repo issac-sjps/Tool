@@ -785,7 +785,18 @@
     margin-bottom: 10px;
   }
 
-  .vocal-btn {
+  .trange-start::-webkit-slider-thumb,
+  .trange-end::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid var(--accent);
+    cursor: pointer;
+    pointer-events: all;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+  .trange-end::-webkit-slider-thumb { border-color: var(--accent2); }
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2131,76 +2142,196 @@ function renderTrackList() {
 
   list.innerHTML = mergeTracks.map((t, i) => {
     const trimDur = t.duration * (t.trimEnd - t.trimStart);
+    const sP = Math.round(t.trimStart * 100);
+    const eP = Math.round(t.trimEnd * 100);
     return `
-    <div class="track-item" draggable="true"
-      ondragstart="trackDragStart(event,${i})"
-      ondragover="trackDragOver(event,${i})"
-      ondrop="trackDrop(event,${i})"
-      ondragend="trackDragEnd()"
-      id="track-${i}">
-      <div class="track-drag-handle" title="拖曳排序">⠿</div>
-      <div class="track-num">${i+1}</div>
-      <div class="track-info">
-        <div class="track-name" title="${t.name}">${t.name}</div>
-        <div class="track-meta">
-          總長 ${formatTime(t.duration)} · 選取 <span id="trim-dur-${i}">${formatTime(trimDur)}</span>
-          &nbsp;|&nbsp; 起 <span id="trim-s-${i}">${formatTimeDetailed(t.trimStart * t.duration)}</span>
-          → 終 <span id="trim-e-${i}">${formatTimeDetailed(t.trimEnd * t.duration)}</span>
+    <div class="track-item" id="track-${i}" style="flex-direction:column; align-items:stretch; cursor:default; padding:0; overflow:hidden;">
+
+      <!-- Header row -->
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:grab;"
+        draggable="true"
+        ondragstart="trackDragStart(event,${i})"
+        ondragover="trackDragOver(event,${i})"
+        ondrop="trackDrop(event,${i})"
+        ondragend="trackDragEnd()">
+        <div class="track-drag-handle" title="拖曳排序">⠿</div>
+        <div class="track-num">${i+1}</div>
+        <div class="track-info" style="flex:1; min-width:0;">
+          <div class="track-name" title="${t.name}">${t.name}</div>
+          <div class="track-meta">
+            總長 ${formatTimeDetailed(t.duration)}
+            &nbsp;·&nbsp; 選取 <span id="tdur-${i}">${formatTimeDetailed(trimDur)}</span>
+            &nbsp;(<span id="ts-${i}">${formatTimeDetailed(t.trimStart * t.duration)}</span>
+            → <span id="te-${i}">${formatTimeDetailed(t.trimEnd * t.duration)}</span>)
+          </div>
         </div>
-        <div style="display:flex; gap:6px; margin-top:6px; align-items:center;">
-          <span style="font-size:10px; color:var(--text3);">剪取</span>
-          <input type="range" min="0" max="100" value="${Math.round(t.trimStart*100)}" step="0.5"
-            style="width:60px; -webkit-appearance:none; background:var(--surface2); height:3px; border-radius:100px; cursor:pointer; outline:none;"
-            oninput="updateTrim(${i},'start',this.value)"
-            title="起點">
-          <input type="range" min="0" max="100" value="${Math.round(t.trimEnd*100)}" step="0.5"
-            style="width:60px; -webkit-appearance:none; background:var(--surface2); height:3px; border-radius:100px; cursor:pointer; outline:none;"
-            oninput="updateTrim(${i},'end',this.value)"
-            title="終點">
+        <div class="track-actions">
+          <button class="track-action-btn" id="tplay-${i}" onclick="previewTrack(${i},event)" title="試聽此片段">▶</button>
+          <button class="track-action-btn danger" onclick="removeTrack(${i})" title="移除">✕</button>
         </div>
       </div>
-      <div class="track-actions">
-        <button class="track-action-btn" onclick="previewTrack(${i})" title="試聽">▶</button>
-        <button class="track-action-btn danger" onclick="removeTrack(${i})" title="移除">✕</button>
+
+      <!-- Waveform -->
+      <div style="padding:0 14px 8px; background:var(--surface2); border-top:1px solid var(--border);">
+        <canvas id="twav-${i}" style="width:100%; height:72px; display:block; border-radius:8px; cursor:crosshair; margin-top:8px;"
+          onclick="trackWaveClick(event,${i})"></canvas>
+
+        <!-- Dual range sliders -->
+        <div style="position:relative; height:28px; margin-top:4px;">
+          <div style="position:absolute; height:3px; width:100%; background:var(--surface); border-radius:100px; top:50%; transform:translateY(-50%);"></div>
+          <div id="trf-${i}" style="position:absolute; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:100px; top:50%; transform:translateY(-50%); left:${sP}%; width:${eP-sP}%;"></div>
+          <input type="range" min="0" max="100" value="${sP}" step="0.2"
+            style="position:absolute; width:100%; -webkit-appearance:none; background:transparent; z-index:2; pointer-events:none; top:0;"
+            oninput="trackHandleInput(${i},'start',this.value)"
+            class="trange-start" id="ths-${i}">
+          <input type="range" min="0" max="100" value="${eP}" step="0.2"
+            style="position:absolute; width:100%; -webkit-appearance:none; background:transparent; z-index:3; pointer-events:none; top:0;"
+            oninput="trackHandleInput(${i},'end',this.value)"
+            class="trange-end" id="the-${i}">
+        </div>
+
+        <!-- Time row -->
+        <div style="display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:10px; color:var(--text3); margin-top:2px; padding:0 2px;">
+          <span id="tsl-${i}">${formatTimeDetailed(t.trimStart * t.duration)}</span>
+          <span id="tel-${i}">${formatTimeDetailed(t.trimEnd * t.duration)}</span>
+        </div>
       </div>
+
     </div>`;
   }).join('');
 
-  // update summary
-  const total = mergeTracks.reduce((s, t) => s + t.duration * (t.trimEnd - t.trimStart), 0);
-  document.getElementById('mergeTrackCount').textContent = `共 ${mergeTracks.length} 個檔案`;
-  document.getElementById('mergeTotalDur').textContent = `總時長：${formatTimeDetailed(total)}`;
+  // Draw waveforms after DOM is ready
+  setTimeout(() => {
+    mergeTracks.forEach((t, i) => {
+      const canvas = document.getElementById(`twav-${i}`);
+      if (canvas) drawTrackWaveform(canvas, t);
+    });
+    // Enable pointer events on range thumbs
+    document.querySelectorAll('.trange-start, .trange-end').forEach(r => {
+      r.style.pointerEvents = 'none';
+      r.addEventListener('mousedown', e => e.stopPropagation(), true);
+      // Make only the thumb interactive
+      r.style.pointerEvents = 'all';
+    });
+  }, 0);
 
-  // re-style range thumbs via inline
-  list.querySelectorAll('input[type=range]').forEach(r => {
-    r.addEventListener('mousedown', e => e.stopPropagation());
-  });
-
-  // hide preview if tracks changed
+  updateMergeSummary();
   mergeBuffer = null;
   document.getElementById('mergePreviewBar').style.display = 'none';
   stopMergePlay();
 }
 
-function updateTrim(idx, which, val) {
+function drawTrackWaveform(canvas, track) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth || 600;
+  const h = 72;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // build peaks
+  const data = track.buffer.getChannelData(0);
+  const step = Math.ceil(data.length / w);
+  const peaks = new Float32Array(w);
+  for (let i = 0; i < w; i++) {
+    let max = 0;
+    const base = i * step;
+    for (let j = 0; j < step; j++) { const v = Math.abs(data[base+j]||0); if(v>max) max=v; }
+    peaks[i] = max;
+  }
+  track._peaks = peaks;
+  drawTrackWaveformSelection(canvas, track);
+}
+
+function drawTrackWaveformSelection(canvas, track) {
+  if (!track._peaks) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth || 600;
+  const h = 72;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#13131a';
+  ctx.fillRect(0, 0, w, h);
+  const sP = track.trimStart;
+  const eP = track.trimEnd;
+  for (let i = 0; i < w; i++) {
+    const barH = track._peaks[i] * h * 0.85;
+    const y = (h - barH) / 2;
+    const prog = i / w;
+    if (prog >= sP && prog <= eP) {
+      const t = (eP > sP) ? (prog - sP) / (eP - sP) : 0;
+      const r = Math.round(124 + (78-124)*t), g = Math.round(108 + (205-108)*t), b = Math.round(240 + (196-240)*t);
+      ctx.fillStyle = `rgba(${r},${g},${b},0.9)`;
+    } else {
+      ctx.fillStyle = 'rgba(124,108,240,0.18)';
+    }
+    ctx.fillRect(i, y, 1, barH);
+  }
+  // markers
+  ctx.strokeStyle = '#7c6cf0'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(sP*w,0); ctx.lineTo(sP*w,h); ctx.stroke();
+  ctx.strokeStyle = '#4ecdc4';
+  ctx.beginPath(); ctx.moveTo(eP*w,0); ctx.lineTo(eP*w,h); ctx.stroke();
+}
+
+function trackHandleInput(idx, which, val) {
   const t = mergeTracks[idx];
   const v = parseFloat(val) / 100;
-  if (which === 'start') {
-    t.trimStart = Math.min(v, t.trimEnd - 0.01);
-  } else {
-    t.trimEnd = Math.max(v, t.trimStart + 0.01);
-  }
+  if (which === 'start') t.trimStart = Math.min(v, t.trimEnd - 0.005);
+  else                   t.trimEnd   = Math.max(v, t.trimStart + 0.005);
+  refreshTrackUI(idx);
+}
+
+function trackWaveClick(e, idx) {
+  const t = mergeTracks[idx];
+  const canvas = document.getElementById(`twav-${idx}`);
+  const rect = canvas.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const mid = (t.trimStart + t.trimEnd) / 2;
+  if (pct < mid) { t.trimStart = Math.min(pct, t.trimEnd - 0.005); }
+  else           { t.trimEnd   = Math.max(pct, t.trimStart + 0.005); }
+  // sync sliders
+  const hs = document.getElementById(`ths-${idx}`);
+  const he = document.getElementById(`the-${idx}`);
+  if (hs) hs.value = t.trimStart * 100;
+  if (he) he.value = t.trimEnd * 100;
+  refreshTrackUI(idx);
+}
+
+function refreshTrackUI(idx) {
+  const t = mergeTracks[idx];
   const trimDur = t.duration * (t.trimEnd - t.trimStart);
-  const el = document.getElementById(`trim-dur-${idx}`);
-  if (el) el.textContent = formatTime(trimDur);
-  const es = document.getElementById(`trim-s-${idx}`);
-  if (es) es.textContent = formatTimeDetailed(t.trimStart * t.duration);
-  const ee = document.getElementById(`trim-e-${idx}`);
-  if (ee) ee.textContent = formatTimeDetailed(t.trimEnd * t.duration);
-  // update summary total
-  const total = mergeTracks.reduce((s, t) => s + t.duration * (t.trimEnd - t.trimStart), 0);
-  document.getElementById('mergeTotalDur').textContent = `總時長：${formatTimeDetailed(total)}`;
+  const sDur = formatTimeDetailed(t.trimStart * t.duration);
+  const eDur = formatTimeDetailed(t.trimEnd * t.duration);
+
+  const elems = {
+    [`tdur-${idx}`]: formatTimeDetailed(trimDur),
+    [`ts-${idx}`]: sDur, [`te-${idx}`]: eDur,
+    [`tsl-${idx}`]: sDur, [`tel-${idx}`]: eDur,
+  };
+  for (const [id, val] of Object.entries(elems)) {
+    const el = document.getElementById(id); if (el) el.textContent = val;
+  }
+  // range fill
+  const fill = document.getElementById(`trf-${idx}`);
+  if (fill) {
+    fill.style.left = (t.trimStart * 100) + '%';
+    fill.style.width = ((t.trimEnd - t.trimStart) * 100) + '%';
+  }
+  // redraw waveform
+  const canvas = document.getElementById(`twav-${idx}`);
+  if (canvas) drawTrackWaveformSelection(canvas, t);
+  updateMergeSummary();
   mergeBuffer = null;
+}
+
+function updateMergeSummary() {
+  const total = mergeTracks.reduce((s, t) => s + t.duration * (t.trimEnd - t.trimStart), 0);
+  const el1 = document.getElementById('mergeTrackCount');
+  const el2 = document.getElementById('mergeTotalDur');
+  if (el1) el1.textContent = `共 ${mergeTracks.length} 個檔案`;
+  if (el2) el2.textContent = `總時長：${formatTimeDetailed(total)}`;
 }
 
 function removeTrack(idx) {
@@ -2224,8 +2355,17 @@ function trackDragEnd() { dragIdx = null; document.querySelectorAll('.track-item
 
 // Single track preview
 let trackPreviewSource = null;
-function previewTrack(idx) {
-  if (trackPreviewSource) { try { trackPreviewSource.stop(); } catch(e){} trackPreviewSource = null; }
+let trackPreviewIdx = -1;
+function previewTrack(idx, e) {
+  if (e) e.stopPropagation();
+  // Stop any playing
+  if (trackPreviewSource) {
+    try { trackPreviewSource.stop(); } catch(ex){}
+    trackPreviewSource = null;
+    const prevBtn = document.getElementById(`tplay-${trackPreviewIdx}`);
+    if (prevBtn) prevBtn.textContent = '▶';
+    if (trackPreviewIdx === idx) { trackPreviewIdx = -1; return; }
+  }
   const ctx = getMergeCtx();
   if (ctx.state === 'suspended') ctx.resume();
   const t = mergeTracks[idx];
@@ -2236,6 +2376,14 @@ function previewTrack(idx) {
   const dur = t.duration * (t.trimEnd - t.trimStart);
   src.start(0, s, dur);
   trackPreviewSource = src;
+  trackPreviewIdx = idx;
+  const btn = document.getElementById(`tplay-${idx}`);
+  if (btn) btn.textContent = '⏹';
+  src.onended = () => {
+    trackPreviewSource = null;
+    trackPreviewIdx = -1;
+    if (btn) btn.textContent = '▶';
+  };
 }
 
 // Build merged AudioBuffer
