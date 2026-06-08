@@ -815,10 +815,169 @@
     box-shadow: 0 0 0 1px rgba(124,108,240,0.15) inset;
   }
 
+  /* ── Tabs ── */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .tab-btn:hover:not(.tab-btn--active) {
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+  }
+  .tab-btn--active {
+    background: linear-gradient(135deg, rgba(124,108,240,0.25), rgba(78,205,196,0.15));
+    color: var(--text);
+    border: 1px solid rgba(124,108,240,0.3);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── Merge page ── */
+  .merge-upload-zone {
+    border: 1.5px dashed var(--border2);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 16px;
+  }
+  .merge-upload-zone:hover { border-color: var(--accent); background: rgba(124,108,240,0.04); }
+
+  .track-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+
+  .track-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    cursor: grab;
+    user-select: none;
+  }
+  .track-item:active { cursor: grabbing; }
+  .track-item.drag-over-track { border-color: var(--accent); background: rgba(124,108,240,0.06); }
+  .track-item.dragging { opacity: 0.4; }
+
+  .track-drag-handle {
+    color: var(--text3);
+    font-size: 16px;
+    cursor: grab;
+    flex-shrink: 0;
+    padding: 4px;
+  }
+  .track-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 18px;
+    flex-shrink: 0;
+  }
+  .track-info { flex: 1; min-width: 0; }
+  .track-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .track-meta {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'Space Mono', monospace;
+    margin-top: 2px;
+  }
+
+  /* Track trim range */
+  .track-trim {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .track-trim input[type=range] {
+    width: 70px;
+    -webkit-appearance: none;
+    background: var(--surface2);
+    height: 3px;
+    border-radius: 100px;
+    outline: none;
+    cursor: pointer;
+  }
+  .track-trim input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid white;
+  }
+  .track-trim-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+
+  .track-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .track-action-btn {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .track-action-btn:hover { border-color: var(--accent); color: var(--text); }
+  .track-action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  .merge-summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .merge-total { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--accent2); }
+
   @media (max-width: 500px) {
     .time-inputs-row, .options-grid, .actions-row {
       grid-template-columns: 1fr;
     }
+    .tab-btn { font-size: 12px; padding: 9px 12px; }
   }
 </style>
 </head>
@@ -830,11 +989,24 @@
   <header>
     <div class="logo-badge">
       <div class="logo-dot"></div>
-      音頻工具 · AUDIO CUTTER
+      音頻工具 · AUDIO TOOLS
     </div>
-    <h1>線上<em>剪輯</em>音樂 / 提取影片聲音</h1>
-    <p class="subtitle">音頻剪輯 · 從影片萃取聲音 · 免費、快速、完全在瀏覽器完成</p>
+    <h1>線上<em>音頻工具箱</em></h1>
+    <p class="subtitle">剪輯 · 合併 · 提取影片聲音 · 免費、完全在瀏覽器完成</p>
   </header>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn tab-btn--active" onclick="switchTab('cut')">
+      ✂️ 剪輯 / 提取
+    </button>
+    <button class="tab-btn" onclick="switchTab('merge')">
+      🔗 合併音樂
+    </button>
+  </div>
+
+  <!-- ══ TAB: 剪輯 ══ -->
+  <div class="tab-pane active" id="tab-cut">
 
   <!-- Upload -->
   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
@@ -1097,6 +1269,61 @@
       </div>
     </div>
   </div>
+
+  </div><!-- end tab-cut -->
+
+  <!-- ══ TAB: 合併 ══ -->
+  <div class="tab-pane" id="tab-merge">
+
+    <!-- 上傳區 -->
+    <div class="merge-upload-zone" id="mergeUploadZone" onclick="document.getElementById('mergeFileInput').click()">
+      <div style="font-size:32px; margin-bottom:8px;">🎵</div>
+      <div style="font-size:16px; font-weight:500; margin-bottom:6px;">點擊或拖放音頻 / 影片檔案</div>
+      <div style="font-size:13px; color:var(--text2);">可一次選多個檔案 · 支援 MP3、WAV、MP4、MOV 等所有格式</div>
+      <input type="file" id="mergeFileInput" accept="audio/*,video/*" multiple style="display:none">
+    </div>
+
+    <!-- 空白提示 -->
+    <div id="mergeEmpty" style="text-align:center; padding:32px; color:var(--text3); font-size:14px;">
+      尚未添加任何檔案 · 上傳後可拖曳調整順序
+    </div>
+
+    <!-- 軌道清單 -->
+    <div class="track-list" id="trackList" style="display:none;"></div>
+
+    <!-- 合併摘要 + 動作 -->
+    <div id="mergeSummaryBar" style="display:none;">
+      <div class="merge-summary">
+        <div>
+          <div style="font-size:13px; font-weight:500;" id="mergeTrackCount">共 0 個檔案</div>
+          <div class="merge-total" id="mergeTotalDur">總時長：0:00.0</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button onclick="previewMerge()" class="btn-main btn-remove" style="padding:10px 18px; font-size:13px;">
+            ▶ 預覽合併
+          </button>
+          <button onclick="doMerge()" class="btn-main btn-extract" style="padding:10px 18px; font-size:13px;">
+            🔗 合併並下載
+          </button>
+        </div>
+      </div>
+
+      <!-- 預覽播放 -->
+      <div id="mergePreviewBar" style="display:none; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:16px;">
+        <div style="font-size:11px; color:var(--accent2); font-family:'Space Mono',monospace; margin-bottom:8px;">▶ 合併預覽試聽</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="btn-play" id="mergePlayBtn" onclick="toggleMergePlay()" style="width:40px; height:40px; font-size:16px;">▶</button>
+          <div style="flex:1;">
+            <div class="play-bar-bg" onclick="seekMerge(event)">
+              <div class="play-bar-fill" id="mergePlayFill" style="background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+            </div>
+          </div>
+          <div class="play-time" id="mergePlayTime" style="min-width:100px; text-align:right;">0:00.0</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end tab-merge -->
 
   <footer>
     完全在你的瀏覽器中處理 · 檔案不會上傳到任何伺服器 · 完全私密
@@ -1836,7 +2063,283 @@ function encodeWAV(buffer) {
   return new Blob([wavBuf], { type: 'audio/wav' });
 }
 
-// Waveform click to set start/end
+// ── Tab switching ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('tab-btn--active');
+}
+
+// ── Merge page ──
+let mergeTracks = []; // [{name, duration, buffer, trimStart(0-1), trimEnd(0-1)}]
+let mergeBuffer = null;
+let mergeSource = null;
+let mergeIsPlaying = false;
+let mergeStartTime = 0;
+let mergeRAF = null;
+let mergeAudioCtx = null;
+
+// Drag-and-drop upload for merge
+const mz = document.getElementById('mergeUploadZone');
+mz.addEventListener('dragover', e => { e.preventDefault(); mz.style.borderColor = 'var(--accent)'; });
+mz.addEventListener('dragleave', () => { mz.style.borderColor = ''; });
+mz.addEventListener('drop', e => {
+  e.preventDefault(); mz.style.borderColor = '';
+  [...e.dataTransfer.files].forEach(f => {
+    if (f.type.startsWith('audio/') || f.type.startsWith('video/')) addMergeFile(f);
+  });
+});
+document.getElementById('mergeFileInput').addEventListener('change', e => {
+  [...e.target.files].forEach(f => addMergeFile(f));
+  e.target.value = '';
+});
+
+function getMergeCtx() {
+  if (!mergeAudioCtx) mergeAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return mergeAudioCtx;
+}
+
+function addMergeFile(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const ctx = getMergeCtx();
+    ctx.decodeAudioData(ev.target.result.slice(0), buf => {
+      mergeTracks.push({
+        name: file.name,
+        duration: buf.duration,
+        buffer: buf,
+        trimStart: 0,
+        trimEnd: 1,
+      });
+      renderTrackList();
+    }, err => {
+      alert('無法讀取：' + file.name + '\n' + (err?.message || ''));
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderTrackList() {
+  const list = document.getElementById('trackList');
+  const empty = document.getElementById('mergeEmpty');
+  const bar = document.getElementById('mergeSummaryBar');
+  if (!mergeTracks.length) {
+    list.style.display = 'none'; empty.style.display = 'block'; bar.style.display = 'none'; return;
+  }
+  list.style.display = 'flex'; empty.style.display = 'none'; bar.style.display = 'block';
+
+  list.innerHTML = mergeTracks.map((t, i) => {
+    const trimDur = t.duration * (t.trimEnd - t.trimStart);
+    return `
+    <div class="track-item" draggable="true"
+      ondragstart="trackDragStart(event,${i})"
+      ondragover="trackDragOver(event,${i})"
+      ondrop="trackDrop(event,${i})"
+      ondragend="trackDragEnd()"
+      id="track-${i}">
+      <div class="track-drag-handle" title="拖曳排序">⠿</div>
+      <div class="track-num">${i+1}</div>
+      <div class="track-info">
+        <div class="track-name" title="${t.name}">${t.name}</div>
+        <div class="track-meta">
+          總長 ${formatTime(t.duration)} · 選取 <span id="trim-dur-${i}">${formatTime(trimDur)}</span>
+          &nbsp;|&nbsp; 起 <span id="trim-s-${i}">${formatTimeDetailed(t.trimStart * t.duration)}</span>
+          → 終 <span id="trim-e-${i}">${formatTimeDetailed(t.trimEnd * t.duration)}</span>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:6px; align-items:center;">
+          <span style="font-size:10px; color:var(--text3);">剪取</span>
+          <input type="range" min="0" max="100" value="${Math.round(t.trimStart*100)}" step="0.5"
+            style="width:60px; -webkit-appearance:none; background:var(--surface2); height:3px; border-radius:100px; cursor:pointer; outline:none;"
+            oninput="updateTrim(${i},'start',this.value)"
+            title="起點">
+          <input type="range" min="0" max="100" value="${Math.round(t.trimEnd*100)}" step="0.5"
+            style="width:60px; -webkit-appearance:none; background:var(--surface2); height:3px; border-radius:100px; cursor:pointer; outline:none;"
+            oninput="updateTrim(${i},'end',this.value)"
+            title="終點">
+        </div>
+      </div>
+      <div class="track-actions">
+        <button class="track-action-btn" onclick="previewTrack(${i})" title="試聽">▶</button>
+        <button class="track-action-btn danger" onclick="removeTrack(${i})" title="移除">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // update summary
+  const total = mergeTracks.reduce((s, t) => s + t.duration * (t.trimEnd - t.trimStart), 0);
+  document.getElementById('mergeTrackCount').textContent = `共 ${mergeTracks.length} 個檔案`;
+  document.getElementById('mergeTotalDur').textContent = `總時長：${formatTimeDetailed(total)}`;
+
+  // re-style range thumbs via inline
+  list.querySelectorAll('input[type=range]').forEach(r => {
+    r.addEventListener('mousedown', e => e.stopPropagation());
+  });
+
+  // hide preview if tracks changed
+  mergeBuffer = null;
+  document.getElementById('mergePreviewBar').style.display = 'none';
+  stopMergePlay();
+}
+
+function updateTrim(idx, which, val) {
+  const t = mergeTracks[idx];
+  const v = parseFloat(val) / 100;
+  if (which === 'start') {
+    t.trimStart = Math.min(v, t.trimEnd - 0.01);
+  } else {
+    t.trimEnd = Math.max(v, t.trimStart + 0.01);
+  }
+  const trimDur = t.duration * (t.trimEnd - t.trimStart);
+  const el = document.getElementById(`trim-dur-${idx}`);
+  if (el) el.textContent = formatTime(trimDur);
+  const es = document.getElementById(`trim-s-${idx}`);
+  if (es) es.textContent = formatTimeDetailed(t.trimStart * t.duration);
+  const ee = document.getElementById(`trim-e-${idx}`);
+  if (ee) ee.textContent = formatTimeDetailed(t.trimEnd * t.duration);
+  // update summary total
+  const total = mergeTracks.reduce((s, t) => s + t.duration * (t.trimEnd - t.trimStart), 0);
+  document.getElementById('mergeTotalDur').textContent = `總時長：${formatTimeDetailed(total)}`;
+  mergeBuffer = null;
+}
+
+function removeTrack(idx) {
+  mergeTracks.splice(idx, 1);
+  renderTrackList();
+}
+
+// Drag-reorder
+let dragIdx = null;
+function trackDragStart(e, i) { dragIdx = i; setTimeout(() => document.getElementById(`track-${i}`)?.classList.add('dragging'), 0); }
+function trackDragOver(e, i) { e.preventDefault(); document.querySelectorAll('.track-item').forEach(el => el.classList.remove('drag-over-track')); document.getElementById(`track-${i}`)?.classList.add('drag-over-track'); }
+function trackDrop(e, i) {
+  e.preventDefault();
+  if (dragIdx === null || dragIdx === i) return;
+  const moved = mergeTracks.splice(dragIdx, 1)[0];
+  mergeTracks.splice(i, 0, moved);
+  dragIdx = null;
+  renderTrackList();
+}
+function trackDragEnd() { dragIdx = null; document.querySelectorAll('.track-item').forEach(el => el.classList.remove('dragging','drag-over-track')); }
+
+// Single track preview
+let trackPreviewSource = null;
+function previewTrack(idx) {
+  if (trackPreviewSource) { try { trackPreviewSource.stop(); } catch(e){} trackPreviewSource = null; }
+  const ctx = getMergeCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+  const t = mergeTracks[idx];
+  const src = ctx.createBufferSource();
+  src.buffer = t.buffer;
+  src.connect(ctx.destination);
+  const s = t.trimStart * t.duration;
+  const dur = t.duration * (t.trimEnd - t.trimStart);
+  src.start(0, s, dur);
+  trackPreviewSource = src;
+}
+
+// Build merged AudioBuffer
+function buildMergeBuffer() {
+  const ctx = getMergeCtx();
+  const sampleRate = ctx.sampleRate;
+  const totalSamples = mergeTracks.reduce((acc, t) => {
+    const dur = t.duration * (t.trimEnd - t.trimStart);
+    return acc + Math.floor(dur * sampleRate);
+  }, 0);
+  if (totalSamples <= 0) return null;
+  const maxCh = Math.max(...mergeTracks.map(t => t.buffer.numberOfChannels));
+  const out = ctx.createBuffer(Math.min(maxCh, 2), totalSamples, sampleRate);
+  let offset = 0;
+  for (const t of mergeTracks) {
+    const s = Math.floor(t.trimStart * t.duration * sampleRate);
+    const len = Math.floor(t.duration * (t.trimEnd - t.trimStart) * sampleRate);
+    const srcCh = t.buffer.numberOfChannels;
+    for (let c = 0; c < out.numberOfChannels; c++) {
+      const srcData = t.buffer.getChannelData(Math.min(c, srcCh - 1));
+      const destData = out.getChannelData(c);
+      for (let i = 0; i < len; i++) destData[offset + i] = srcData[s + i] || 0;
+    }
+    offset += len;
+  }
+  return out;
+}
+
+function previewMerge() {
+  stopMergePlay();
+  mergeBuffer = buildMergeBuffer();
+  if (!mergeBuffer) { alert('沒有可合併的檔案'); return; }
+  document.getElementById('mergePreviewBar').style.display = 'block';
+  document.getElementById('mergePlayTime').textContent = formatTimeDetailed(mergeBuffer.duration);
+  toggleMergePlay();
+}
+
+function toggleMergePlay() {
+  if (mergeIsPlaying) stopMergePlay();
+  else startMergePlay(0);
+}
+
+function startMergePlay(fromSec) {
+  if (!mergeBuffer) return;
+  const ctx = getMergeCtx();
+  if (ctx.state === 'suspended') ctx.resume();
+  stopMergePlay(true);
+  mergeSource = ctx.createBufferSource();
+  mergeSource.buffer = mergeBuffer;
+  mergeSource.connect(ctx.destination);
+  mergeSource.start(0, fromSec);
+  mergeStartTime = ctx.currentTime - fromSec;
+  mergeIsPlaying = true;
+  document.getElementById('mergePlayBtn').textContent = '⏸';
+  mergeSource.onended = () => {
+    mergeIsPlaying = false;
+    document.getElementById('mergePlayBtn').textContent = '▶';
+    cancelAnimationFrame(mergeRAF);
+    document.getElementById('mergePlayFill').style.width = '0%';
+    document.getElementById('mergePlayTime').textContent = formatTimeDetailed(mergeBuffer.duration);
+  };
+  updateMergePlayback();
+}
+
+function stopMergePlay(silent) {
+  if (mergeSource) { try { mergeSource.stop(); } catch(e){} mergeSource = null; }
+  mergeIsPlaying = false;
+  cancelAnimationFrame(mergeRAF);
+  if (!silent) {
+    document.getElementById('mergePlayBtn').textContent = '▶';
+    document.getElementById('mergePlayFill').style.width = '0%';
+  }
+}
+
+function seekMerge(e) {
+  if (!mergeBuffer) return;
+  const bar = e.currentTarget;
+  const rect = bar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  startMergePlay(pct * mergeBuffer.duration);
+}
+
+function updateMergePlayback() {
+  if (!mergeIsPlaying || !mergeBuffer) return;
+  const elapsed = getMergeCtx().currentTime - mergeStartTime;
+  const pct = Math.min(100, (elapsed / mergeBuffer.duration) * 100);
+  document.getElementById('mergePlayFill').style.width = pct + '%';
+  document.getElementById('mergePlayTime').textContent =
+    formatTimeDetailed(Math.min(elapsed, mergeBuffer.duration)) + ' / ' + formatTimeDetailed(mergeBuffer.duration);
+  if (elapsed < mergeBuffer.duration) mergeRAF = requestAnimationFrame(updateMergePlayback);
+}
+
+function doMerge() {
+  mergeBuffer = buildMergeBuffer();
+  if (!mergeBuffer) { alert('沒有可合併的檔案'); return; }
+  const blob = encodeWAV(mergeBuffer);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '合併音樂_' + new Date().toISOString().slice(0,10) + '.wav';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 $('waveformCanvas').addEventListener('click', e => {
   if (!audioBuffer) return;
   const rect = e.currentTarget.getBoundingClientRect();
