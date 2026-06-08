@@ -2171,28 +2171,13 @@ function renderTrackList() {
         </div>
       </div>
 
-      <!-- Waveform -->
-      <div style="padding:0 14px 8px; background:var(--surface2); border-top:1px solid var(--border);">
-        <canvas id="twav-${i}" style="width:100%; height:72px; display:block; border-radius:8px; cursor:crosshair; margin-top:8px;"
-          onclick="trackWaveClick(event,${i})"></canvas>
-
-        <!-- Dual range sliders -->
-        <div style="position:relative; height:28px; margin-top:4px;">
-          <div style="position:absolute; height:3px; width:100%; background:var(--surface); border-radius:100px; top:50%; transform:translateY(-50%);"></div>
-          <div id="trf-${i}" style="position:absolute; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:100px; top:50%; transform:translateY(-50%); left:${sP}%; width:${eP-sP}%;"></div>
-          <input type="range" min="0" max="100" value="${sP}" step="0.2"
-            style="position:absolute; width:100%; -webkit-appearance:none; background:transparent; z-index:2; pointer-events:none; top:0;"
-            oninput="trackHandleInput(${i},'start',this.value)"
-            class="trange-start" id="ths-${i}">
-          <input type="range" min="0" max="100" value="${eP}" step="0.2"
-            style="position:absolute; width:100%; -webkit-appearance:none; background:transparent; z-index:3; pointer-events:none; top:0;"
-            oninput="trackHandleInput(${i},'end',this.value)"
-            class="trange-end" id="the-${i}">
-        </div>
-
+      <!-- Waveform + handles (all-in-one canvas) -->
+      <div style="padding:0 14px 12px; background:var(--surface2); border-top:1px solid var(--border);">
+        <canvas id="twav-${i}" style="width:100%; height:100px; display:block; border-radius:8px; margin-top:8px; cursor:crosshair; touch-action:none;"></canvas>
         <!-- Time row -->
-        <div style="display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:10px; color:var(--text3); margin-top:2px; padding:0 2px;">
+        <div style="display:flex; justify-content:space-between; font-family:'Space Mono',monospace; font-size:10px; color:var(--text3); margin-top:4px; padding:0 2px;">
           <span id="tsl-${i}">${formatTimeDetailed(t.trimStart * t.duration)}</span>
+          <span style="color:var(--accent2);" id="tdur2-${i}">${formatTimeDetailed(trimDur)}</span>
           <span id="tel-${i}">${formatTimeDetailed(t.trimEnd * t.duration)}</span>
         </div>
       </div>
@@ -2204,14 +2189,10 @@ function renderTrackList() {
   setTimeout(() => {
     mergeTracks.forEach((t, i) => {
       const canvas = document.getElementById(`twav-${i}`);
-      if (canvas) drawTrackWaveform(canvas, t);
-    });
-    // Enable pointer events on range thumbs
-    document.querySelectorAll('.trange-start, .trange-end').forEach(r => {
-      r.style.pointerEvents = 'none';
-      r.addEventListener('mousedown', e => e.stopPropagation(), true);
-      // Make only the thumb interactive
-      r.style.pointerEvents = 'all';
+      if (canvas) {
+        drawTrackWaveform(canvas, t, i);
+        attachTrackCanvasDrag(canvas, i);
+      }
     });
   }, 0);
 
@@ -2221,15 +2202,16 @@ function renderTrackList() {
   stopMergePlay();
 }
 
-function drawTrackWaveform(canvas, track) {
+const HANDLE_R = 9; // handle radius px
+
+function drawTrackWaveform(canvas, track, idx) {
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.offsetWidth || 600;
-  const h = 72;
+  const h = 100;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
   // build peaks
   const data = track.buffer.getChannelData(0);
   const step = Math.ceil(data.length / w);
@@ -2241,23 +2223,30 @@ function drawTrackWaveform(canvas, track) {
     peaks[i] = max;
   }
   track._peaks = peaks;
+  track._canvasW = w;
   drawTrackWaveformSelection(canvas, track);
 }
 
 function drawTrackWaveformSelection(canvas, track) {
   if (!track._peaks) return;
   const dpr = window.devicePixelRatio || 1;
-  const w = canvas.offsetWidth || 600;
-  const h = 72;
+  const w = canvas.offsetWidth || track._canvasW || 600;
+  const WAVE_H = 72; // waveform area
+  const HANDLE_ZONE = 28; // bottom zone for handles
+  const h = WAVE_H + HANDLE_ZONE;
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Background
   ctx.fillStyle = '#13131a';
   ctx.fillRect(0, 0, w, h);
+
+  // Waveform bars
   const sP = track.trimStart;
   const eP = track.trimEnd;
   for (let i = 0; i < w; i++) {
-    const barH = track._peaks[i] * h * 0.85;
-    const y = (h - barH) / 2;
+    const barH = track._peaks[i] * WAVE_H * 0.85;
+    const y = (WAVE_H - barH) / 2;
     const prog = i / w;
     if (prog >= sP && prog <= eP) {
       const t = (eP > sP) ? (prog - sP) / (eP - sP) : 0;
@@ -2268,11 +2257,109 @@ function drawTrackWaveformSelection(canvas, track) {
     }
     ctx.fillRect(i, y, 1, barH);
   }
-  // markers
+
+  // Marker lines
   ctx.strokeStyle = '#7c6cf0'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(sP*w,0); ctx.lineTo(sP*w,h); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sP*w, 0); ctx.lineTo(sP*w, WAVE_H); ctx.stroke();
   ctx.strokeStyle = '#4ecdc4';
-  ctx.beginPath(); ctx.moveTo(eP*w,0); ctx.lineTo(eP*w,h); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(eP*w, 0); ctx.lineTo(eP*w, WAVE_H); ctx.stroke();
+
+  // Handle track (grey bar)
+  const barY = WAVE_H + HANDLE_ZONE/2;
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath(); ctx.roundRect(0, barY-2, w, 4, 2); ctx.fill();
+
+  // Selection fill on bar
+  const grad = ctx.createLinearGradient(sP*w, 0, eP*w, 0);
+  grad.addColorStop(0, '#7c6cf0');
+  grad.addColorStop(1, '#4ecdc4');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.roundRect(sP*w, barY-2, (eP-sP)*w, 4, 2); ctx.fill();
+
+  // Start handle (purple)
+  ctx.beginPath();
+  ctx.arc(sP*w, barY, HANDLE_R, 0, Math.PI*2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  ctx.strokeStyle = '#7c6cf0'; ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // End handle (teal)
+  ctx.beginPath();
+  ctx.arc(eP*w, barY, HANDLE_R, 0, Math.PI*2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  ctx.strokeStyle = '#4ecdc4'; ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+// Canvas drag logic
+function attachTrackCanvasDrag(canvas, idx) {
+  const WAVE_H = 72;
+  const HANDLE_ZONE = 28;
+  let dragging = null; // 'start' | 'end' | null
+
+  function getHandleY(canvas) {
+    return WAVE_H + HANDLE_ZONE / 2;
+  }
+
+  function getPct(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  }
+
+  function hitTest(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const t = mergeTracks[idx];
+    const w = rect.width;
+    const barY = getHandleY(canvas);
+    const dS = Math.hypot(x - t.trimStart * w, y - barY);
+    const dE = Math.hypot(x - t.trimEnd * w, y - barY);
+    if (dS <= HANDLE_R + 6 && dS <= dE) return 'start';
+    if (dE <= HANDLE_R + 6) return 'end';
+    return null;
+  }
+
+  function onDown(e) {
+    const hit = hitTest(e);
+    if (hit) {
+      dragging = hit;
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  function onMove(e) {
+    if (!dragging) {
+      // Change cursor
+      const hit = hitTest(e);
+      canvas.style.cursor = hit ? 'ew-resize' : 'crosshair';
+      return;
+    }
+    e.preventDefault();
+    const pct = getPct(e);
+    const t = mergeTracks[idx];
+    if (dragging === 'start') t.trimStart = Math.min(pct, t.trimEnd - 0.005);
+    else                      t.trimEnd   = Math.max(pct, t.trimStart + 0.005);
+    refreshTrackUI(idx);
+  }
+
+  function onUp(e) {
+    dragging = null;
+  }
+
+  canvas.addEventListener('mousedown', onDown);
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseup', onUp);
+  canvas.addEventListener('mouseleave', onUp);
+  canvas.addEventListener('touchstart', onDown, { passive: false });
+  canvas.addEventListener('touchmove', onMove, { passive: false });
+  canvas.addEventListener('touchend', onUp);
 }
 
 function trackHandleInput(idx, which, val) {
@@ -2306,20 +2393,15 @@ function refreshTrackUI(idx) {
   const eDur = formatTimeDetailed(t.trimEnd * t.duration);
 
   const elems = {
-    [`tdur-${idx}`]: formatTimeDetailed(trimDur),
+    [`tdur-${idx}`]:  formatTimeDetailed(trimDur),
+    [`tdur2-${idx}`]: formatTimeDetailed(trimDur),
     [`ts-${idx}`]: sDur, [`te-${idx}`]: eDur,
     [`tsl-${idx}`]: sDur, [`tel-${idx}`]: eDur,
   };
   for (const [id, val] of Object.entries(elems)) {
     const el = document.getElementById(id); if (el) el.textContent = val;
   }
-  // range fill
-  const fill = document.getElementById(`trf-${idx}`);
-  if (fill) {
-    fill.style.left = (t.trimStart * 100) + '%';
-    fill.style.width = ((t.trimEnd - t.trimStart) * 100) + '%';
-  }
-  // redraw waveform
+  // redraw waveform with handles
   const canvas = document.getElementById(`twav-${idx}`);
   if (canvas) drawTrackWaveformSelection(canvas, t);
   updateMergeSummary();
