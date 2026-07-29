@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>線上訪客後台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        min-height: 100vh;
+    }
+    .wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px 16px 60px;
+    }
+    h1 {
+        font-size: 1.3rem;
+        margin-bottom: 4px;
+    }
+    .sub {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-bottom: 24px;
+    }
+
+    /* --- 登入畫面 --- */
+    #loginBox {
+        max-width: 340px;
+        margin: 80px auto;
+        background: #1e293b;
+        border-radius: 12px;
+        padding: 32px 28px;
+        text-align: center;
+    }
+    #loginBox h2 { margin-top: 0; font-size: 1.1rem; }
+    #loginBox input {
+        width: 100%;
+        padding: 10px 12px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 0.95rem;
+        text-align: center;
+        letter-spacing: 2px;
+    }
+    #loginBox button {
+        width: 100%;
+        padding: 10px 12px;
+        margin-top: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #22c55e;
+        color: #06210f;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+    #loginBox button:hover { background: #16a34a; }
+    #loginError {
+        color: #f87171;
+        font-size: 0.82rem;
+        margin-top: 10px;
+        min-height: 1.2em;
+    }
+
+    /* --- 後台主畫面 --- */
+    #dashboard { display: none; }
+    .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    #logoutBtn {
+        background: #334155;
+        color: #e2e8f0;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        cursor: pointer;
+    }
+    #logoutBtn:hover { background: #475569; }
+
+    .stat {
+        display: inline-block;
+        background: #1e293b;
+        border-radius: 10px;
+        padding: 14px 20px;
+        margin-bottom: 20px;
+    }
+    .stat .num { font-size: 1.8rem; font-weight: 700; color: #4ade80; }
+    .stat .label { font-size: 0.8rem; color: #94a3b8; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #1e293b;
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 0.85rem;
+    }
+    th, td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #334155;
+    }
+    th {
+        background: #0f172a;
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    tr:last-child td { border-bottom: none; }
+    td.ip { font-family: "SF Mono", Consolas, monospace; color: #93c5fd; }
+    td.flag { font-size: 1.2rem; }
+    .empty {
+        text-align: center;
+        color: #64748b;
+        padding: 30px 0;
+    }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+    <!-- 登入畫面 -->
+    <div id="loginBox">
+        <h2>🔒 管理員登入</h2>
+        <input type="password" id="passwordInput" placeholder="請輸入密碼" autocomplete="off">
+        <button id="loginBtn">登入</button>
+        <div id="loginError"></div>
+    </div>
+
+    <!-- 後台主畫面 -->
+    <div id="dashboard">
+        <div class="topbar">
+            <div>
+                <h1>👁️ 線上訪客即時名單</h1>
+                <div class="sub">每 30 秒自動更新，超過 90 秒未回報視為離線</div>
+            </div>
+            <button id="logoutBtn">登出</button>
+        </div>
+
+        <div class="stat">
+            <div class="num" id="statCount">0</div>
+            <div class="label">目前線上人數</div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>國家</th>
+                    <th>城市</th>
+                    <th>IP</th>
+                    <th>最後回報</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr><td colspan="4" class="empty">讀取中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+        getDatabase,
+        ref,
+        onValue,
+        off
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // === 跟 firebase-counter.js 使用同一份設定 ===
+    const firebaseConfig = {
+        apiKey: "AIzaSyDqeEY0iqznnncUoL1_dCK9EXVUEZOhrFg",
+        authDomain: "sjps-official.firebaseapp.com",
+        databaseURL: "https://sjps-official-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "sjps-official",
+        storageBucket: "sjps-official.firebasestorage.app",
+        messagingSenderId: "447778086897",
+        appId: "1:447778086897:web:5b61eead3bebc418fcae50",
+        measurementId: "G-SJCYYRL1Z6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 簡單密碼保護（僅作為畫面門檻，不是真正的資料庫層級保護，請見教學文件說明）
+    const SIMPLE_PASSWORD = "admin";
+
+    const STALE_THRESHOLD = 90 * 1000;
+    const geoRef = ref(db, 'online_users_geo');
+
+    const loginBox = document.getElementById('loginBox');
+    const dashboard = document.getElementById('dashboard');
+    const loginError = document.getElementById('loginError');
+    const tableBody = document.getElementById('tableBody');
+    const statCount = document.getElementById('statCount');
+    const passwordInput = document.getElementById('passwordInput');
+
+    // 國家代碼轉國旗 emoji
+    function flagEmoji(countryCode) {
+        if (!countryCode || countryCode.length !== 2) return '🏳️';
+        const codePoints = countryCode
+            .toUpperCase()
+            .split('')
+            .map((c) => 127397 + c.charCodeAt(0));
+        return String.fromCodePoint(...codePoints);
+    }
+
+    function renderTable(snapshotVal) {
+        const now = Date.now();
+        const rows = [];
+
+        Object.values(snapshotVal || {}).forEach((entry) => {
+            if (entry && typeof entry.ts === 'number' && (now - entry.ts) < STALE_THRESHOLD) {
+                rows.push(entry);
+            }
+        });
+
+        statCount.textContent = rows.length;
+
+        if (rows.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="empty">目前沒有線上訪客</td></tr>';
+            return;
+        }
+
+        // 依最後回報時間排序，最新的在上面
+        rows.sort((a, b) => b.ts - a.ts);
+
+        tableBody.innerHTML = rows.map((entry) => {
+            const secondsAgo = Math.max(0, Math.round((now - entry.ts) / 1000));
+            return `
+                <tr>
+                    <td><span class="flag">${flagEmoji(entry.countryCode)}</span> ${entry.country || '未知'}</td>
+                    <td>${entry.city || '未知'}</td>
+                    <td class="ip">${entry.ip || '未知'}</td>
+                    <td>${secondsAgo} 秒前</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    let geoListenerAttached = false;
+
+    function startListening() {
+        if (geoListenerAttached) return;
+        geoListenerAttached = true;
+        onValue(geoRef, (snap) => {
+            renderTable(snap.val());
+        });
+    }
+
+    function stopListening() {
+        if (!geoListenerAttached) return;
+        geoListenerAttached = false;
+        off(geoRef);
+    }
+
+    function showDashboard() {
+        loginBox.style.display = 'none';
+        dashboard.style.display = 'block';
+        startListening();
+    }
+
+    function showLogin() {
+        loginBox.style.display = 'block';
+        dashboard.style.display = 'none';
+        stopListening();
+    }
+
+    // 每次重新整理都要重新輸入密碼（不使用 localStorage 記住登入狀態）
+    showLogin();
+
+    // === 登入按鈕 ===
+    document.getElementById('loginBtn').addEventListener('click', () => {
+        loginError.textContent = '';
+        if (passwordInput.value === SIMPLE_PASSWORD) {
+            passwordInput.value = '';
+            showDashboard();
+        } else {
+            loginError.textContent = '密碼錯誤';
+        }
+    });
+
+    // Enter 鍵送出
+    passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    // === 登出按鈕 ===
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        showLogin();
+    });
+</script>
+
+</body>
+</html>
