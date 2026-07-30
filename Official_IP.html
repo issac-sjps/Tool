@@ -130,11 +130,11 @@
         padding: 30px 0;
     }
 
-    /* --- 歷史紀錄區塊 --- */
-    #historySection {
+    /* --- 歷史紀錄 / IP 統計 收合區塊（共用樣式）--- */
+    #historySection, #ipStatsSection {
         margin-top: 28px;
     }
-    #historyToggle {
+    #historyToggle, #ipStatsToggle {
         width: 100%;
         text-align: left;
         background: #1e293b;
@@ -149,12 +149,12 @@
         justify-content: space-between;
         align-items: center;
     }
-    #historyToggle:hover { background: #263449; }
-    #historyToggle .arrow { transition: transform 0.15s ease; color: #94a3b8; }
-    #historyToggle.open .arrow { transform: rotate(90deg); }
-    #historyBody { display: none; margin-top: 12px; }
-    #historyBody.open { display: block; }
-    #historyMeta {
+    #historyToggle:hover, #ipStatsToggle:hover { background: #263449; }
+    #historyToggle .arrow, #ipStatsToggle .arrow { transition: transform 0.15s ease; color: #94a3b8; }
+    #historyToggle.open .arrow, #ipStatsToggle.open .arrow { transform: rotate(90deg); }
+    #historyBody, #ipStatsBody { display: none; margin-top: 12px; }
+    #historyBody.open, #ipStatsBody.open { display: block; }
+    #historyMeta, #ipStatsMeta {
         color: #64748b;
         font-size: 0.78rem;
         margin-bottom: 8px;
@@ -236,6 +236,32 @@
                 </table>
             </div>
         </div>
+
+        <!-- IP 統計（累計造訪次數排行），預設收合，點開才載入 -->
+        <div id="ipStatsSection">
+            <button id="ipStatsToggle">
+                <span>📊 IP 造訪次數統計（依次數排序，前 50 筆）</span>
+                <span class="arrow">▶</span>
+            </button>
+            <div id="ipStatsBody">
+                <div id="ipStatsMeta"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>國家</th>
+                            <th>城市</th>
+                            <th>IP</th>
+                            <th>造訪次數</th>
+                            <th>第一次造訪</th>
+                            <th>最近一次造訪</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ipStatsTableBody">
+                        <tr><td colspan="6" class="empty">尚未載入</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -275,8 +301,10 @@
     const STALE_THRESHOLD = 90 * 1000;
     const geoRef = ref(db, 'online_users_geo');
     const historyRef = ref(db, 'visit_history');
+    const ipStatsRef = ref(db, 'ip_stats');
     const HISTORY_RETENTION_DAYS = 30;
     const HISTORY_DISPLAY_LIMIT = 100;
+    const IP_STATS_DISPLAY_LIMIT = 50;
 
     const loginBox = document.getElementById('loginBox');
     const dashboard = document.getElementById('dashboard');
@@ -288,6 +316,10 @@
     const historyBodyEl = document.getElementById('historyBody');
     const historyTableBody = document.getElementById('historyTableBody');
     const historyMeta = document.getElementById('historyMeta');
+    const ipStatsToggle = document.getElementById('ipStatsToggle');
+    const ipStatsBodyEl = document.getElementById('ipStatsBody');
+    const ipStatsTableBody = document.getElementById('ipStatsTableBody');
+    const ipStatsMeta = document.getElementById('ipStatsMeta');
 
     // 國家代碼轉國旗 emoji
     function flagEmoji(countryCode) {
@@ -445,6 +477,50 @@
         }
     });
 
+    // === IP 造訪次數統計區塊 ===
+    let ipStatsLoaded = false;
+
+    async function loadIpStats() {
+        ipStatsTableBody.innerHTML = '<tr><td colspan="6" class="empty">讀取中...</td></tr>';
+
+        const topQuery = query(ipStatsRef, orderByChild('count'), limitToLast(IP_STATS_DISPLAY_LIMIT));
+        const snap = await get(topQuery);
+        const val = snap.val() || {};
+        const entries = Object.values(val);
+
+        ipStatsMeta.textContent = `顯示前 ${entries.length} 筆（依造訪次數排序）`;
+
+        if (entries.length === 0) {
+            ipStatsTableBody.innerHTML = '<tr><td colspan="6" class="empty">目前沒有統計資料</td></tr>';
+            return;
+        }
+
+        // limitToLast 依 count 由小到大排列，這裡反轉成由大到小
+        entries.sort((a, b) => (b.count || 0) - (a.count || 0));
+
+        ipStatsTableBody.innerHTML = entries.map((entry) => {
+            return `
+                <tr>
+                    <td><span class="flag">${flagEmoji(entry.countryCode)}</span> ${entry.country || '未知'}</td>
+                    <td>${entry.city || '未知'}</td>
+                    <td class="ip">${entry.ip || '未知'}</td>
+                    <td class="duration">${entry.count || 0} 次</td>
+                    <td>${formatDateTime(entry.firstSeenTs)}</td>
+                    <td>${formatDateTime(entry.lastSeenTs)}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    ipStatsToggle.addEventListener('click', () => {
+        const isOpen = ipStatsBodyEl.classList.toggle('open');
+        ipStatsToggle.classList.toggle('open', isOpen);
+        if (isOpen && !ipStatsLoaded) {
+            ipStatsLoaded = true;
+            loadIpStats();
+        }
+    });
+
     function showDashboard() {
         loginBox.style.display = 'none';
         dashboard.style.display = 'block';
@@ -458,6 +534,9 @@
         historyBodyEl.classList.remove('open');
         historyToggle.classList.remove('open');
         historyLoaded = false;
+        ipStatsBodyEl.classList.remove('open');
+        ipStatsToggle.classList.remove('open');
+        ipStatsLoaded = false;
     }
 
     // 每次重新整理都要重新輸入密碼（不使用 localStorage 記住登入狀態）
