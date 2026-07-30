@@ -90,6 +90,23 @@
     }
     #logoutBtn:hover { background: #475569; }
 
+    .topbar-actions {
+        display: flex;
+        gap: 10px;
+    }
+    #refreshBtn {
+        background: #1e40af;
+        color: #e2e8f0;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        cursor: pointer;
+    }
+    #refreshBtn:hover { background: #2554d6; }
+    #refreshBtn:active { transform: scale(0.97); }
+    #refreshBtn.spinning { opacity: 0.6; pointer-events: none; }
+
     .stat {
         display: inline-block;
         background: #1e293b;
@@ -189,7 +206,10 @@
                 <h1>👁️ 線上訪客即時名單</h1>
                 <div class="sub">每 30 秒自動更新，超過 90 秒未回報視為離線</div>
             </div>
-            <button id="logoutBtn">登出</button>
+            <div class="topbar-actions">
+                <button id="refreshBtn">🔄 重新整理</button>
+                <button id="logoutBtn">登出</button>
+            </div>
         </div>
 
         <div class="stat">
@@ -556,6 +576,30 @@
     // Enter 鍵送出
     passwordInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    // === 手動重新整理按鈕 ===
+    document.getElementById('refreshBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('refreshBtn');
+        btn.classList.add('spinning');
+        btn.textContent = '🔄 更新中...';
+
+        // 即時名單：重新訂閱一次，強制抓最新資料（不用等下一次自動推播）
+        stopListening();
+        startListening();
+
+        // 歷史紀錄 / IP 統計：只有目前是展開狀態才重新載入，避免浪費查詢
+        const tasks = [];
+        if (historyBodyEl.classList.contains('open')) {
+            tasks.push(loadHistory());
+        }
+        if (ipStatsBodyEl.classList.contains('open')) {
+            tasks.push(loadIpStats());
+        }
+        await Promise.all(tasks);
+
+        btn.classList.remove('spinning');
+        btn.textContent = '🔄 重新整理';
     });
 
     // === 登出按鈕 ===
