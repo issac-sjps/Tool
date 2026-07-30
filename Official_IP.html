@@ -129,6 +129,47 @@
         color: #64748b;
         padding: 30px 0;
     }
+
+    /* --- 歷史紀錄區塊 --- */
+    #historySection {
+        margin-top: 28px;
+    }
+    #historyToggle {
+        width: 100%;
+        text-align: left;
+        background: #1e293b;
+        color: #e2e8f0;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    #historyToggle:hover { background: #263449; }
+    #historyToggle .arrow { transition: transform 0.15s ease; color: #94a3b8; }
+    #historyToggle.open .arrow { transform: rotate(90deg); }
+    #historyBody { display: none; margin-top: 12px; }
+    #historyBody.open { display: block; }
+    #historyMeta {
+        color: #64748b;
+        font-size: 0.78rem;
+        margin-bottom: 8px;
+    }
+    td.ua {
+        font-family: "SF Mono", Consolas, monospace;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    td.duration { color: #fbbf24; }
+    td.leave-pending { color: #4ade80; }
 </style>
 </head>
 <body>
@@ -171,6 +212,32 @@
                 <tr><td colspan="4" class="empty">讀取中...</td></tr>
             </tbody>
         </table>
+
+        <!-- 歷史紀錄（已離線的訪客紀錄），預設收合，點開才載入 -->
+        <div id="historySection">
+            <button id="historyToggle">
+                <span>📜 歷史紀錄（最近 100 筆，自動清除 30 天前資料）</span>
+                <span class="arrow">▶</span>
+            </button>
+            <div id="historyBody">
+                <div id="historyMeta"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>國家</th>
+                            <th>城市</th>
+                            <th>IP</th>
+                            <th>裝置 / UA</th>
+                            <th>進站時間</th>
+                            <th>停留時長</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="6" class="empty">尚未載入</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -180,7 +247,13 @@
         getDatabase,
         ref,
         onValue,
-        off
+        off,
+        query,
+        orderByChild,
+        limitToLast,
+        endAt,
+        get,
+        remove
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     // === 跟 firebase-counter.js 使用同一份設定 ===
@@ -203,6 +276,9 @@
 
     const STALE_THRESHOLD = 90 * 1000;
     const geoRef = ref(db, 'online_users_geo');
+    const historyRef = ref(db, 'visit_history');
+    const HISTORY_RETENTION_DAYS = 30;
+    const HISTORY_DISPLAY_LIMIT = 100;
 
     const loginBox = document.getElementById('loginBox');
     const dashboard = document.getElementById('dashboard');
@@ -210,6 +286,10 @@
     const tableBody = document.getElementById('tableBody');
     const statCount = document.getElementById('statCount');
     const passwordInput = document.getElementById('passwordInput');
+    const historyToggle = document.getElementById('historyToggle');
+    const historyBodyEl = document.getElementById('historyBody');
+    const historyTableBody = document.getElementById('historyTableBody');
+    const historyMeta = document.getElementById('historyMeta');
 
     // 國家代碼轉國旗 emoji
     function flagEmoji(countryCode) {
@@ -270,6 +350,103 @@
         off(geoRef);
     }
 
+    // === 歷史紀錄區塊 ===
+    let historyLoaded = false;
+
+    function formatDuration(ms) {
+        if (ms < 0) ms = 0;
+        const totalMinutes = Math.round(ms / 60000);
+        if (totalMinutes < 1) return '< 1 分鐘';
+        if (totalMinutes < 60) return `${totalMinutes} 分鐘`;
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        return `${hours} 小時 ${mins} 分`;
+    }
+
+    function formatDateTime(ts) {
+        if (typeof ts !== 'number') return '未知';
+        const d = new Date(ts);
+        return d.toLocaleString('zh-TW', { hour12: false });
+    }
+
+    // 清掉超過保留天數的舊紀錄（每次展開時執行一次）
+    async function cleanupOldHistory() {
+        const cutoff = Date.now() - HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+        try {
+            const oldQuery = query(historyRef, orderByChild('enterTs'), endAt(cutoff));
+            const snap = await get(oldQuery);
+            const val = snap.val();
+            if (!val) return 0;
+            const keys = Object.keys(val);
+            await Promise.all(keys.map((key) => remove(ref(db, `visit_history/${key}`))));
+            return keys.length;
+        } catch (error) {
+            console.error('清理舊歷史紀錄失敗:', error);
+            return 0;
+        }
+    }
+
+    async function loadHistory() {
+        historyTableBody.innerHTML = '<tr><td colspan="6" class="empty">讀取中...</td></tr>';
+
+        const removedCount = await cleanupOldHistory();
+
+        const recentQuery = query(historyRef, orderByChild('enterTs'), limitToLast(HISTORY_DISPLAY_LIMIT));
+        const snap = await get(recentQuery);
+        const val = snap.val() || {};
+        const entries = Object.values(val);
+
+        historyMeta.textContent = removedCount > 0
+            ? `已自動清除 ${removedCount} 筆超過 ${HISTORY_RETENTION_DAYS} 天的舊紀錄`
+            : `顯示最近 ${entries.length} 筆紀錄`;
+
+        if (entries.length === 0) {
+            historyTableBody.innerHTML = '<tr><td colspan="6" class="empty">目前沒有歷史紀錄</td></tr>';
+            return;
+        }
+
+        entries.sort((a, b) => (b.enterTs || 0) - (a.enterTs || 0));
+
+        const now = Date.now();
+        historyTableBody.innerHTML = entries.map((entry) => {
+            const enterTs = typeof entry.enterTs === 'number' ? entry.enterTs : null;
+            const leaveTs = typeof entry.leaveTs === 'number' ? entry.leaveTs : null;
+            const lastSeenTs = typeof entry.lastSeenTs === 'number' ? entry.lastSeenTs : enterTs;
+
+            let durationHtml;
+            if (enterTs === null) {
+                durationHtml = '未知';
+            } else if (leaveTs !== null) {
+                durationHtml = formatDuration(leaveTs - enterTs);
+            } else if (lastSeenTs !== null && (now - lastSeenTs) > STALE_THRESHOLD) {
+                // 沒有正常觸發斷線，用最後一次心跳時間概估停留時長
+                durationHtml = `${formatDuration(lastSeenTs - enterTs)}（推估）`;
+            } else {
+                durationHtml = '<span class="leave-pending">仍在線上</span>';
+            }
+
+            return `
+                <tr>
+                    <td><span class="flag">${flagEmoji(entry.countryCode)}</span> ${entry.country || '未知'}</td>
+                    <td>${entry.city || '未知'}</td>
+                    <td class="ip">${entry.ip || '未知'}</td>
+                    <td class="ua">${entry.ua || '未知'}</td>
+                    <td>${formatDateTime(enterTs)}</td>
+                    <td class="duration">${durationHtml}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    historyToggle.addEventListener('click', () => {
+        const isOpen = historyBodyEl.classList.toggle('open');
+        historyToggle.classList.toggle('open', isOpen);
+        if (isOpen && !historyLoaded) {
+            historyLoaded = true;
+            loadHistory();
+        }
+    });
+
     function showDashboard() {
         loginBox.style.display = 'none';
         dashboard.style.display = 'block';
@@ -280,6 +457,9 @@
         loginBox.style.display = 'block';
         dashboard.style.display = 'none';
         stopListening();
+        historyBodyEl.classList.remove('open');
+        historyToggle.classList.remove('open');
+        historyLoaded = false;
     }
 
     // 每次重新整理都要重新輸入密碼（不使用 localStorage 記住登入狀態）
