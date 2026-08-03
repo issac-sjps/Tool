@@ -185,6 +185,67 @@
     }
     td.duration { color: #fbbf24; }
     td.leave-pending { color: #4ade80; }
+
+    /* --- 排行榜卡片 --- */
+    .leaderboard-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .leaderboard-card {
+        flex: 1 1 260px;
+        background: #1e293b;
+        border-radius: 12px;
+        padding: 16px 18px;
+    }
+    .leaderboard-card h3 {
+        margin: 0 0 10px 0;
+        font-size: 0.88rem;
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+    .leaderboard-card ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .leaderboard-card li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 0;
+        font-size: 0.85rem;
+        border-bottom: 1px solid #263449;
+    }
+    .leaderboard-card li:last-child { border-bottom: none; }
+    .leaderboard-card li.empty {
+        color: #64748b;
+        justify-content: center;
+        border-bottom: none;
+    }
+    .leaderboard-card .rank {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: #0f172a;
+        color: #fbbf24;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+    .leaderboard-card .ip {
+        font-family: "SF Mono", Consolas, monospace;
+        color: #93c5fd;
+    }
+    .leaderboard-card .count {
+        margin-left: auto;
+        color: #4ade80;
+        font-weight: 600;
+        white-space: nowrap;
+    }
 </style>
 </head>
 <body>
@@ -209,6 +270,18 @@
             <div class="topbar-actions">
                 <button id="refreshBtn">🔄 重新整理</button>
                 <button id="logoutBtn">登出</button>
+            </div>
+        </div>
+
+        <!-- 排行榜：IP 前三名 / 地區前三名 -->
+        <div class="leaderboard-row">
+            <div class="leaderboard-card">
+                <h3>🏆 IP 造訪次數 前三名</h3>
+                <ol id="ipTop3List"><li class="empty">讀取中...</li></ol>
+            </div>
+            <div class="leaderboard-card">
+                <h3>🌍 地區造訪次數 前三名</h3>
+                <ol id="regionTop3List"><li class="empty">讀取中...</li></ol>
             </div>
         </div>
 
@@ -340,6 +413,8 @@
     const ipStatsBodyEl = document.getElementById('ipStatsBody');
     const ipStatsTableBody = document.getElementById('ipStatsTableBody');
     const ipStatsMeta = document.getElementById('ipStatsMeta');
+    const ipTop3List = document.getElementById('ipTop3List');
+    const regionTop3List = document.getElementById('regionTop3List');
 
     // 國家代碼轉國旗 emoji
     function flagEmoji(countryCode) {
@@ -541,10 +616,61 @@
         }
     });
 
+    // === 排行榜：IP 前三名 / 地區前三名 ===
+    // 讀取整個 ip_stats（資料量小，直接全部抓回來，才能正確彙總地區加總）
+    async function loadLeaderboards() {
+        ipTop3List.innerHTML = '<li class="empty">讀取中...</li>';
+        regionTop3List.innerHTML = '<li class="empty">讀取中...</li>';
+
+        let entries = [];
+        try {
+            const snap = await get(ipStatsRef);
+            entries = Object.values(snap.val() || {});
+        } catch (error) {
+            console.error('排行榜讀取失敗:', error);
+        }
+
+        if (entries.length === 0) {
+            ipTop3List.innerHTML = '<li class="empty">尚無資料</li>';
+            regionTop3List.innerHTML = '<li class="empty">尚無資料</li>';
+            return;
+        }
+
+        // --- IP 前三名 ---
+        const ipTop3 = [...entries].sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 3);
+        ipTop3List.innerHTML = ipTop3.map((entry, i) => `
+            <li>
+                <span class="rank">#${i + 1}</span>
+                ${flagEmoji(entry.countryCode)}
+                <span class="ip">${entry.ip || '未知'}</span>
+                <span class="count">${entry.count || 0} 次</span>
+            </li>
+        `).join('');
+
+        // --- 地區前三名（依國家彙總所有 IP 的次數）---
+        const regionMap = {};
+        entries.forEach((entry) => {
+            const key = entry.country || '未知';
+            if (!regionMap[key]) {
+                regionMap[key] = { country: key, countryCode: entry.countryCode, count: 0 };
+            }
+            regionMap[key].count += (entry.count || 0);
+        });
+        const regionTop3 = Object.values(regionMap).sort((a, b) => b.count - a.count).slice(0, 3);
+        regionTop3List.innerHTML = regionTop3.map((entry, i) => `
+            <li>
+                <span class="rank">#${i + 1}</span>
+                ${flagEmoji(entry.countryCode)} ${entry.country}
+                <span class="count">${entry.count} 次</span>
+            </li>
+        `).join('');
+    }
+
     function showDashboard() {
         loginBox.style.display = 'none';
         dashboard.style.display = 'block';
         startListening();
+        loadLeaderboards();
     }
 
     function showLogin() {
@@ -589,7 +715,7 @@
         startListening();
 
         // 歷史紀錄 / IP 統計：只有目前是展開狀態才重新載入，避免浪費查詢
-        const tasks = [];
+        const tasks = [loadLeaderboards()];
         if (historyBodyEl.classList.contains('open')) {
             tasks.push(loadHistory());
         }
