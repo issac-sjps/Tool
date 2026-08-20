@@ -307,6 +307,35 @@ body{
 }
 .line-tag.free{background:var(--stamp); color:#fff;}
 .line-tag.fixed{background:var(--ink); color:#fff;}
+
+.scope-tag{
+  display:inline-block;
+  font-size:10px;
+  padding:1px 7px;
+  border-radius:10px;
+  margin-left:2px;
+  vertical-align:1px;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  background:#fff;
+}
+.scope-tag.scope-all{
+  border-color:var(--line-strong);
+  color:var(--ink-soft);
+}
+
+.read-note{
+  font-size:12px;
+  color:var(--ink-soft);
+  background:var(--warn-bg);
+  border:1px solid #D9B872;
+  border-left:4px solid var(--gold);
+  border-radius:4px;
+  padding:10px 14px;
+  margin-bottom:14px;
+  line-height:1.8;
+}
+.read-note b{ color:var(--stamp); }
 </style>
 </head>
 <body>
@@ -445,6 +474,16 @@ function renderEmpty(msg){
   resultCountEl.textContent = '';
 }
 
+function extractNeighborTag(line){
+  // find 鄰 ranges/numbers mentioned in this line, e.g. "32鄰、33鄰、53鄰" or "1-9鄰"
+  const nums = line.match(/[0-9０-９]+(?:[-－][0-9０-９]+)?鄰/g);
+  if(!nums || nums.length === 0) return null; // no neighbor scoping -> whole village
+  // dedupe while keeping order
+  const seen = new Set();
+  const uniq = nums.filter(n => { if(seen.has(n)) return false; seen.add(n); return true; });
+  return uniq.join('、');
+}
+
 function doSearch(){
   const district = districtSel.value;
   const villageRaw = villageInput.value.trim();
@@ -485,20 +524,33 @@ function doSearch(){
 
   resultCountEl.textContent = `共比對到 ${bySchool.size} 所${schoolWord}，${matches.length} 筆條文`;
 
-  let html = '<div class="result-grid">';
+  let html = '';
+
+  if(villageRaw){
+    html += `<div class="read-note">
+      <b>怎麼看這些結果：</b>下面每張卡片是一所學校。若某條文旁標示「適用鄰別」，代表<b>只有那幾鄰</b>符合這條規則（可能是固定學區、也可能是自由學區可擇一）；若沒有標示鄰別，代表「${escapeHtml(villageRaw)}」<b>全里</b>都適用這條規則。
+      同一個里常常會分屬不同鄰給不同學校，請把「${escapeHtml(villageRaw)}」相關的每一張卡片都看過一遍，找到您實際戶籍所在的鄰別對應哪一張卡片、標示的是「學區內」還是「自由學區・可擇一」。
+    </div>`;
+  }
+
+  html += '<div class="result-grid">';
   bySchool.forEach(({school, lines, district: matchedDistrict}) => {
     const isFreeAny = lines.some(l => l.includes('自由學區'));
     const cardClass = isFreeAny ? 'result-card is-free' : 'result-card';
     let linesHtml = lines.map(l => {
       const isFree = l.includes('自由學區');
-      const tag = isFree ? `<span class="line-tag free">自由學區・可擇一</span>` : `<span class="line-tag fixed">學區內</span>`;
+      const tag = isFree ? `<span class="line-tag free">自由學區・可擇一</span>` : `<span class="line-tag fixed">學區內（固定）</span>`;
+      const neiTag = extractNeighborTag(l);
+      const scopeTag = neiTag
+        ? `<span class="scope-tag">僅：${escapeHtml(neiTag)}</span>`
+        : `<span class="scope-tag scope-all">全里適用</span>`;
       let content = highlightVillage(l, villageRaw);
       if(neighbor){
         const safe = neighbor.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
         const neiPattern = new RegExp('(' + safe + ')鄰');
         content = content.replace(neiPattern, '<mark>$1</mark>鄰');
       }
-      return `<li>${tag}${content}</li>`;
+      return `<li>${tag}${scopeTag}<br>${content}</li>`;
     }).join('');
 
     html += `
