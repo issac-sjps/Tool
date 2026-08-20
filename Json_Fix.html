@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON 編輯器</title>
+<style>
+  :root {
+    --bg: #1e1e2e;
+    --panel: #262638;
+    --accent: #7dd3fc;
+    --accent2: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --error: #f87171;
+    --ok: #4ade80;
+    --border: #3a3a52;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
+    background: linear-gradient(135deg, #1e1e2e, #2a2a40);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+  .container {
+    width: 100%;
+    max-width: 900px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .filename {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .filename span { color: var(--accent); font-weight: 600; }
+  button, .file-label {
+    background: var(--accent);
+    color: #1e1e2e;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: transform 0.1s, opacity 0.2s;
+  }
+  button:hover, .file-label:hover { opacity: 0.85; }
+  button:active, .file-label:active { transform: scale(0.97); }
+  button.secondary {
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  input[type="file"] { display: none; }
+  textarea {
+    width: 100%;
+    height: 60vh;
+    min-height: 300px;
+    background: #14141f;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: "Consolas", "Menlo", monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+    tab-size: 2;
+  }
+  textarea:focus { outline: 1px solid var(--accent); }
+  .status {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    min-height: 20px;
+  }
+  .status.error { color: var(--error); }
+  .status.ok { color: var(--ok); }
+  .hint {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 16px;
+    line-height: 1.6;
+  }
+  .drop-hint {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>📄 JSON 編輯器</h1>
+<div class="subtitle">上傳 JSON 檔案 → 編輯 → 下載（保留原檔名）</div>
+
+<div class="container" id="dropZone">
+  <div class="toolbar">
+    <label class="file-label" for="fileInput">📂 開啟 JSON 檔案</label>
+    <input type="file" id="fileInput" accept=".json,application/json">
+    <button id="formatBtn" class="secondary" disabled>格式化</button>
+    <button id="minifyBtn" class="secondary" disabled>壓縮</button>
+    <button id="downloadBtn" disabled>💾 下載</button>
+    <div class="filename" id="filenameLabel"></div>
+  </div>
+
+  <div id="dropHint" class="drop-hint">
+    尚未載入檔案<br>
+    請點選「開啟 JSON 檔案」，或直接把 .json 檔案拖曳到這裡
+  </div>
+
+  <textarea id="editor" style="display:none;" spellcheck="false"></textarea>
+
+  <div class="status" id="status"></div>
+</div>
+
+<div class="hint">
+  提示：儲存下載時會直接用原檔名（例如 data.json → 下載後仍叫 data.json），瀏覽器可能會依你的下載設定詢問存檔位置或直接放進「下載」資料夾。若要覆蓋原檔案，下載後請自行搬移取代。
+</div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const editor = document.getElementById('editor');
+  const dropHint = document.getElementById('dropHint');
+  const dropZone = document.getElementById('dropZone');
+  const status = document.getElementById('status');
+  const filenameLabel = document.getElementById('filenameLabel');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const formatBtn = document.getElementById('formatBtn');
+  const minifyBtn = document.getElementById('minifyBtn');
+
+  let currentFilename = 'data.json';
+
+  function setStatus(msg, type) {
+    status.textContent = msg;
+    status.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  function validateJson(silent) {
+    try {
+      JSON.parse(editor.value);
+      if (!silent) setStatus('✅ JSON 格式正確', 'ok');
+      return true;
+    } catch (e) {
+      setStatus('⚠️ JSON 格式錯誤：' + e.message, 'error');
+      return false;
+    }
+  }
+
+  function loadFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      editor.value = e.target.result;
+      currentFilename = file.name || 'data.json';
+      filenameLabel.innerHTML = '目前檔案：<span>' + currentFilename + '</span>';
+      dropHint.style.display = 'none';
+      editor.style.display = 'block';
+      downloadBtn.disabled = false;
+      formatBtn.disabled = false;
+      minifyBtn.disabled = false;
+      validateJson();
+    };
+    reader.onerror = () => setStatus('讀取檔案失敗', 'error');
+    reader.readAsText(file, 'utf-8');
+  }
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) loadFile(e.target.files[0]);
+  });
+
+  editor.addEventListener('input', () => {
+    validateJson();
+  });
+
+  formatBtn.addEventListener('click', () => {
+    try {
+      const parsed = JSON.parse(editor.value);
+      editor.value = JSON.stringify(parsed, null, 2);
+      setStatus('✅ 已格式化', 'ok');
+    } catch (e) {
+      setStatus('⚠️ 無法格式化，JSON 格式錯誤：' + e.message, 'error');
+    }
+  });
+
+  minifyBtn.addEventListener('click', () => {
+    try {
+      const parsed = JSON.parse(editor.value);
+      editor.value = JSON.stringify(parsed);
+      setStatus('✅ 已壓縮', 'ok');
+    } catch (e) {
+      setStatus('⚠️ 無法壓縮，JSON 格式錯誤：' + e.message, 'error');
+    }
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    if (!validateJson()) {
+      const proceed = confirm('目前 JSON 格式有誤，仍要下載這份內容嗎？');
+      if (!proceed) return;
+    }
+    const blob = new Blob([editor.value], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus('⬇️ 已下載：' + currentFilename, 'ok');
+  });
+
+  // 拖放支援
+  ['dragover', 'dragenter'].forEach(evt => {
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = 'var(--accent)';
+    });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+    });
+  });
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type === 'application/json' || file.name.endsWith('.json'))) {
+      loadFile(file);
+    } else {
+      setStatus('請拖曳 .json 檔案', 'error');
+    }
+  });
+</script>
+
+</body>
+</html>
