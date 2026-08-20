@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JSON 編輯器</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <style>
   :root {
     --bg: #1e1e2e;
@@ -27,6 +29,7 @@
     flex-direction: column;
     align-items: center;
     padding: 24px;
+    box-sizing: border-box;
   }
   h1 {
     font-size: 1.5rem;
@@ -38,8 +41,7 @@
   }
   .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
   .container {
-    width: 100%;
-    max-width: 900px;
+    width: 98%;
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -82,22 +84,31 @@
     cursor: not-allowed;
   }
   input[type="file"] { display: none; }
-  textarea {
+  .CodeMirror {
     width: 100%;
-    height: 60vh;
-    min-height: 300px;
-    background: #14141f;
-    color: var(--text);
+    height: 80vh;
+    min-height: 400px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 14px;
     font-family: "Consolas", "Menlo", monospace;
     font-size: 0.9rem;
     line-height: 1.5;
-    resize: vertical;
-    tab-size: 2;
   }
-  textarea:focus { outline: 1px solid var(--accent); }
+  .CodeMirror-focused { outline: 1px solid var(--accent); }
+  .cm-error-line { background: rgba(248, 113, 113, 0.15); }
+  .meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    background: #14141f;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: fit-content;
+  }
+  .meta span.value { color: var(--accent); font-weight: 600; }
   .status {
     margin-top: 10px;
     font-size: 0.85rem;
@@ -135,13 +146,16 @@
     <button id="downloadBtn" disabled>💾 下載</button>
     <div class="filename" id="filenameLabel"></div>
   </div>
+  <div class="meta" id="metaInfo"></div>
 
   <div id="dropHint" class="drop-hint">
     尚未載入檔案<br>
     請點選「開啟 JSON 檔案」，或直接把 .json 檔案拖曳到這裡
   </div>
 
-  <textarea id="editor" style="display:none;" spellcheck="false"></textarea>
+  <div id="editorWrapper" style="display:none;">
+    <textarea id="editor" spellcheck="false"></textarea>
+  </div>
 
   <div class="status" id="status"></div>
 </div>
@@ -150,9 +164,11 @@
   提示：儲存下載時會直接用原檔名（例如 data.json → 下載後仍叫 data.json），瀏覽器可能會依你的下載設定詢問存檔位置或直接放進「下載」資料夾。若要覆蓋原檔案，下載後請自行搬移取代。
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
 <script>
   const fileInput = document.getElementById('fileInput');
-  const editor = document.getElementById('editor');
+  const editorWrapper = document.getElementById('editorWrapper');
   const dropHint = document.getElementById('dropHint');
   const dropZone = document.getElementById('dropZone');
   const status = document.getElementById('status');
@@ -163,6 +179,35 @@
 
   let currentFilename = 'data.json';
 
+  // 初始化 CodeMirror：JSON 語法上色 + 行號
+  const cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
+    mode: { name: 'javascript', json: true },
+    theme: 'dracula',
+    lineNumbers: true,
+    tabSize: 2,
+    indentUnit: 2,
+    lineWrapping: true,
+    matchBrackets: true,
+    autoCloseBrackets: false
+  });
+
+  const metaInfo = document.getElementById('metaInfo');
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function updateMeta() {
+    const text = cm.getValue();
+    const charCount = text.length;
+    const byteSize = new Blob([text]).size;
+    metaInfo.innerHTML =
+      '📦 檔案大小：<span class="value">' + formatBytes(byteSize) + '</span>' +
+      '　✏️ 字數：<span class="value">' + charCount.toLocaleString() + '</span> 字元';
+  }
+
   function setStatus(msg, type) {
     status.textContent = msg;
     status.className = 'status' + (type ? ' ' + type : '');
@@ -170,7 +215,7 @@
 
   function validateJson(silent) {
     try {
-      JSON.parse(editor.value);
+      JSON.parse(cm.getValue());
       if (!silent) setStatus('✅ JSON 格式正確', 'ok');
       return true;
     } catch (e) {
@@ -183,15 +228,17 @@
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      editor.value = e.target.result;
+      dropHint.style.display = 'none';
+      editorWrapper.style.display = 'block';
+      cm.setValue(e.target.result);
+      cm.refresh();
       currentFilename = file.name || 'data.json';
       filenameLabel.innerHTML = '目前檔案：<span>' + currentFilename + '</span>';
-      dropHint.style.display = 'none';
-      editor.style.display = 'block';
       downloadBtn.disabled = false;
       formatBtn.disabled = false;
       minifyBtn.disabled = false;
       validateJson();
+      updateMeta();
     };
     reader.onerror = () => setStatus('讀取檔案失敗', 'error');
     reader.readAsText(file, 'utf-8');
@@ -201,15 +248,17 @@
     if (e.target.files.length) loadFile(e.target.files[0]);
   });
 
-  editor.addEventListener('input', () => {
+  cm.on('change', () => {
     validateJson();
+    updateMeta();
   });
 
   formatBtn.addEventListener('click', () => {
     try {
-      const parsed = JSON.parse(editor.value);
-      editor.value = JSON.stringify(parsed, null, 2);
+      const parsed = JSON.parse(cm.getValue());
+      cm.setValue(JSON.stringify(parsed, null, 2));
       setStatus('✅ 已格式化', 'ok');
+      updateMeta();
     } catch (e) {
       setStatus('⚠️ 無法格式化，JSON 格式錯誤：' + e.message, 'error');
     }
@@ -217,9 +266,10 @@
 
   minifyBtn.addEventListener('click', () => {
     try {
-      const parsed = JSON.parse(editor.value);
-      editor.value = JSON.stringify(parsed);
+      const parsed = JSON.parse(cm.getValue());
+      cm.setValue(JSON.stringify(parsed));
       setStatus('✅ 已壓縮', 'ok');
+      updateMeta();
     } catch (e) {
       setStatus('⚠️ 無法壓縮，JSON 格式錯誤：' + e.message, 'error');
     }
@@ -230,7 +280,7 @@
       const proceed = confirm('目前 JSON 格式有誤，仍要下載這份內容嗎？');
       if (!proceed) return;
     }
-    const blob = new Blob([editor.value], { type: 'application/json;charset=utf-8' });
+    const blob = new Blob([cm.getValue()], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
