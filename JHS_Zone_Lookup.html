@@ -112,6 +112,24 @@ body{
 .info-btn.open .info-pop{display:block;}
 .info-pop b{color:var(--stamp);}
 
+.quota-mode-btn{
+  font-family:'Noto Sans TC', sans-serif;
+  font-size:13px;
+  font-weight:700;
+  padding:6px 14px;
+  border:1.5px solid var(--stamp);
+  border-radius:20px;
+  background:#fff;
+  color:var(--stamp);
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.quota-mode-btn.active{
+  background:var(--stamp);
+  color:#fff;
+}
+
 /* ===== app body: sidebar + results, no page scroll ===== */
 .app{
   display:grid;
@@ -346,6 +364,7 @@ body{
     <button id="btn-mid" class="active" type="button">國中</button>
     <button id="btn-elem" type="button">國小</button>
   </div>
+  <button class="quota-mode-btn" id="quota-mode-btn" type="button">總量管制學校</button>
   <div class="topbar-spacer"></div>
   <button class="info-btn" id="info-btn" type="button">i
     <div class="info-pop" id="info-pop">
@@ -359,25 +378,35 @@ body{
 
 <div class="app">
   <div class="sidebar">
-    <div class="field">
-      <label for="sel-district">行政區 <span class="req">必填</span></label>
-      <select id="sel-district"><option value="">請選擇行政區</option></select>
+    <div id="search-fields">
+      <div class="field">
+        <label for="sel-district">行政區 <span class="req">必填</span></label>
+        <select id="sel-district"><option value="">請選擇行政區</option></select>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label for="inp-village">里別 <span class="req">建議填寫</span></label>
+        <input list="village-list" id="inp-village" type="text" placeholder="例如：新上里" disabled>
+        <datalist id="village-list"></datalist>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label for="inp-neighbor">鄰別（選填）</label>
+        <input id="inp-neighbor" type="text" inputmode="numeric" placeholder="例如：12" disabled>
+      </div>
+      <button class="clear-btn" id="clear-btn" type="button" style="margin-top:12px;">清除條件</button>
+      <div class="hint-line" style="margin-top:10px;">先選行政區，再輸入或選擇里別；若同一里依鄰別劃分不同學校，請再填鄰別以利核對條文內容。</div>
     </div>
-    <div class="field">
-      <label for="inp-village">里別 <span class="req">建議填寫</span></label>
-      <input list="village-list" id="inp-village" type="text" placeholder="例如：新上里" disabled>
-      <datalist id="village-list"></datalist>
+
+    <div id="quota-fields" style="display:none;">
+      <div class="field">
+        <label for="sel-quota-district">行政區（選填）</label>
+        <select id="sel-quota-district"><option value="">全部行政區</option></select>
+      </div>
+      <div class="hint-line" style="margin-top:10px;">列出目前所選學制（國中／國小）中，屬於<b>總量管制</b>的所有學校。可用行政區篩選，或選「全部行政區」看完整清單。</div>
     </div>
-    <div class="field">
-      <label for="inp-neighbor">鄰別（選填）</label>
-      <input id="inp-neighbor" type="text" inputmode="numeric" placeholder="例如：12" disabled>
-    </div>
-    <button class="clear-btn" id="clear-btn" type="button">清除條件</button>
-    <div class="hint-line">先選行政區，再輸入或選擇里別；若同一里依鄰別劃分不同學校，請再填鄰別以利核對條文內容。</div>
 
     <hr>
 
-    <div class="legend">
+    <div class="legend" id="legend-block">
       <div class="row"><span class="swatch sw-fixed"></span><span><b>學區內</b>：戶籍在此里（鄰），只對應這一所學校，直接分發就讀。</span></div>
       <div class="row"><span class="swatch sw-free"></span><span><b>自由學區</b>：戶籍在此里（鄰），條文中「與○○國中／國小自由學區」代表這幾所學校<b>可以任選其中一所</b>登記，不是全部都要念，也不是自動分到某一所——由家長在登記時擇一填寫。</span></div>
     </div>
@@ -411,6 +440,7 @@ const ELEM = JSON.parse(document.getElementById('elem-data').textContent);
 
 let currentLevel = 'mid'; // 'mid' | 'elem'
 let SCHOOLS = MID;
+let quotaMode = false;
 
 const districtSel = document.getElementById('sel-district');
 const villageInput = document.getElementById('inp-village');
@@ -425,6 +455,11 @@ const clearBtn = document.getElementById('clear-btn');
 const infoBtn = document.getElementById('info-btn');
 const quotaToggle = document.getElementById('quota-toggle');
 const quotaBox = document.getElementById('quota-box');
+const quotaModeBtn = document.getElementById('quota-mode-btn');
+const searchFields = document.getElementById('search-fields');
+const quotaFields = document.getElementById('quota-fields');
+const quotaDistrictSel = document.getElementById('sel-quota-district');
+const legendBlock = document.getElementById('legend-block');
 
 function escapeHtml(str){
   return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -607,11 +642,17 @@ btnMid.addEventListener('click', () => {
   SCHOOLS = MID;
   btnMid.classList.add('active');
   btnElem.classList.remove('active');
-  resultsTitle.textContent = '查詢結果（國中）';
-  districtSel.value = '';
   buildDistrictOptions();
-  resetFields();
-  doSearch();
+  buildQuotaDistrictOptions();
+  if(quotaMode){
+    resultsTitle.textContent = '總量管制學校（國中）';
+    renderQuotaList();
+  } else {
+    resultsTitle.textContent = '查詢結果（國中）';
+    districtSel.value = '';
+    resetFields();
+    doSearch();
+  }
 });
 btnElem.addEventListener('click', () => {
   if(currentLevel === 'elem') return;
@@ -619,12 +660,89 @@ btnElem.addEventListener('click', () => {
   SCHOOLS = ELEM;
   btnElem.classList.add('active');
   btnMid.classList.remove('active');
-  resultsTitle.textContent = '查詢結果（國小）';
-  districtSel.value = '';
   buildDistrictOptions();
-  resetFields();
-  doSearch();
+  buildQuotaDistrictOptions();
+  if(quotaMode){
+    resultsTitle.textContent = '總量管制學校（國小）';
+    renderQuotaList();
+  } else {
+    resultsTitle.textContent = '查詢結果（國小）';
+    districtSel.value = '';
+    resetFields();
+    doSearch();
+  }
 });
+
+function buildQuotaDistrictOptions(){
+  const quotaSchools = SCHOOLS.filter(s => s.quota === '總量管制');
+  const districts = new Set();
+  quotaSchools.forEach(s => s.areas.forEach(a => districts.add(a.district)));
+  const sorted = [...districts].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  quotaDistrictSel.innerHTML = '<option value="">全部行政區</option>';
+  sorted.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    quotaDistrictSel.appendChild(opt);
+  });
+}
+
+function renderQuotaList(){
+  const filterDistrict = quotaDistrictSel.value;
+  const schoolWord = currentLevel === 'mid' ? '國中' : '國小';
+  let quotaSchools = SCHOOLS.filter(s => s.quota === '總量管制');
+
+  if(filterDistrict){
+    quotaSchools = quotaSchools.filter(s => s.areas.some(a => a.district === filterDistrict));
+  }
+
+  if(quotaSchools.length === 0){
+    renderEmpty(`目前學制中${filterDistrict ? '在「'+escapeHtml(filterDistrict)+'」' : ''}沒有總量管制的${schoolWord}。`);
+    return;
+  }
+
+  resultCountEl.textContent = `共 ${quotaSchools.length} 所總量管制${schoolWord}${filterDistrict ? '（' + escapeHtml(filterDistrict) + '）' : '（全市）'}`;
+
+  let html = `<div class="read-note"><b>總量管制學校：</b>依全戶設籍先後順序分發入學，額滿為止，超額新生改分發鄰近學校就讀。以下為${filterDistrict ? '「'+escapeHtml(filterDistrict)+'」' : '全市'}屬於總量管制的${schoolWord}清單。</div>`;
+  html += '<div class="result-grid">';
+  quotaSchools.forEach(s => {
+    const districts = [...new Set(s.areas.map(a => a.district))].join('、');
+    html += `
+    <div class="result-card">
+      <div class="result-top">
+        <div>
+          <span class="result-no">No.${s.no}</span>
+          <span class="result-name">${escapeHtml(s.name)}</span>
+        </div>
+        <div class="badge-row">
+          <span class="badge b-quota">總量管制</span>
+        </div>
+      </div>
+      <div class="result-district">所在行政區：${escapeHtml(districts)}</div>
+    </div>`;
+  });
+  html += '</div>';
+  resultsEl.innerHTML = html;
+}
+
+quotaModeBtn.addEventListener('click', () => {
+  quotaMode = !quotaMode;
+  quotaModeBtn.classList.toggle('active', quotaMode);
+  if(quotaMode){
+    searchFields.style.display = 'none';
+    quotaFields.style.display = 'block';
+    legendBlock.style.display = 'none';
+    resultsTitle.textContent = `總量管制學校（${currentLevel === 'mid' ? '國中' : '國小'}）`;
+    renderQuotaList();
+  } else {
+    searchFields.style.display = 'block';
+    quotaFields.style.display = 'none';
+    legendBlock.style.display = 'flex';
+    resultsTitle.textContent = `查詢結果（${currentLevel === 'mid' ? '國中' : '國小'}）`;
+    doSearch();
+  }
+});
+
+quotaDistrictSel.addEventListener('change', renderQuotaList);
 
 infoBtn.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -639,6 +757,7 @@ quotaToggle.addEventListener('click', () => {
 
 resultsTitle.textContent = '查詢結果（國中）';
 buildDistrictOptions();
+buildQuotaDistrictOptions();
 </script>
 </body>
 </html>
