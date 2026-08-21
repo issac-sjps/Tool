@@ -338,8 +338,12 @@ body{
   background:#fff;
 }
 .scope-tag.scope-all{
-  border-color:var(--line-strong);
-  color:var(--ink-soft);
+  border:1.5px solid var(--ink);
+  color:#fff;
+  background:var(--ink);
+  font-weight:700;
+  font-size:11px;
+  padding:2px 10px;
 }
 
 .read-note{
@@ -510,13 +514,41 @@ function renderEmpty(msg){
 }
 
 function extractNeighborTag(line){
-  // find 鄰 ranges/numbers mentioned in this line, e.g. "32鄰、33鄰、53鄰" or "1-9鄰"
+  // "全里" (whole village) always overrides any embedded exception numbers
+  if(line.includes('全里') || line.includes('全區各里')) return null;
   const nums = line.match(/[0-9０-９]+(?:[-－][0-9０-９]+)?鄰/g);
   if(!nums || nums.length === 0) return null; // no neighbor scoping -> whole village
-  // dedupe while keeping order
   const seen = new Set();
   const uniq = nums.filter(n => { if(seen.has(n)) return false; seen.add(n); return true; });
   return uniq.join('、');
+}
+
+function toHalfWidthDigits(str){
+  return str.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+}
+
+function neighborScopeRanges(line){
+  // returns null if whole-village (no restriction), otherwise array of [start,end]
+  if(line.includes('全里') || line.includes('全區各里')) return null;
+  const nums = line.match(/[0-9０-９]+(?:[-－][0-9０-９]+)?(?=鄰)/g);
+  if(!nums || nums.length === 0) return null;
+  return nums.map(tok => {
+    const t = toHalfWidthDigits(tok);
+    if(t.includes('-') || t.includes('－')){
+      const parts = t.split(/[-－]/);
+      return [parseInt(parts[0],10), parseInt(parts[1],10)];
+    }
+    const v = parseInt(t,10);
+    return [v, v];
+  });
+}
+
+function lineMatchesNeighbor(line, neighborNum){
+  const ranges = neighborScopeRanges(line);
+  if(ranges === null) return true; // whole village always applies
+  const n = parseInt(toHalfWidthDigits(neighborNum), 10);
+  if(isNaN(n)) return true;
+  return ranges.some(([a,b]) => n >= a && n <= b);
 }
 
 function doSearch(){
@@ -537,13 +569,16 @@ function doSearch(){
       a.lines.forEach(line => {
         const villageOk = villageRaw ? line.includes(villageRaw) : true;
         if(!villageOk) return;
+        if(neighbor && !lineMatchesNeighbor(line, neighbor)) return;
         matches.push({school:s, district:a.district, line});
       });
     });
   });
 
   if(matches.length === 0){
-    if(villageRaw){
+    if(villageRaw && neighbor){
+      renderEmpty(`在「${escapeHtml(district)}」中找不到「${escapeHtml(villageRaw)}」${escapeHtml(neighbor)}鄰符合的學校資料，請確認里別、鄰別是否正確。`);
+    } else if(villageRaw){
       renderEmpty(`在「${escapeHtml(district)}」中找不到包含「${escapeHtml(villageRaw)}」的里別資料，請確認里別名稱是否正確（可從清單中選取）。`);
     } else {
       renderEmpty('查無資料。');
@@ -579,7 +614,7 @@ function doSearch(){
       const scopeLabel = isFree ? '可多選學校' : '僅此校';
       const scopeTag = neiTag
         ? `<span class="scope-tag">僅：${escapeHtml(neiTag)}（${scopeLabel}）</span>`
-        : `<span class="scope-tag scope-all">全里適用（${scopeLabel}）</span>`;
+        : `<span class="scope-tag scope-all">★ 全里適用（${scopeLabel}）</span>`;
       let content = highlightVillage(l, villageRaw);
       if(neighbor){
         const safe = neighbor.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
