@@ -97,7 +97,7 @@ body{
   position:absolute;
   top:34px;
   right:0;
-  width:300px;
+  width:320px;
   background:#fff;
   border:1px solid var(--line-strong);
   box-shadow:0 6px 18px rgba(30,42,58,.18);
@@ -128,6 +128,28 @@ body{
 .quota-mode-btn.active{
   background:var(--stamp);
   color:#fff;
+}
+
+.doc-link-btn{
+  font-family:'Noto Sans TC', sans-serif;
+  font-size:12.5px;
+  font-weight:700;
+  padding:6px 14px;
+  border:1.5px solid var(--gold);
+  border-radius:20px;
+  background:#fff;
+  color:var(--gold);
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+  text-decoration:none;
+}
+.doc-link-btn:hover{
+  background:var(--gold);
+  color:#fff;
+}
+@media (max-width:900px){
+  .doc-link-btn{ display:none; }
 }
 
 /* ===== app body: sidebar + results, no page scroll ===== */
@@ -369,6 +391,8 @@ body{
     <button id="btn-elem" type="button">國小</button>
   </div>
   <button class="quota-mode-btn" id="quota-mode-btn" type="button">總量管制學校</button>
+  <a class="doc-link-btn" href="https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%88%86%E7%99%BC%E4%BD%9C%E6%A5%AD%E9%A0%88%E7%9F%A5.pdf" target="_blank" rel="noopener">115新生分發作業須知</a>
+  <a class="doc-link-btn" href="https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%85%AC%E7%A7%81%E7%AB%8B%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%85%A5%E5%AD%B8%E5%B7%A5%E4%BD%9C%E6%9C%9F%E7%A8%8B%E8%A1%A8.pdf" target="_blank" rel="noopener">115國民中學新生入學工作期程表</a>
   <div class="topbar-spacer"></div>
   <button class="info-btn" id="info-btn" type="button">i
     <div class="info-pop" id="info-pop">
@@ -376,7 +400,8 @@ body{
       <b>什麼是「自由學區」？</b>條文寫「甲校與乙校自由學區」，意思是戶籍在該里（或該鄰）的學生，可以在甲、乙兩校（有時是三校）之中<b>自己選一所</b>登記入學，不用兩間都要考慮、也不是系統自動分配，實際登記流程與截止日期仍以教育局公告為準。<br><br>
       資料整理自高雄市115學年度國民中學／國民小學學區劃分一覽表。116學年度起因里鄰行政區域調整，學區將由教育局另行修正公告，屆時本站資料可能不再適用。<br><br>
       設籍<b>大林蒲地區</b>（小港區鳳森、鳳林、鳳源、鳳興、龍鳳、鳳鳴等6里）者，持居住事實文件可不受戶籍限制，專案就讀學區內國中小（不含總量管制學校）。<br><br>
-      <a href="https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%88%86%E7%99%BC%E4%BD%9C%E6%A5%AD%E9%A0%88%E7%9F%A5.pdf" target="_blank" rel="noopener" style="color:#A3352A; font-weight:700;">📄 教育局官方公告：115學年度國民中學新生分發作業須知（PDF）</a>
+      <a href="https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%88%86%E7%99%BC%E4%BD%9C%E6%A5%AD%E9%A0%88%E7%9F%A5.pdf" target="_blank" rel="noopener" style="color:#A3352A; font-weight:700; display:block; margin-bottom:6px;">📄 高雄市115學年度國民中學新生分發作業須知（PDF）</a>
+      <a href="https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%85%AC%E7%A7%81%E7%AB%8B%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%85%A5%E5%AD%B8%E5%B7%A5%E4%BD%9C%E6%9C%9F%E7%A8%8B%E8%A1%A8.pdf" target="_blank" rel="noopener" style="color:#A3352A; font-weight:700; display:block;">📄 高雄市115學年度公私立國民中學新生入學工作期程表（PDF）</a>
     </div>
   </button>
 </div>
