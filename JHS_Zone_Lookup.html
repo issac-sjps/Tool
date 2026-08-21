@@ -151,7 +151,6 @@ body{
 @media (max-width:900px){
   .doc-link-btn{ display:none; }
 }
-
 /* ===== app body: sidebar + results, no page scroll ===== */
 .app{
   display:grid;
@@ -391,8 +390,8 @@ body{
     <button id="btn-elem" type="button">國小</button>
   </div>
   <button class="quota-mode-btn" id="quota-mode-btn" type="button">總量管制學校</button>
-  <a class="doc-link-btn" href="https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%88%86%E7%99%BC%E4%BD%9C%E6%A5%AD%E9%A0%88%E7%9F%A5.pdf" target="_blank" rel="noopener">115新生分發作業須知</a>
-  <a class="doc-link-btn" href="https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%85%AC%E7%A7%81%E7%AB%8B%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%85%A5%E5%AD%B8%E5%B7%A5%E4%BD%9C%E6%9C%9F%E7%A8%8B%E8%A1%A8.pdf" target="_blank" rel="noopener">115國民中學新生入學工作期程表</a>
+  <button class="doc-link-btn" id="doc-link-1" type="button">115新生分發作業須知</button>
+  <button class="doc-link-btn" id="doc-link-2" type="button">115國民中學新生入學工作期程表</button>
   <div class="topbar-spacer"></div>
   <button class="info-btn" id="info-btn" type="button">i
     <div class="info-pop" id="info-pop">
@@ -486,6 +485,8 @@ const infoBtn = document.getElementById('info-btn');
 const quotaToggle = document.getElementById('quota-toggle');
 const quotaBox = document.getElementById('quota-box');
 const quotaModeBtn = document.getElementById('quota-mode-btn');
+const docLink1 = document.getElementById('doc-link-1');
+const docLink2 = document.getElementById('doc-link-2');
 const searchFields = document.getElementById('search-fields');
 const quotaFields = document.getElementById('quota-fields');
 const quotaDistrictSel = document.getElementById('sel-quota-district');
@@ -521,11 +522,36 @@ function buildDistrictOptions(){
   });
 }
 
+function buildSchoolAbbrList(){
+  const abbrs = new Set();
+  const suffixMap = [['國民中學','國中'], ['國民小學','國小']];
+  function stripToAbbr(fullName){
+    for(const [full, abbr] of suffixMap){
+      if(fullName.endsWith(full)) return fullName.slice(0, -full.length) + abbr;
+    }
+    return fullName; // already in prose-abbreviated form (高中國中部／國中小(國小部)／elementary short names, etc.)
+  }
+  MID.forEach(s => abbrs.add(stripToAbbr(s.name)));
+  ELEM.forEach(s => abbrs.add(stripToAbbr(s.name)));
+  return [...abbrs].sort((a,b) => b.length - a.length); // longest first avoids partial submatches
+}
+
+const SCHOOL_ABBRS = buildSchoolAbbrList();
+const SCHOOL_ABBR_REGEX = new RegExp(
+  SCHOOL_ABBRS.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'),
+  'g'
+);
+
 function highlightVillage(line, village){
   const esc = escapeHtml(line);
-  if(!village) return esc;
+  // wrap every village-name token (X里) in 【】 for easy scanning
+  let bracketed = esc.replace(/([\u4e00-\u9fa5]{1,4}里)/g, '【$1】');
+  // wrap every known school-name mention in <> for easy scanning
+  bracketed = bracketed.replace(SCHOOL_ABBR_REGEX, m => `&lt;${m}&gt;`);
+  if(!village) return bracketed;
   const escVillage = escapeHtml(village);
-  return esc.split(escVillage).join(`<mark>${escVillage}</mark>`);
+  const bracketedVillage = `【${escVillage}】`;
+  return bracketed.split(bracketedVillage).join(`<mark>${bracketedVillage}</mark>`);
 }
 
 function quotaBadge(quota){
@@ -874,6 +900,18 @@ quotaToggle.addEventListener('click', () => {
 resultsTitle.textContent = '查詢結果（國中）';
 buildDistrictOptions();
 buildQuotaDistrictOptions();
+
+const DOC_URL_1 = 'https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/' +
+  '%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%88%86%E7%99%BC%E4%BD%9C%E6%A5%AD%E9%A0%88%E7%9F%A5.pdf';
+const DOC_URL_2 = 'https://affairs.kh.edu.tw/sites/8239/bulletin_file/23/' +
+  '%E9%AB%98%E9%9B%84%E5%B8%82115%E5%AD%B8%E5%B9%B4%E5%BA%A6%E5%85%AC%E7%A7%81%E7%AB%8B%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%AD%B8%E6%96%B0%E7%94%9F%E5%85%A5%E5%AD%B8%E5%B7%A5%E4%BD%9C%E6%9C%9F%E7%A8%8B%E8%A1%A8.pdf';
+
+docLink1.addEventListener('click', () => {
+  window.open(DOC_URL_1, '_blank', 'noopener');
+});
+docLink2.addEventListener('click', () => {
+  window.open(DOC_URL_2, '_blank', 'noopener');
+});
 </script>
 </body>
 </html>
