@@ -541,9 +541,10 @@ function doSearch(){
       const isFree = l.includes('自由學區');
       const tag = isFree ? `<span class="line-tag free">自由學區・可擇一</span>` : `<span class="line-tag fixed">學區內（固定）</span>`;
       const neiTag = extractNeighborTag(l);
+      const scopeLabel = isFree ? '可多選學校' : '僅此校';
       const scopeTag = neiTag
-        ? `<span class="scope-tag">僅：${escapeHtml(neiTag)}</span>`
-        : `<span class="scope-tag scope-all">全里適用</span>`;
+        ? `<span class="scope-tag">僅：${escapeHtml(neiTag)}（${scopeLabel}）</span>`
+        : `<span class="scope-tag scope-all">全里適用（${scopeLabel}）</span>`;
       let content = highlightVillage(l, villageRaw);
       if(neighbor){
         const safe = neighbor.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
