@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>網路假期闖關情形比對網</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a2e2c;
+    --paper:#f4efe4;
+    --card:#fffdf8;
+    --line:#ddd4bf;
+    --line-soft:#eae3d2;
+    --pass:#2f6a52;
+    --pass-bg:#e0efe4;
+    --fail:#b4482f;
+    --fail-bg:#f7e4dd;
+    --stamp:#c98a2b;
+    --stamp-bg:#fbeed2;
+    --muted:#8a8170;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:"Noto Sans TC","PingFang TC",sans-serif;
+    background:
+      radial-gradient(1100px 500px at 8% -10%, #ece2c8 0%, transparent 60%),
+      var(--paper);
+    color:var(--ink);
+    padding:0 0 100px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:56px 28px 40px;
+    max-width:980px;
+    margin:0 auto;
+    position:relative;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    left:28px; right:28px; bottom:0;
+    height:1px;
+    background:repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 12px);
+  }
+  .eyebrow-mark{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:"Space Mono",monospace;
+    font-size:12px;
+    color:var(--stamp);
+    border:1px solid var(--stamp);
+    padding:3px 10px 3px 8px;
+    border-radius:20px;
+    margin-bottom:18px;
+    background:var(--stamp-bg);
+  }
+  .eyebrow-mark svg{width:13px;height:13px;}
+  h1{
+    font-family:"Noto Serif TC",serif;
+    font-weight:900;
+    font-size:clamp(28px, 4vw, 40px);
+    margin:0 0 10px;
+    line-height:1.25;
+    letter-spacing:.5px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.7;
+    max-width:560px;
+    margin:0;
+  }
+
+  /* ---------- Body wrap ---------- */
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:40px 28px 0;
+  }
+
+  .step-row{
+    display:flex;
+    gap:22px;
+    align-items:flex-start;
+    margin-bottom:34px;
+  }
+  .step-num{
+    flex:none;
+    width:34px; height:34px;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:"Space Mono",monospace;
+    font-weight:700;
+    font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+    margin-top:2px;
+  }
+  .step-body{ flex:1; min-width:0; }
+  .step-body h2{
+    font-size:16px;
+    margin:2px 0 4px;
+    font-weight:700;
+  }
+  .step-body .hint{
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.6;
+    margin:0 0 14px;
+  }
+
+  .upload-row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .upload-box{
+    flex:1;
+    min-width:260px;
+    border:1px solid var(--line);
+    background:var(--card);
+    padding:16px 18px;
+    border-radius:10px;
+    box-shadow:0 1px 0 rgba(26,46,44,.03);
+  }
+  .upload-box label.pickbtn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 16px;
+    border:1px solid var(--ink);
+    border-radius:20px;
+    cursor:pointer;
+    background:#fff;
+    transition:background .15s ease, color .15s ease;
+  }
+  .upload-box label.pickbtn:hover{ background:var(--ink); color:var(--paper); }
+  .upload-box input[type=file]{ display:none; }
+  .filename{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--pass);
+    font-family:"Space Mono",monospace;
+  }
+
+  .class-picker{
+    border:1px solid var(--line);
+    background:var(--card);
+    padding:16px 18px;
+    border-radius:10px;
+  }
+  .picker-actions{ margin-bottom:12px; }
+  .picker-actions a{
+    font-size:12px;
+    text-decoration:none;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .picker-actions a#selAll{ color:var(--pass); margin-right:16px; }
+  .picker-actions a#selNone{ color:var(--muted); }
+  #classCheckboxes{ display:flex; flex-wrap:wrap; gap:8px; }
+  #classCheckboxes label{
+    display:flex; align-items:center; gap:6px;
+    border:1px solid var(--line);
+    padding:5px 12px;
+    border-radius:16px;
+    cursor:pointer;
+    background:#fff;
+    font-size:13px;
+    transition:border-color .15s, background .15s;
+  }
+  #classCheckboxes label:has(input:checked){
+    border-color:var(--pass);
+    background:var(--pass-bg);
+    color:var(--pass);
+    font-weight:600;
+  }
+  #classCheckboxes input{ accent-color:var(--pass); }
+
+  .run-row{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin:6px 0 8px;
+    flex-wrap:wrap;
+  }
+  button#runBtn{
+    font-family:"Noto Sans TC",sans-serif;
+    font-size:15px;
+    font-weight:700;
+    padding:13px 32px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:24px;
+    cursor:pointer;
+    letter-spacing:1px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button#runBtn:not(:disabled):hover{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(26,46,44,.18); }
+  button#runBtn:disabled{ background:#c9c2b0; cursor:not-allowed; }
+  #status{ font-size:13px; color:var(--fail); font-weight:600; }
+  #status.ok{ color:var(--pass); }
+
+  /* ---------- Results ---------- */
+  #summary{ margin-top:48px; }
+  .class-block{ margin-bottom:44px; }
+  .class-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--ink);
+  }
+  .class-title{ display:flex; align-items:baseline; gap:10px; }
+  .class-title h2{
+    font-family:"Noto Serif TC",serif;
+    font-size:22px;
+    margin:0;
+    font-weight:700;
+  }
+  .class-title .count{
+    font-family:"Space Mono",monospace;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .class-rate{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .rate-bar{
+    width:110px;
+    height:6px;
+    border-radius:4px;
+    background:var(--line-soft);
+    overflow:hidden;
+  }
+  .rate-bar > span{
+    display:block;
+    height:100%;
+    background:var(--pass);
+  }
+  .rate-label{
+    font-family:"Space Mono",monospace;
+    font-size:12.5px;
+    color:var(--pass);
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .missing-flag{
+    font-size:12px;
+    color:var(--fail);
+    background:var(--fail-bg);
+    padding:2px 10px;
+    border-radius:10px;
+    font-weight:600;
+  }
+
+  .table-scroll{
+    overflow-x:auto;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--card);
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    min-width:520px;
+    table-layout:fixed;
+  }
+  th, td{
+    padding:9px 6px;
+    text-align:center;
+    border-bottom:1px solid var(--line-soft);
+    width:80px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  th:nth-child(1), td:nth-child(1){ width:56px; }
+  th:nth-child(2), td:nth-child(2){ width:110px; }
+  th{
+    background:#efe6cf;
+    font-weight:700;
+    font-size:12.5px;
+    white-space:nowrap;
+    position:sticky;
+    top:0;
+  }
+  tr:last-child td{ border-bottom:none; }
+  td.name{
+    text-align:left;
+    font-weight:600;
+    white-space:nowrap;
+  }
+  td.seat{
+    font-family:"Space Mono",monospace;
+    color:var(--muted);
+  }
+  td.pass{ background:var(--pass-bg); color:var(--pass); font-weight:700; }
+  td.pass::before{ content:"✓ "; }
+  td.fail{ background:var(--fail-bg); color:var(--fail); font-weight:700; }
+  td.fail::before{ content:"✕ "; }
+  td.na{ background:#f2ede0; color:#c4bca8; }
+  tr.not-found td{ background:var(--stamp-bg); }
+  tr:hover td{ background:#f8f4e8; }
+  tr.not-found:hover td{ background:#f7e9c8; }
+  .badge{
+    display:inline-block;
+    font-size:10.5px;
+    padding:1px 8px;
+    border-radius:10px;
+    margin-left:6px;
+    background:var(--fail-bg);
+    color:var(--fail);
+    font-weight:600;
+  }
+
+  #notFoundBox{
+    margin-top:48px;
+    border:1px dashed var(--fail);
+    border-radius:10px;
+    padding:18px 22px;
+    background:var(--fail-bg);
+    font-size:13px;
+  }
+  #notFoundBox h3{
+    margin:0 0 12px;
+    font-size:14.5px;
+    color:var(--fail);
+    font-weight:700;
+  }
+  #notFoundBox table{ background:transparent; min-width:0; }
+  #notFoundBox th{ background:transparent; border-bottom:1px solid var(--fail); }
+  #notFoundBox td{ border-bottom:1px solid rgba(180,72,47,.15); }
+
+  .compact table{ font-size:11.5px; }
+  .compact th, .compact td{ padding:4px 5px; }
+  .compact .class-title h2{ font-size:17px; }
+  .compact .class-header{ padding-bottom:6px; margin-bottom:8px; }
+  .compact .class-block{ margin-bottom:22px; }
+  .compact td.pass::before, .compact td.fail::before{ content:""; }
+  .compact td.pass, .compact td.fail{ font-weight:700; }
+
+  .view-toggle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .view-toggle span{ font-size:12.5px; color:var(--muted); }
+  .toggle-pill{
+    display:inline-flex;
+    border:1px solid var(--ink);
+    border-radius:16px;
+    overflow:hidden;
+    font-size:12px;
+    font-weight:600;
+  }
+  .toggle-pill button{
+    font-family:inherit;
+    border:none;
+    background:#fff;
+    padding:6px 14px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .toggle-pill button.active{
+    background:var(--ink);
+    color:var(--paper);
+  }
+
+  @media print{
+    .step-row, .view-toggle{ display:none !important; }
+    .hero{ padding:0 0 20px; }
+    body{ background:#fff; padding:0; }
+    .class-block{ page-break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+    闖關護照 · 過關統計
+  </div>
+  <h1>網路假期闖關情形比對</h1>
+  <p class="sub">上傳闖關資料與全校新名冊，依姓名自動比對，整理出每個班級、每位同學的過關情形。全年級皆適用，讀取名冊後可勾選要查看的年級與班級。</p>
+</div>
+
+<div class="wrap">
+
+  <div class="step-row">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h2>上傳兩份資料</h2>
+      <p class="hint">闖關資料需含班級、座號、姓名與各科過關數（3 代表過關）；新名冊需含班級、座號、姓名，全校名冊即可。</p>
+      <div class="upload-row">
+        <div class="upload-box">
+          <label class="pickbtn" for="fileQuest">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+            選擇闖關資料
+          </label>
+          <input type="file" id="fileQuest" accept=".xlsx,.xls">
+          <div class="filename" id="fname1">尚未選擇檔案</div>
+        </div>
+        <div class="upload-box">
+          <label class="pickbtn" for="fileRoster">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+            選擇新名冊
+          </label>
+          <input type="file" id="fileRoster" accept=".xlsx,.xls">
+          <div class="filename" id="fname2">尚未選擇檔案</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-row" id="gradeBox" style="display:none;">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h2>選擇要查看的班級</h2>
+      <p class="hint">只勾選你教的班級，其他班級不會顯示在結果裡。</p>
+      <div class="class-picker">
+        <div class="picker-actions">
+          <a href="#" id="selAll">全選</a>
+          <a href="#" id="selNone">取消全選</a>
+        </div>
+        <div id="classCheckboxes"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-row">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h2>開始比對</h2>
+      <div class="run-row">
+        <button id="runBtn" disabled>開始比對</button>
+        <div id="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view-toggle" id="viewToggle" style="display:none;">
+    <span>顯示密度</span>
+    <div class="toggle-pill">
+      <button id="btnNormal" class="active">一般</button>
+      <button id="btnCompact">精簡</button>
+    </div>
+    <span style="margin-left:6px;">·</span>
+    <button id="btnPrint" style="font-family:inherit; font-size:12px; font-weight:600; border:1px solid var(--ink); background:#fff; padding:6px 14px; border-radius:16px; cursor:pointer;">列印 / 存成 PDF</button>
+  </div>
+
+  <div id="summary"></div>
+  <div id="notFoundBox" style="display:none"></div>
+
+</div>
+
+<script>
+let questData = null, rosterData = null;
+const PASS_VALUE = 3;
+
+document.getElementById('fileQuest').addEventListener('change', e=>handleFile(e,'quest'));
+document.getElementById('fileRoster').addEventListener('change', e=>handleFile(e,'roster'));
+document.getElementById('runBtn').addEventListener('click', run);
+document.getElementById('selAll').addEventListener('click', e=>{
+  e.preventDefault();
+  document.querySelectorAll('.classChk').forEach(el=>el.checked=true);
+});
+document.getElementById('selNone').addEventListener('click', e=>{
+  e.preventDefault();
+  document.querySelectorAll('.classChk').forEach(el=>el.checked=false);
+});
+document.getElementById('btnNormal').addEventListener('click', ()=>{
+  document.body.classList.remove('compact');
+  document.getElementById('btnNormal').classList.add('active');
+  document.getElementById('btnCompact').classList.remove('active');
+});
+document.getElementById('btnCompact').addEventListener('click', ()=>{
+  document.body.classList.add('compact');
+  document.getElementById('btnCompact').classList.add('active');
+  document.getElementById('btnNormal').classList.remove('active');
+});
+document.getElementById('btnPrint').addEventListener('click', ()=>window.print());
+
+function handleFile(e, kind){
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById(kind==='quest'?'fname1':'fname2').textContent = '✓ ' + file.name;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const wb = XLSX.read(ev.target.result, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      if(kind==='quest') questData = rows; else rosterData = rows;
+      if(kind==='roster') setupGradeSelect(rows);
+      checkReady();
+    }catch(err){
+      setStatus('讀取檔案失敗：' + file.name + '（' + err.message + '）');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+let rosterGradeKey = null; // 保留變數名稱相容，但此處未必使用
+let rosterClassKeyGlobal = null;
+
+function setupGradeSelect(rows){
+  const box = document.getElementById('gradeBox');
+  const wrap = document.getElementById('classCheckboxes');
+  if(!rows.length){ box.style.display='none'; return; }
+
+  const rClassKey = findKey(rows[0], ['班級','新班級']);
+  if(!rClassKey){
+    box.style.display = 'none';
+    return;
+  }
+  rosterClassKeyGlobal = rClassKey;
+
+  const classes = [...new Set(rows.map(r => (r[rClassKey]===undefined||r[rClassKey]===null)?'':r[rClassKey].toString().trim()).filter(g=>g!==''))];
+  classes.sort((a,b)=>{
+    const na = parseInt(a,10), nb = parseInt(b,10);
+    if(!isNaN(na) && !isNaN(nb)) return na-nb;
+    return a.localeCompare(b);
+  });
+
+  wrap.innerHTML = classes.map(c=>
+    `<label style="display:flex; align-items:center; gap:5px; border:1px solid var(--line); padding:4px 10px; border-radius:14px; cursor:pointer; background:#fff;">
+       <input type="checkbox" class="classChk" value="${c}"> ${c}
+     </label>`
+  ).join('');
+
+  box.style.display = 'block';
+}
+
+function getSelectedClasses(){
+  return Array.from(document.querySelectorAll('.classChk:checked')).map(el=>el.value);
+}
+
+function checkReady(){
+  document.getElementById('runBtn').disabled = !(questData && rosterData);
+  setStatus('');
+}
+
+function setStatus(msg, ok){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.classList.toggle('ok', !!ok);
+}
+
+// 找出欄位名稱的彈性比對（避免使用者欄位命名略有差異）
+function findKey(row, candidates){
+  const keys = Object.keys(row);
+  for(const c of candidates){
+    const hit = keys.find(k => k.toString().trim() === c);
+    if(hit) return hit;
+  }
+  // 模糊比對：欄名包含關鍵字
+  for(const c of candidates){
+    const hit = keys.find(k => k.toString().includes(c));
+    if(hit) return hit;
+  }
+  return null;
+}
+
+function normName(s){
+  return (s===undefined||s===null) ? '' : s.toString().trim().replace(/\s+/g,'');
+}
+function normSeat(s){
+  if(s===undefined||s===null||s==='') return '';
+  let str = s.toString().trim();
+  // 去除前導零以便比對用（顯示仍用原值）
+  return str.replace(/^0+(?=\d)/,'');
+}
+
+function run(){
+  setStatus('比對中...');
+  document.getElementById('summary').innerHTML = '';
+  document.getElementById('notFoundBox').style.display = 'none';
+
+  if(questData.length===0 || rosterData.length===0){
+    setStatus('其中一個檔案沒有資料列，請確認檔案內容。');
+    return;
+  }
+
+  let activeRoster = rosterData;
+  const selectedClasses = getSelectedClasses();
+  if(rosterClassKeyGlobal && selectedClasses.length>0){
+    activeRoster = rosterData.filter(r => selectedClasses.includes((r[rosterClassKeyGlobal]===undefined||r[rosterClassKeyGlobal]===null?'':r[rosterClassKeyGlobal].toString().trim())));
+  }
+
+  if(activeRoster.length===0){
+    setStatus('所選班級在新名冊中沒有資料，請確認至少勾選一個班級。');
+    return;
+  }
+
+  const qSample = questData[0];
+  const rSample = activeRoster[0];
+
+  const qNameKey = findKey(qSample, ['姓名','學生姓名','名字']);
+  const rNameKey = findKey(rSample, ['姓名','學生姓名','名字']);
+  const rClassKey = findKey(rSample, ['班級','新班級']);
+  const rSeatKey = findKey(rSample, ['座號','新座號']);
+
+  if(!qNameKey || !rNameKey || !rClassKey || !rSeatKey){
+    setStatus('找不到必要欄位，請確認闖關資料含「姓名」，新名冊含「班級」「座號」「姓名」。');
+    return;
+  }
+
+  // 找出闖關資料裡，扣除 年級/班級/座號/姓名/上線數 以外的科目欄位
+  const excludeCols = new Set([qNameKey]);
+  ['年級','班級','座號','上線數'].forEach(w=>{
+    const k = findKey(qSample, [w]);
+    if(k) excludeCols.add(k);
+  });
+  const subjectKeys = Object.keys(qSample).filter(k => !excludeCols.has(k));
+  const onlineKey = findKey(qSample, ['上線數']);
+
+  // 建立闖關資料姓名索引（同名可能重複，先用姓名為主 key，存陣列）
+  const questByName = {};
+  questData.forEach(row=>{
+    const nm = normName(row[qNameKey]);
+    if(!nm) return;
+    if(!questByName[nm]) questByName[nm] = [];
+    questByName[nm].push(row);
+  });
+
+  // 依新班級分組
+  const classes = {};
+  const notFound = [];
+
+  activeRoster.forEach(row=>{
+    const nm = normName(row[rNameKey]);
+    const cls = (row[rClassKey]===undefined||row[rClassKey]===null) ? '' : row[rClassKey].toString().trim();
+    const seat = (row[rSeatKey]===undefined||row[rSeatKey]===null) ? '' : row[rSeatKey].toString().trim();
+    if(!cls) return;
+    if(!classes[cls]) classes[cls] = [];
+
+    const matches = questByName[nm];
+    let questRow = null;
+    if(matches && matches.length===1){
+      questRow = matches[0];
+    } else if(matches && matches.length>1){
+      // 同名多筆，全部列出但標記需人工確認
+      questRow = matches[0];
+    }
+
+    if(!questRow){
+      notFound.push({name: row[rNameKey], cls, seat});
+    }
+
+    classes[cls].push({
+      seat, name: row[rNameKey], questRow, dup: matches && matches.length>1
+    });
+  });
+
+  renderResults(classes, subjectKeys, onlineKey, notFound);
+  document.getElementById('viewToggle').style.display = 'flex';
+  const clsLabel = selectedClasses.length>0 ? ('已篩選 '+selectedClasses.length+' 個班級 · ') : '';
+  setStatus(clsLabel + '比對完成，共 ' + activeRoster.length + ' 位學生', true);
+}
+
+function sortSeat(a,b){
+  const na = parseInt(a.seat,10), nb = parseInt(b.seat,10);
+  if(isNaN(na) || isNaN(nb)) return (a.seat||'').localeCompare(b.seat||'');
+  return na-nb;
+}
+
+function classSortKey(c){
+  const n = parseInt(c,10);
+  return isNaN(n) ? c : n;
+}
+
+function renderResults(classes, subjectKeys, onlineKey, notFound){
+  const container = document.getElementById('summary');
+  container.innerHTML = '';
+
+  const classNames = Object.keys(classes).sort((a,b)=>{
+    const ka = classSortKey(a), kb = classSortKey(b);
+    if(typeof ka === 'number' && typeof kb === 'number') return ka-kb;
+    return a.toString().localeCompare(b.toString());
+  });
+
+  classNames.forEach(cls=>{
+    const students = classes[cls].slice().sort(sortSeat);
+    const total = students.length;
+    const missing = students.filter(s=>!s.questRow).length;
+
+    // 計算全班過關率（以有資料的科目格數為分母）
+    let passCount = 0, gradedCount = 0;
+    students.forEach(s=>{
+      if(!s.questRow) return;
+      subjectKeys.forEach(k=>{
+        const v = s.questRow[k];
+        if(v===''||v===undefined||v===null) return;
+        const num = Number(v);
+        if(isNaN(num)) return;
+        gradedCount++;
+        if(num>=3) passCount++;
+      });
+    });
+    const rate = gradedCount>0 ? Math.round(passCount/gradedCount*100) : 0;
+
+    const block = document.createElement('div');
+    block.className = 'class-block';
+
+    const header = document.createElement('div');
+    header.className = 'class-header';
+    header.innerHTML = `
+      <div class="class-title">
+        <h2>${cls} 班</h2>
+        <span class="count">${total} 位同學</span>
+        ${missing? `<span class="missing-flag">${missing} 人查無闖關資料</span>` : ''}
+      </div>
+      <div class="class-rate">
+        <div class="rate-bar"><span style="width:${rate}%"></span></div>
+        <span class="rate-label">${rate}% 過關</span>
+      </div>`;
+    block.appendChild(header);
+
+    const scrollWrap = document.createElement('div');
+    scrollWrap.className = 'table-scroll';
+    const table = document.createElement('table');
+    let thead = '<tr><th>座號</th><th>姓名</th>';
+    subjectKeys.forEach(k=> thead += `<th>${k}</th>`);
+    if(onlineKey) thead += `<th>${onlineKey}</th>`;
+    thead += '</tr>';
+
+    let tbody = '';
+    students.forEach(s=>{
+      const rowClass = s.questRow ? '' : 'not-found';
+      tbody += `<tr class="${rowClass}"><td class="seat">${s.seat}</td><td class="name">${s.name}${s.dup?'<span class="badge">同名多筆</span>':''}</td>`;
+      subjectKeys.forEach(k=>{
+        if(!s.questRow){ tbody += '<td class="na">－</td>'; return; }
+        const v = s.questRow[k];
+        if(v===''||v===undefined||v===null){
+          tbody += '<td class="na">－</td>';
+        } else {
+          const num = Number(v);
+          const passed = !isNaN(num) && num >= 3;
+          tbody += `<td class="${passed?'pass':'fail'}">${v}</td>`;
+        }
+      });
+      if(onlineKey){
+        const v = s.questRow ? s.questRow[onlineKey] : '';
+        tbody += `<td class="seat">${v===undefined||v===null?'':v}</td>`;
+      }
+      tbody += '</tr>';
+    });
+
+    table.innerHTML = thead + tbody;
+    scrollWrap.appendChild(table);
+    block.appendChild(scrollWrap);
+    container.appendChild(block);
+  });
+
+  const nfBox = document.getElementById('notFoundBox');
+  if(notFound.length>0){
+    nfBox.style.display = 'block';
+    let html = `<h3>以下 ${notFound.length} 位同學在新名冊中找不到對應的闖關資料（可能是姓名寫法不同、或尚未闖關）</h3><table><tr><th>班級</th><th>座號</th><th>姓名</th></tr>`;
+    notFound.forEach(n=>{
+      html += `<tr><td>${n.cls}</td><td>${n.seat}</td><td>${n.name}</td></tr>`;
+    });
+    html += '</table>';
+    nfBox.innerHTML = html;
+  } else {
+    nfBox.style.display = 'none';
+  }
+}
+</script>
+
+</body>
+</html>
