@@ -881,10 +881,105 @@
 
     // 收集空值警告
     for (const [k, v] of Object.entries(基本資料)) {
-      if (v === null) warnings.push(k);
+      if (v === null) warnings.push('基本資料.' + k);
     }
 
-    return { result: [{ '基本資料': 基本資料 }], warnings };
+    // ---------- 學籍資料（逐學期） ----------
+    const semesterMap = { '一': 1, '二': 2, '1': 1, '2': 2 };
+
+    function findByName(arr, nameField, name) {
+      if (!Array.isArray(arr)) return null;
+      return arr.find(x => x && x[nameField] && x[nameField].indexOf(name) !== -1) || null;
+    }
+    function scorePct(item) {
+      if (!item) return null;
+      return cleanVal(item['學期百分制成績']);
+    }
+    function scoreDesc(item) {
+      if (!item) return null;
+      return cleanVal(item['學期文字描述']) || cleanVal(item['學期字串描述']);
+    }
+
+    const 學籍資料 = semesters.map(sem => {
+      const 領域 = sem['領域'] || [];
+      const 分項科目 = sem['分項科目'] || sem['科目'] || [];
+      const daily = sem['日常生活表現'] || {};
+
+      const 語文 = findByName(領域, '領域名稱', '語文');
+      const 國語 = findByName(分項科目, '科目名稱', '國語');
+      const 本土語文 = findByName(分項科目, '科目名稱', '本土語文');
+      const 健體 = findByName(領域, '領域名稱', '健體');
+      const 健康 = findByName(分項科目, '科目名稱', '健康');
+      const 生活領域 = findByName(領域, '領域名稱', '生活');
+      const 數學 = findByName(領域, '領域名稱', '數學');
+      const 英語 = findByName(分項科目, '科目名稱', '英語');
+      const 社會 = findByName(領域, '領域名稱', '社會');
+      const 藝術 = findByName(領域, '領域名稱', '藝術');
+      const 音樂 = findByName(分項科目, '科目名稱', '音樂');
+      const 自然 = findByName(領域, '領域名稱', '自然');
+      const 綜合 = findByName(領域, '領域名稱', '綜合');
+
+      const 學習紀錄_資料內容 = {
+        '學期成績': cleanVal((sem['總分成績'] || {})['學期平均成績']),
+        '語文_領域百分制成績': scorePct(語文),
+        '語文_領域字串描述': scoreDesc(語文),
+        '國語文百分制成績': scorePct(國語),
+        '本土語文_百分制成績': scorePct(本土語文),
+        '本土語文_類別': null,
+        '健康與體育_領域百分制成績': scorePct(健體),
+        '健康與體育_領域字串描述': scoreDesc(健體),
+        '健康教育_百分制成績': scorePct(健康),
+        '生活課程_百分制成績': scorePct(生活領域),
+        '生活課程_字串描述': scoreDesc(生活領域),
+        '數學_領域百分制成績': scorePct(數學),
+        '數學_領域字串描述': scoreDesc(數學),
+        '英語文_百分制成績': scorePct(英語),
+        '社會_領域百分制成績': scorePct(社會),
+        '社會_領域字串描述': scoreDesc(社會),
+        '藝術_領域百分制成績': scorePct(藝術),
+        '藝術_領域字串描述': scoreDesc(藝術),
+        '音樂_百分制成績': scorePct(音樂),
+        '自然科學_領域百分制成績': scorePct(自然),
+        '自然科學_領域字串描述': scoreDesc(自然),
+        '綜合活動_領域百分制成績': scorePct(綜合),
+        '綜合活動_領域字串描述': scoreDesc(綜合)
+      };
+      // 移除完全沒有資料的欄位（維持精簡，只保留有值或明確 null 的必要欄位不刪除，這裡全部保留供人工檢查）
+
+      const 彈性項目 = 分項科目.filter(x => x && x['科目代碼'] && String(x['科目代碼']).startsWith('A08'));
+      const 彈性學習課程 = 彈性項目.map(item => ({
+        '課程名稱': cleanVal(item['科目名稱']),
+        '課程類型': null,
+        '彈性學習課程_成績': {
+          '彈性學習課程_百分制成績': cleanVal(item['學期百分制成績']),
+          '彈性學習課程_字串描述': cleanVal(item['學期文字描述']) || ''
+        }
+      }));
+
+      return {
+        '學年': toIntOrNull(sem['學年別']),
+        '學期': semesterMap[cleanVal(sem['學期別'])] || toIntOrNull(sem['學期別']),
+        '年級': toIntOrNull((sem['班級座號'] || {})['年級']),
+        '學習紀錄_資料內容': 學習紀錄_資料內容,
+        '彈性學習課程': 彈性學習課程,
+        '日常生活表現_日常行為': null,
+        '應出席節數': null,
+        '公假數': toIntOrNull(daily['學期出缺席_公假天數']),
+        '事假數': toIntOrNull(daily['學期出缺席_事假天數']),
+        '病假數': toIntOrNull(daily['學期出缺席_病假天數']),
+        '喪假數': toIntOrNull(daily['學期出缺席_喪假天數']),
+        '曠課數': toIntOrNull(daily['學期出缺席_曠課天數']),
+        '其他假數': toIntOrNull(daily['學期出缺席_不可抗力天數'])
+      };
+    });
+
+    for (let i = 0; i < 學籍資料.length; i++) {
+      for (const [k, v] of Object.entries(學籍資料[i])) {
+        if (v === null) warnings.push('學籍資料[' + i + '].' + k);
+      }
+    }
+
+    return { result: [{ '基本資料': 基本資料, '學籍資料': 學籍資料 }], warnings };
   }
 
   function loadMapFile(file) {
