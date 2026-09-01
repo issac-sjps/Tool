@@ -252,6 +252,7 @@
       <label><input type="checkbox" id="optAttrPrefix" checked> 保留屬性（前綴 <code>@</code>）</label>
       <label><input type="checkbox" id="optTextKey" checked> 混合內容以 <code>#text</code> 儲存文字</label>
       <label><input type="checkbox" id="optTrim" checked> 去除文字前後空白</label>
+      <label><input type="checkbox" id="optWrapArray"> 最外層包一層陣列 <code>[ {...} ]</code></label>
     </div>
 
     <div id="xmlDropZone">
@@ -469,6 +470,7 @@
   const optAttrPrefix = document.getElementById('optAttrPrefix');
   const optTextKey = document.getElementById('optTextKey');
   const optTrim = document.getElementById('optTrim');
+  const optWrapArray = document.getElementById('optWrapArray');
 
   let currentXmlFilename = 'data.xml';
   let xmlCm = null;
@@ -575,7 +577,7 @@
     const root = doc.documentElement;
     const result = {};
     result[root.nodeName] = xmlNodeToObj(root);
-    return result;
+    return optWrapArray.checked ? [result] : result;
   }
 
   function loadXmlFile(file) {
