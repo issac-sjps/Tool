@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSON 編輯器</title>
+<title>校務系統專用 JSON 編輯器</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <style>
@@ -198,7 +198,7 @@
 </head>
 <body>
 
-<h1>📄 JSON 編輯器</h1>
+<h1>📄 校務系統專用 JSON 編輯器</h1>
 <div class="subtitle">上傳 JSON 檔案 → 編輯 → 下載（保留原檔名），或將 XML 轉換為 JSON</div>
 
 <div class="container">
@@ -206,6 +206,7 @@
   <div class="tabs">
     <button class="tab-btn active" id="tabBtnJson" data-tab="json">📝 JSON 編輯器</button>
     <button class="tab-btn" id="tabBtnXml" data-tab="xml">🔄 XML → JSON</button>
+    <button class="tab-btn" id="tabBtnMap" data-tab="map">🧩 錯誤格式 → 正確格式（基本資料）</button>
   </div>
 
   <!-- ===================== JSON 編輯器 分頁 ===================== -->
@@ -236,6 +237,42 @@
     <div class="hint">
       提示：儲存下載時會直接用原檔名（例如 data.json → 下載後仍叫 data.json），瀏覽器可能會依你的下載設定詢問存檔位置或直接放進「下載」資料夾。若要覆蓋原檔案，下載後請自行搬移取代。
     </div>
+  </div>
+
+  <!-- ===================== 格式轉換分頁（基本資料） ===================== -->
+  <div class="tab-panel" id="panelMap">
+    <div class="toolbar">
+      <label class="file-label" for="mapFileInput">📂 開啟「錯誤格式」JSON</label>
+      <input type="file" id="mapFileInput" accept=".json,application/json">
+      <button id="mapConvertBtn" disabled>➡️ 轉換為正確格式</button>
+      <button id="mapDownloadBtn" class="secondary" disabled>💾 下載</button>
+      <div class="filename" id="mapFilenameLabel"></div>
+    </div>
+
+    <div class="hint" style="margin-top:0; margin-bottom:12px;">
+      這個分頁只處理「基本資料」欄位對照。沒有來源資料的欄位會自動填 <code>null</code>，轉換後請務必在下方檢查並手動補齊標示 ⚠️ 的欄位（可切換到 JSON 編輯器分頁繼續編輯）。
+    </div>
+
+    <div id="mapDropZone">
+      <div id="mapDropHint" class="drop-hint">
+        尚未載入檔案<br>
+        請點選「開啟「錯誤格式」JSON」，或直接把檔案拖曳到這裡
+      </div>
+
+      <div id="mapSplitWrapper" style="display:none;" class="split">
+        <div class="split-col">
+          <h3>原始（錯誤格式）</h3>
+          <textarea id="mapSrcEditor" spellcheck="false"></textarea>
+        </div>
+        <div class="split-col">
+          <h3>轉換後（正確格式）</h3>
+          <textarea id="mapOutEditor" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="status" id="mapStatus"></div>
+    <div class="status" id="mapWarnings" style="color: var(--muted); white-space: pre-line;"></div>
   </div>
 
   <!-- ===================== XML → JSON 分頁 ===================== -->
@@ -288,7 +325,7 @@
 <script>
   /* ============ Tab switching ============ */
   const tabBtns = document.querySelectorAll('.tab-btn');
-  const panels = { json: document.getElementById('panelJson'), xml: document.getElementById('panelXml') };
+  const panels = { json: document.getElementById('panelJson'), xml: document.getElementById('panelXml'), map: document.getElementById('panelMap') };
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       tabBtns.forEach(b => b.classList.remove('active'));
@@ -298,7 +335,8 @@
       // refresh CodeMirror instances when their panel becomes visible
       setTimeout(() => {
         if (btn.dataset.tab === 'json') { cm.refresh(); }
-        else { xmlCm && xmlCm.refresh(); xmlJsonCm && xmlJsonCm.refresh(); }
+        else if (btn.dataset.tab === 'xml') { xmlCm && xmlCm.refresh(); xmlJsonCm && xmlJsonCm.refresh(); }
+        else { mapSrcCm && mapSrcCm.refresh(); mapOutCm && mapOutCm.refresh(); }
       }, 0);
     });
   });
@@ -643,6 +681,279 @@
       loadXmlFile(file);
     } else {
       setXmlStatus('請拖曳 .xml 檔案', 'error');
+    }
+  });
+
+  /* ============================================================
+     格式轉換分頁：錯誤格式 → 正確格式（基本資料對照）
+  ============================================================ */
+  const mapFileInput = document.getElementById('mapFileInput');
+  const mapDropZone = document.getElementById('mapDropZone');
+  const mapDropHint = document.getElementById('mapDropHint');
+  const mapSplitWrapper = document.getElementById('mapSplitWrapper');
+  const mapStatus = document.getElementById('mapStatus');
+  const mapWarnings = document.getElementById('mapWarnings');
+  const mapFilenameLabel = document.getElementById('mapFilenameLabel');
+  const mapConvertBtn = document.getElementById('mapConvertBtn');
+  const mapDownloadBtn = document.getElementById('mapDownloadBtn');
+
+  let currentMapFilename = 'data.json';
+  let mapSrcCm = null;
+  let mapOutCm = null;
+
+  function setMapStatus(msg, type) {
+    mapStatus.textContent = msg;
+    mapStatus.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  function ensureMapEditors() {
+    if (!mapSrcCm) {
+      mapSrcCm = CodeMirror.fromTextArea(document.getElementById('mapSrcEditor'), {
+        mode: { name: 'javascript', json: true },
+        theme: 'dracula', lineNumbers: true, tabSize: 2, indentUnit: 2,
+        lineWrapping: true, matchBrackets: true
+      });
+    }
+    if (!mapOutCm) {
+      mapOutCm = CodeMirror.fromTextArea(document.getElementById('mapOutEditor'), {
+        mode: { name: 'javascript', json: true },
+        theme: 'dracula', lineNumbers: true, tabSize: 2, indentUnit: 2,
+        lineWrapping: true, matchBrackets: true
+      });
+    }
+  }
+
+  // 把 "null" 字串或空字串當成真正的 null
+  function cleanVal(v) {
+    if (v === undefined) return null;
+    if (v === 'null') return null;
+    if (v === '') return null;
+    return v;
+  }
+
+  function toIntOrNull(v) {
+    v = cleanVal(v);
+    if (v === null) return null;
+    const n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  // 組合地址物件成單一字串
+  function buildAddress(addrObj) {
+    if (!addrObj) return null;
+    const order = ['縣市名', '鄉鎮市區名', '村里', '鄰', '路街', '段', '巷', '弄', '號', '之', '樓', '樓之', '其他'];
+    const suffix = { '鄰': '鄰', '段': '段', '巷': '巷', '弄': '弄', '號': '號', '樓': '樓' };
+    let parts = [];
+    for (const key of order) {
+      const fullKey = Object.keys(addrObj).find(k => k.endsWith('_' + key));
+      if (!fullKey) continue;
+      const v = cleanVal(addrObj[fullKey]);
+      if (v === null) continue;
+      if (key === '鄰') parts.push(v + '鄰');
+      else parts.push(v);
+    }
+    const text = parts.join('');
+    return text === '' ? null : text;
+  }
+
+  const IDENTITY_KEYS = [
+    '一般學生','本人身心障礙(身心障礙生)','資優生','家長身心障礙','大陸來臺依親者',
+    '僑生','港澳生','邊疆(蒙藏)生','外國學生','派外人員子女','體育績優',
+    '軍公教人員子女','軍公教遺族_因公','軍公教遺族_因病或意外','特殊境遇家庭'
+  ];
+
+  function buildIdentityFlags(categoryStr) {
+    const cat = cleanVal(categoryStr);
+    const obj = { '身心障礙核定日期': null };
+    let matched = false;
+    for (const k of IDENTITY_KEYS) {
+      const isMatch = cat && cat.indexOf(k) !== -1;
+      obj[k] = !!isMatch;
+      if (isMatch) matched = true;
+    }
+    if (!matched) obj['一般學生'] = true; // 找不到對應類別時，預設為一般學生
+    // 依原本正確格式的 key 順序重建
+    const ordered = {};
+    ordered['一般學生'] = obj['一般學生'];
+    ordered['本人身心障礙(身心障礙生)'] = obj['本人身心障礙(身心障礙生)'];
+    ordered['身心障礙核定日期'] = null;
+    ordered['資優生'] = obj['資優生'];
+    ordered['家長身心障礙'] = obj['家長身心障礙'];
+    ordered['大陸來臺依親者'] = obj['大陸來臺依親者'];
+    ordered['僑生'] = obj['僑生'];
+    ordered['港澳生'] = obj['港澳生'];
+    ordered['邊疆(蒙藏)生'] = obj['邊疆(蒙藏)生'];
+    ordered['外國學生'] = obj['外國學生'];
+    ordered['派外人員子女'] = obj['派外人員子女'];
+    ordered['體育績優'] = obj['體育績優'];
+    ordered['軍公教人員子女'] = obj['軍公教人員子女'];
+    ordered['軍公教遺族_因公'] = obj['軍公教遺族_因公'];
+    ordered['軍公教遺族_因病或意外'] = obj['軍公教遺族_因病或意外'];
+    ordered['特殊境遇家庭'] = obj['特殊境遇家庭'];
+    return ordered;
+  }
+
+  function convertBasicInfo(src) {
+    const warnings = [];
+    const root = src['學籍交換資料'] || src;
+    const sbr = root['學生基本資料'] || {};
+    const bd = sbr['基本資料'] || {};
+    const idCard = sbr['身分證證照'] || {};
+    const contact = sbr['連絡資料'] || {};
+    const identityContent = (sbr['學生身份註記'] || {})['學生身份註記_資料內容'] || {};
+    const indigenous = sbr['原住民'] || {};
+    const classNature = sbr['學生班級性質'] || {};
+    const graduation = sbr['畢修業核准文號'] || {};
+    const father = sbr['父親基本資料'] || {};
+    const mother = sbr['母親基本資料'] || {};
+    const guardian = sbr['監護人'] || {};
+    const semesters = (root['學期資料'] || {})['個別學期資料'] || [];
+    const latestSemester = semesters.length ? semesters[semesters.length - 1] : {};
+    const changeList = (root['異動資料'] || {})['異動資料_資料內容'] || [];
+
+    const indigenousType = cleanVal(indigenous['原住民_族別']);
+
+    const 基本資料 = {
+      '國民身分證統一編號(或居留證統一證號、臨時編號)': cleanVal(idCard['證照號碼']),
+      '學生中文姓名': cleanVal(bd['學生姓名']),
+      '學生英文姓名': null,
+      '學生第一(主要)國家地區': null,
+      '學生第二國家地區': null,
+      '僑居地': cleanVal(idCard['僑居地']),
+      '學生戶籍地址': buildAddress(contact['戶籍地址']),
+      '學生通訊地址': buildAddress(contact['通訊地址']),
+      '學生連絡電話': cleanVal(contact['行動電話']) || cleanVal(contact['通訊電話']),
+      '學生性別': cleanVal(bd['學生性別']),
+      '學生出生年月日': cleanVal(bd['學生生日']),
+      '現在就讀學校代碼': cleanVal(bd['現在學校代碼']),
+      '現在學校學制別': null,
+      '現在分校分部分班名稱': null,
+      '學生學習型態': null,
+      '現在年級': toIntOrNull(bd['現在年級']),
+      '現在班級屬性': null,
+      '現在班級序號': null,
+      '學年度': toIntOrNull(latestSemester['學年別']),
+      '學期': toIntOrNull(latestSemester['學期別']),
+      '現在班級': cleanVal(bd['現在班級']),
+      '現在座號': cleanVal(bd['現在座號']),
+      '學生身分註記_類別': buildIdentityFlags(identityContent['學生身份註記_類別']),
+      '學生父母(雙親)現況_失親': null,
+      '學生家庭狀況_低收入戶': null,
+      '低收入戶資格年月起日': null,
+      '低收入戶資格年月迄日': null,
+      '學生家庭狀況_中低收入戶': null,
+      '中低收入戶資格年月起日': null,
+      '中低收入戶資格年月迄日': null,
+      '原住民族資料_身分別': indigenousType ? '原住民' : '非原住民',
+      '原住民族資料_族別': indigenousType || '非原住民',
+      '通過原住民族語認證': null,
+      '父/母親_身分證號': cleanVal(father['父親_身分證號']),
+      '父/母親_姓名': cleanVal(father['父親_姓名']),
+      '父/母親_出生年次': cleanVal(father['父親_出生年次']),
+      '學生父/母親國家地區': null,
+      '學生父/母親_原屬國家地區': cleanVal(father['父親_原國籍']),
+      '母/父親_身分證號': cleanVal(mother['母親_身分證號']),
+      '母/父親_姓名': cleanVal(mother['母親_姓名']),
+      '母/父親_出生年次': cleanVal(mother['母親_出生年次']),
+      '學生母/父親國家地區': null,
+      '學生母/父親_原屬國家地區': cleanVal(mother['母親_原國籍']),
+      '班級性質': cleanVal(classNature['班級性質']),
+      '畢修業別': cleanVal(graduation['畢修業別']),
+      '畢修業_日期': cleanVal(graduation['畢修業_日期']),
+      '前一年段就讀年級': null,
+      '前一年段就讀班級': null,
+      '導師姓名': cleanVal((latestSemester['日常生活表現'] || {})['導師姓名']),
+      '異動紀錄_資料內容': changeList.map(item => ({
+        '異動後學校代碼': null,
+        '異動後學校學制別': null,
+        '異動後分校分部分班名稱': null,
+        '異動後就讀年級': toIntOrNull(item['異動年級']),
+        '異動前學校代碼': cleanVal(item['原就讀學校代碼']),
+        '異動前學校學制別': null,
+        '異動前分校分部分班名稱': null,
+        '異動前就讀年級': toIntOrNull(item['異動年級']),
+        '異動日期': cleanVal(item['異動日期']),
+        '異動原因': cleanVal(item['異動原因'])
+      })),
+      '監護人_身分證號': cleanVal(guardian['監護人_身分證號']),
+      '監護人_姓名': cleanVal(guardian['監護人_姓名'])
+    };
+
+    // 收集空值警告
+    for (const [k, v] of Object.entries(基本資料)) {
+      if (v === null) warnings.push(k);
+    }
+
+    return { result: [{ '基本資料': 基本資料 }], warnings };
+  }
+
+  function loadMapFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      ensureMapEditors();
+      mapDropHint.style.display = 'none';
+      mapSplitWrapper.style.display = 'flex';
+      mapSrcCm.setValue(e.target.result);
+      mapOutCm.setValue('');
+      mapSrcCm.refresh();
+      mapOutCm.refresh();
+      currentMapFilename = file.name || 'data.json';
+      mapFilenameLabel.innerHTML = '目前檔案：<span>' + currentMapFilename + '</span>';
+      mapConvertBtn.disabled = false;
+      mapDownloadBtn.disabled = true;
+      mapWarnings.textContent = '';
+      setMapStatus('已載入，請按「轉換為正確格式」', '');
+    };
+    reader.onerror = () => setMapStatus('讀取檔案失敗', 'error');
+    reader.readAsText(file, 'utf-8');
+  }
+
+  mapFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) loadMapFile(e.target.files[0]);
+  });
+
+  mapConvertBtn.addEventListener('click', () => {
+    try {
+      const src = JSON.parse(mapSrcCm.getValue());
+      const { result, warnings } = convertBasicInfo(src);
+      mapOutCm.setValue(JSON.stringify(result, null, 2));
+      mapOutCm.refresh();
+      mapDownloadBtn.disabled = false;
+      setMapStatus('✅ 已轉換，共 ' + warnings.length + ' 個欄位無來源資料（填為 null，需人工補齊）', 'ok');
+      mapWarnings.textContent = warnings.length ? '⚠️ 需人工補齊的欄位：\n' + warnings.join('、') : '';
+    } catch (err) {
+      mapDownloadBtn.disabled = true;
+      setMapStatus('⚠️ 轉換失敗：' + err.message, 'error');
+      mapWarnings.textContent = '';
+    }
+  });
+
+  mapDownloadBtn.addEventListener('click', () => {
+    const jsonText = mapOutCm.getValue();
+    if (!jsonText) { setMapStatus('請先轉換', 'error'); return; }
+    const baseName = currentMapFilename.replace(/\.json$/i, '');
+    const outName = baseName + '_正確格式.json';
+    downloadBlob(jsonText, 'application/json;charset=utf-8', outName);
+    setMapStatus('⬇️ 已下載：' + outName, 'ok');
+  });
+
+  ['dragover', 'dragenter'].forEach(evt => {
+    mapDropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      mapDropZone.style.borderColor = 'var(--accent)';
+    });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    mapDropZone.addEventListener(evt, (e) => e.preventDefault());
+  });
+  mapDropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type === 'application/json' || file.name.endsWith('.json'))) {
+      loadMapFile(file);
+    } else {
+      setMapStatus('請拖曳 .json 檔案', 'error');
     }
   });
 </script>
