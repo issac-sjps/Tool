@@ -48,6 +48,34 @@
     padding: 20px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { opacity: 1; color: var(--text); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
   .toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -130,43 +158,153 @@
     border-radius: 8px;
     font-size: 0.95rem;
   }
+
+  /* XML tab split view */
+  .split {
+    display: flex;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .split-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .split-col h3 {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0 0 6px 2px;
+    font-weight: 600;
+  }
+  .split .CodeMirror { height: 65vh; }
+  .options-row {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .options-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .options-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
 </style>
 </head>
 <body>
 
 <h1>📄 JSON 編輯器</h1>
-<div class="subtitle">上傳 JSON 檔案 → 編輯 → 下載（保留原檔名）</div>
+<div class="subtitle">上傳 JSON 檔案 → 編輯 → 下載（保留原檔名），或將 XML 轉換為 JSON</div>
 
-<div class="container" id="dropZone">
-  <div class="toolbar">
-    <label class="file-label" for="fileInput">📂 開啟 JSON 檔案</label>
-    <input type="file" id="fileInput" accept=".json,application/json">
-    <button id="formatBtn" class="secondary" disabled>格式化</button>
-    <button id="minifyBtn" class="secondary" disabled>壓縮</button>
-    <button id="downloadBtn" disabled>💾 下載</button>
-    <div class="filename" id="filenameLabel"></div>
-  </div>
-  <div class="meta" id="metaInfo"></div>
+<div class="container">
 
-  <div id="dropHint" class="drop-hint">
-    尚未載入檔案<br>
-    請點選「開啟 JSON 檔案」，或直接把 .json 檔案拖曳到這裡
+  <div class="tabs">
+    <button class="tab-btn active" id="tabBtnJson" data-tab="json">📝 JSON 編輯器</button>
+    <button class="tab-btn" id="tabBtnXml" data-tab="xml">🔄 XML → JSON</button>
   </div>
 
-  <div id="editorWrapper" style="display:none;">
-    <textarea id="editor" spellcheck="false"></textarea>
+  <!-- ===================== JSON 編輯器 分頁 ===================== -->
+  <div class="tab-panel active" id="panelJson">
+    <div class="toolbar">
+      <label class="file-label" for="fileInput">📂 開啟 JSON 檔案</label>
+      <input type="file" id="fileInput" accept=".json,application/json">
+      <button id="formatBtn" class="secondary" disabled>格式化</button>
+      <button id="minifyBtn" class="secondary" disabled>壓縮</button>
+      <button id="downloadBtn" disabled>💾 下載</button>
+      <div class="filename" id="filenameLabel"></div>
+    </div>
+    <div class="meta" id="metaInfo"></div>
+
+    <div id="dropZone">
+      <div id="dropHint" class="drop-hint">
+        尚未載入檔案<br>
+        請點選「開啟 JSON 檔案」，或直接把 .json 檔案拖曳到這裡
+      </div>
+
+      <div id="editorWrapper" style="display:none;">
+        <textarea id="editor" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="hint">
+      提示：儲存下載時會直接用原檔名（例如 data.json → 下載後仍叫 data.json），瀏覽器可能會依你的下載設定詢問存檔位置或直接放進「下載」資料夾。若要覆蓋原檔案，下載後請自行搬移取代。
+    </div>
   </div>
 
-  <div class="status" id="status"></div>
-</div>
+  <!-- ===================== XML → JSON 分頁 ===================== -->
+  <div class="tab-panel" id="panelXml">
+    <div class="toolbar">
+      <label class="file-label" for="xmlFileInput">📂 開啟 XML 檔案</label>
+      <input type="file" id="xmlFileInput" accept=".xml,text/xml,application/xml">
+      <button id="convertBtn" disabled>➡️ 轉換為 JSON</button>
+      <button id="xmlDownloadBtn" class="secondary" disabled>💾 下載 JSON</button>
+      <div class="filename" id="xmlFilenameLabel"></div>
+    </div>
 
-<div class="hint">
-  提示：儲存下載時會直接用原檔名（例如 data.json → 下載後仍叫 data.json），瀏覽器可能會依你的下載設定詢問存檔位置或直接放進「下載」資料夾。若要覆蓋原檔案，下載後請自行搬移取代。
+    <div class="options-row">
+      <label><input type="checkbox" id="optAttrPrefix" checked> 保留屬性（前綴 <code>@</code>）</label>
+      <label><input type="checkbox" id="optTextKey" checked> 混合內容以 <code>#text</code> 儲存文字</label>
+      <label><input type="checkbox" id="optTrim" checked> 去除文字前後空白</label>
+    </div>
+
+    <div id="xmlDropZone">
+      <div id="xmlDropHint" class="drop-hint">
+        尚未載入檔案<br>
+        請點選「開啟 XML 檔案」，或直接把 .xml 檔案拖曳到這裡
+      </div>
+
+      <div id="xmlSplitWrapper" style="display:none;" class="split">
+        <div class="split-col">
+          <h3>原始 XML</h3>
+          <textarea id="xmlEditor" spellcheck="false"></textarea>
+        </div>
+        <div class="split-col">
+          <h3>轉換後 JSON</h3>
+          <textarea id="xmlJsonEditor" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="status" id="xmlStatus"></div>
+
+    <div class="hint">
+      提示：轉換規則 — XML 屬性會轉成 <code>@屬性名稱</code>；同名的重複子節點會自動合併成陣列；純文字節點直接轉成字串值。下載時檔名會自動改成 <code>原檔名.json</code>。
+    </div>
+  </div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
 <script>
+  /* ============ Tab switching ============ */
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panels = { json: document.getElementById('panelJson'), xml: document.getElementById('panelXml') };
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      Object.values(panels).forEach(p => p.classList.remove('active'));
+      panels[btn.dataset.tab].classList.add('active');
+      // refresh CodeMirror instances when their panel becomes visible
+      setTimeout(() => {
+        if (btn.dataset.tab === 'json') { cm.refresh(); }
+        else { xmlCm && xmlCm.refresh(); xmlJsonCm && xmlJsonCm.refresh(); }
+      }, 0);
+    });
+  });
+
+  /* ============================================================
+     JSON 編輯器分頁（原有功能）
+  ============================================================ */
   const fileInput = document.getElementById('fileInput');
   const editorWrapper = document.getElementById('editorWrapper');
   const dropHint = document.getElementById('dropHint');
@@ -179,7 +317,6 @@
 
   let currentFilename = 'data.json';
 
-  // 初始化 CodeMirror：JSON 語法上色 + 行號
   const cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
     mode: { name: 'javascript', json: true },
     theme: 'dracula',
@@ -280,19 +417,10 @@
       const proceed = confirm('目前 JSON 格式有誤，仍要下載這份內容嗎？');
       if (!proceed) return;
     }
-    const blob = new Blob([cm.getValue()], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = currentFilename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlob(cm.getValue(), 'application/json;charset=utf-8', currentFilename);
     setStatus('⬇️ 已下載：' + currentFilename, 'ok');
   });
 
-  // 拖放支援
   ['dragover', 'dragenter'].forEach(evt => {
     dropZone.addEventListener(evt, (e) => {
       e.preventDefault();
@@ -300,9 +428,7 @@
     });
   });
   ['dragleave', 'drop'].forEach(evt => {
-    dropZone.addEventListener(evt, (e) => {
-      e.preventDefault();
-    });
+    dropZone.addEventListener(evt, (e) => e.preventDefault());
   });
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
@@ -311,6 +437,210 @@
       loadFile(file);
     } else {
       setStatus('請拖曳 .json 檔案', 'error');
+    }
+  });
+
+  /* ============================================================
+     共用下載函式
+  ============================================================ */
+  function downloadBlob(content, mime, filename) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* ============================================================
+     XML → JSON 分頁
+  ============================================================ */
+  const xmlFileInput = document.getElementById('xmlFileInput');
+  const xmlDropZone = document.getElementById('xmlDropZone');
+  const xmlDropHint = document.getElementById('xmlDropHint');
+  const xmlSplitWrapper = document.getElementById('xmlSplitWrapper');
+  const xmlStatus = document.getElementById('xmlStatus');
+  const xmlFilenameLabel = document.getElementById('xmlFilenameLabel');
+  const convertBtn = document.getElementById('convertBtn');
+  const xmlDownloadBtn = document.getElementById('xmlDownloadBtn');
+  const optAttrPrefix = document.getElementById('optAttrPrefix');
+  const optTextKey = document.getElementById('optTextKey');
+  const optTrim = document.getElementById('optTrim');
+
+  let currentXmlFilename = 'data.xml';
+  let xmlCm = null;
+  let xmlJsonCm = null;
+
+  function setXmlStatus(msg, type) {
+    xmlStatus.textContent = msg;
+    xmlStatus.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  function ensureXmlEditors() {
+    if (!xmlCm) {
+      xmlCm = CodeMirror.fromTextArea(document.getElementById('xmlEditor'), {
+        mode: 'xml',
+        theme: 'dracula',
+        lineNumbers: true,
+        tabSize: 2,
+        indentUnit: 2,
+        lineWrapping: true,
+        matchBrackets: true
+      });
+    }
+    if (!xmlJsonCm) {
+      xmlJsonCm = CodeMirror.fromTextArea(document.getElementById('xmlJsonEditor'), {
+        mode: { name: 'javascript', json: true },
+        theme: 'dracula',
+        lineNumbers: true,
+        tabSize: 2,
+        indentUnit: 2,
+        lineWrapping: true,
+        matchBrackets: true,
+        readOnly: false
+      });
+    }
+  }
+
+  // 將 DOM 節點遞迴轉換成 plain object
+  function xmlNodeToObj(node) {
+    const attrPrefix = optAttrPrefix.checked;
+    const textKey = optTextKey.checked ? '#text' : null;
+    const trim = optTrim.checked;
+
+    const obj = {};
+    let hasAttrs = false;
+
+    if (node.attributes && node.attributes.length > 0 && attrPrefix) {
+      for (const attr of node.attributes) {
+        obj['@' + attr.name] = attr.value;
+        hasAttrs = true;
+      }
+    }
+
+    const children = Array.from(node.childNodes).filter(n =>
+      n.nodeType === 1 /* ELEMENT_NODE */ ||
+      (n.nodeType === 3 /* TEXT_NODE */ && (trim ? n.nodeValue.trim() !== '' : n.nodeValue !== ''))
+    );
+
+    const elementChildren = children.filter(n => n.nodeType === 1);
+    const textChildren = children.filter(n => n.nodeType === 3);
+
+    if (elementChildren.length === 0) {
+      // 純文字或空節點
+      const textContent = trim ? node.textContent.trim() : node.textContent;
+      if (!hasAttrs) {
+        return textContent === '' ? null : textContent;
+      } else {
+        if (textContent !== '') {
+          obj[textKey || '#text'] = textContent;
+        }
+        return obj;
+      }
+    }
+
+    // 有子元素：遞迴處理，同名節點合併為陣列
+    for (const child of elementChildren) {
+      const childValue = xmlNodeToObj(child);
+      const name = child.nodeName;
+      if (Object.prototype.hasOwnProperty.call(obj, name)) {
+        if (!Array.isArray(obj[name])) obj[name] = [obj[name]];
+        obj[name].push(childValue);
+      } else {
+        obj[name] = childValue;
+      }
+    }
+
+    // 混合內容：元素旁邊還有文字
+    if (textChildren.length > 0 && textKey) {
+      const mixedText = textChildren.map(n => trim ? n.nodeValue.trim() : n.nodeValue).join('').trim();
+      if (mixedText !== '') obj[textKey] = mixedText;
+    }
+
+    return obj;
+  }
+
+  function xmlToJson(xmlString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlString, 'application/xml');
+
+    const parserError = doc.querySelector('parsererror');
+    if (parserError) {
+      throw new Error(parserError.textContent.trim().split('\n')[0] || 'XML 解析錯誤');
+    }
+
+    const root = doc.documentElement;
+    const result = {};
+    result[root.nodeName] = xmlNodeToObj(root);
+    return result;
+  }
+
+  function loadXmlFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      ensureXmlEditors();
+      xmlDropHint.style.display = 'none';
+      xmlSplitWrapper.style.display = 'flex';
+      xmlCm.setValue(e.target.result);
+      xmlJsonCm.setValue('');
+      xmlCm.refresh();
+      xmlJsonCm.refresh();
+      currentXmlFilename = file.name || 'data.xml';
+      xmlFilenameLabel.innerHTML = '目前檔案：<span>' + currentXmlFilename + '</span>';
+      convertBtn.disabled = false;
+      xmlDownloadBtn.disabled = true;
+      setXmlStatus('已載入，請按「轉換為 JSON」', '');
+    };
+    reader.onerror = () => setXmlStatus('讀取檔案失敗', 'error');
+    reader.readAsText(file, 'utf-8');
+  }
+
+  xmlFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) loadXmlFile(e.target.files[0]);
+  });
+
+  convertBtn.addEventListener('click', () => {
+    try {
+      const result = xmlToJson(xmlCm.getValue());
+      xmlJsonCm.setValue(JSON.stringify(result, null, 2));
+      xmlJsonCm.refresh();
+      xmlDownloadBtn.disabled = false;
+      setXmlStatus('✅ 已轉換為 JSON', 'ok');
+    } catch (err) {
+      xmlDownloadBtn.disabled = true;
+      setXmlStatus('⚠️ 轉換失敗：' + err.message, 'error');
+    }
+  });
+
+  xmlDownloadBtn.addEventListener('click', () => {
+    const jsonText = xmlJsonCm.getValue();
+    if (!jsonText) { setXmlStatus('請先轉換為 JSON', 'error'); return; }
+    const baseName = currentXmlFilename.replace(/\.xml$/i, '');
+    const outName = baseName + '.json';
+    downloadBlob(jsonText, 'application/json;charset=utf-8', outName);
+    setXmlStatus('⬇️ 已下載：' + outName, 'ok');
+  });
+
+  ['dragover', 'dragenter'].forEach(evt => {
+    xmlDropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      xmlDropZone.style.borderColor = 'var(--accent)';
+    });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    xmlDropZone.addEventListener(evt, (e) => e.preventDefault());
+  });
+  xmlDropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type.includes('xml') || file.name.toLowerCase().endsWith('.xml'))) {
+      loadXmlFile(file);
+    } else {
+      setXmlStatus('請拖曳 .xml 檔案', 'error');
     }
   });
 </script>
