@@ -44,33 +44,46 @@
   .room-card .name { font-size: 18px; font-weight: bold; }
   .room-card .desc { font-size: 13px; color: #a89a86; margin-top: 6px; }
 
-  /* ---------- 教室大螢幕 ---------- */
+  /* ---------- 教室大螢幕：左右兩欄，固定高度不捲動 ---------- */
+  html, body { height: 100%; overflow: hidden; }
   #room-screen {
-    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-    justify-content: flex-start; padding: 24px; position: relative;
+    height: 100vh; display: flex; flex-direction: column;
+    padding: 16px; position: relative; overflow: hidden;
     background-size: cover; background-position: center;
   }
   .back-btn, .reset-btn {
-    position: absolute; top: 14px; background: #1c1c28cc; border: 1px solid #4a3d5c;
-    color: #f0e6d2; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+    position: absolute; top: 12px; background: #1c1c28cc; border: 1px solid #4a3d5c;
+    color: #f0e6d2; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px;
+    z-index: 5;
   }
-  .back-btn { left: 14px; }
-  .reset-btn { right: 14px; }
+  .back-btn { left: 12px; }
+  .reset-btn { right: 12px; }
+
+  #room-main {
+    flex: 1; display: flex; gap: 24px; min-height: 0; margin-top: 44px;
+  }
+  #left-panel {
+    flex: 1.1; display: flex; flex-direction: column; justify-content: center;
+    min-height: 0; overflow: hidden; padding: 0 12px;
+  }
+  #right-panel {
+    flex: 0.9; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 0;
+  }
 
   #story-box {
-    max-width: 720px; margin: 60px auto 20px; text-align: center;
-    font-size: 22px; line-height: 1.8; min-height: 120px;
+    text-align: left; font-size: 19px; line-height: 1.65; max-height: 60vh; overflow: hidden;
   }
   #story-cursor { animation: blink 0.8s infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 
   #countdown-hint {
-    text-align: center; font-size: 20px; color: #ffcc4d; margin: 16px 0; min-height: 28px;
+    text-align: left; font-size: 18px; color: #ffcc4d; margin: 12px 0 0; min-height: 26px;
   }
 
   #color-clue {
-    text-align: center; margin: 6px 0 18px; font-size: 22px; font-weight: bold;
-    padding: 10px 24px; border-radius: 10px; display: inline-block;
+    text-align: center; margin: 0 0 14px; font-size: 20px; font-weight: bold;
+    padding: 8px 20px; border-radius: 10px; display: inline-block;
   }
   .clue-red { background: #4a1010; color: #ff6b6b; border: 2px solid #ff6b6b; }
   .clue-yellow { background: #4a3d10; color: #ffe066; border: 2px solid #ffe066; }
@@ -78,7 +91,7 @@
   .clue-green { background: #10402a; color: #6bffa0; border: 2px solid #6bffa0; }
 
   #timer {
-    font-size: 64px; font-weight: bold; text-align: center; margin: 10px 0 4px;
+    font-size: 48px; font-weight: bold; text-align: center; margin: 0 0 10px;
     letter-spacing: 2px; text-shadow: 0 0 14px currentColor;
   }
   .t-safe { color: #7ee787; }
@@ -86,16 +99,16 @@
   .t-danger { color: #ff5c5c; animation: pulse 0.6s infinite; }
   @keyframes pulse { 50% { opacity: 0.5; } }
 
-  #keypad-wrap { display: flex; flex-direction: column; align-items: center; margin-top: 24px; }
+  #keypad-wrap { display: flex; flex-direction: column; align-items: center; }
   #pw-display {
-    font-size: 34px; letter-spacing: 12px; min-height: 46px; margin-bottom: 16px;
-    border-bottom: 2px solid #4a3d5c; padding: 4px 20px; min-width: 220px; text-align: center;
+    font-size: 30px; letter-spacing: 12px; min-height: 40px; margin-bottom: 14px;
+    border-bottom: 2px solid #4a3d5c; padding: 4px 20px; min-width: 200px; text-align: center;
   }
   #keypad {
-    display: grid; grid-template-columns: repeat(3, 70px); gap: 10px;
+    display: grid; grid-template-columns: repeat(3, 66px); gap: 9px;
   }
   #keypad button {
-    height: 60px; font-size: 22px; border-radius: 10px; border: 1px solid #4a3d5c;
+    height: 56px; font-size: 20px; border-radius: 10px; border: 1px solid #4a3d5c;
     background: #241b30; color: #f0e6d2; cursor: pointer;
   }
   #keypad button:active { background: #382b48; }
@@ -103,13 +116,14 @@
   .key-enter { color: #7ee787 !important; grid-column: span 1; }
 
   #feedback {
-    margin-top: 20px; font-size: 20px; font-weight: bold; min-height: 30px; text-align: center;
+    margin-top: 14px; font-size: 18px; font-weight: bold; min-height: 26px; text-align: center;
   }
   .fb-wrong { color: #ff5c5c; }
   .fb-right { color: #7ee787; }
 
   #end-screen {
-    text-align: center; margin-top: 40px; font-size: 26px;
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    text-align: center; font-size: 26px; background: #0d0d14ee;
   }
   #end-screen.success { color: #7ee787; }
   #end-screen.fail { color: #ff5c5c; }
@@ -137,17 +151,23 @@
   <button class="back-btn" onclick="goHome()">← 返回首頁</button>
   <button class="reset-btn" onclick="resetRoom()">🔄 重置（換下一組）</button>
 
-  <div id="story-box"></div>
-  <div id="countdown-hint"></div>
-
-  <div id="challenge-area" class="hidden">
-    <div id="timer" class="t-safe">05:00</div>
-    <div id="color-clue-wrap" style="text-align:center;"><span id="color-clue"></span></div>
-    <div id="keypad-wrap">
-      <div id="pw-display"></div>
-      <div id="keypad"></div>
+  <div id="room-main">
+    <div id="left-panel">
+      <div id="story-box"></div>
+      <div id="countdown-hint"></div>
     </div>
-    <div id="feedback"></div>
+
+    <div id="right-panel">
+      <div id="challenge-area" class="hidden">
+        <div id="timer" class="t-safe">05:00</div>
+        <div id="color-clue-wrap" style="text-align:center;"><span id="color-clue"></span></div>
+        <div id="keypad-wrap">
+          <div id="pw-display"></div>
+          <div id="keypad"></div>
+        </div>
+        <div id="feedback"></div>
+      </div>
+    </div>
   </div>
 
   <div id="end-screen" class="hidden"></div>
