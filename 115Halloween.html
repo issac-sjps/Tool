@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>萬聖節密室逃脫</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    background: #0d0d14;
+    color: #f0e6d2;
+    min-height: 100vh;
+  }
+  .hidden { display: none !important; }
+
+  /* ---------- 首頁 ---------- */
+  #home {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px;
+  }
+  #home h1 {
+    font-size: 32px; color: #ff8c2b; text-shadow: 0 0 12px #ff8c2b88;
+    margin-bottom: 4px;
+  }
+  #home p.sub { color: #b8afa0; margin-top: 0; margin-bottom: 32px; }
+  .room-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+    width: 100%; max-width: 700px;
+  }
+  .room-card {
+    background: #1c1c28; border: 1px solid #3a2f4a; border-radius: 14px;
+    padding: 24px; text-align: center; cursor: pointer;
+    transition: transform .15s, border-color .15s;
+  }
+  .room-card:hover { transform: translateY(-4px); border-color: #ff8c2b; }
+  .room-card .icon { font-size: 40px; margin-bottom: 10px; }
+  .room-card .name { font-size: 18px; font-weight: bold; }
+  .room-card .desc { font-size: 13px; color: #a89a86; margin-top: 6px; }
+
+  /* ---------- 教室大螢幕 ---------- */
+  #room-screen {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; padding: 24px; position: relative;
+    background-size: cover; background-position: center;
+  }
+  .back-btn, .reset-btn {
+    position: absolute; top: 14px; background: #1c1c28cc; border: 1px solid #4a3d5c;
+    color: #f0e6d2; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  }
+  .back-btn { left: 14px; }
+  .reset-btn { right: 14px; }
+
+  #story-box {
+    max-width: 720px; margin: 60px auto 20px; text-align: center;
+    font-size: 22px; line-height: 1.8; min-height: 120px;
+  }
+  #story-cursor { animation: blink 0.8s infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  #countdown-hint {
+    text-align: center; font-size: 20px; color: #ffcc4d; margin: 16px 0; min-height: 28px;
+  }
+
+  #color-clue {
+    text-align: center; margin: 6px 0 18px; font-size: 22px; font-weight: bold;
+    padding: 10px 24px; border-radius: 10px; display: inline-block;
+  }
+  .clue-red { background: #4a1010; color: #ff6b6b; border: 2px solid #ff6b6b; }
+  .clue-yellow { background: #4a3d10; color: #ffe066; border: 2px solid #ffe066; }
+  .clue-blue { background: #10304a; color: #66c7ff; border: 2px solid #66c7ff; }
+  .clue-green { background: #10402a; color: #6bffa0; border: 2px solid #6bffa0; }
+
+  #timer {
+    font-size: 64px; font-weight: bold; text-align: center; margin: 10px 0 4px;
+    letter-spacing: 2px; text-shadow: 0 0 14px currentColor;
+  }
+  .t-safe { color: #7ee787; }
+  .t-warn { color: #ffcc4d; }
+  .t-danger { color: #ff5c5c; animation: pulse 0.6s infinite; }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+
+  #keypad-wrap { display: flex; flex-direction: column; align-items: center; margin-top: 24px; }
+  #pw-display {
+    font-size: 34px; letter-spacing: 12px; min-height: 46px; margin-bottom: 16px;
+    border-bottom: 2px solid #4a3d5c; padding: 4px 20px; min-width: 220px; text-align: center;
+  }
+  #keypad {
+    display: grid; grid-template-columns: repeat(3, 70px); gap: 10px;
+  }
+  #keypad button {
+    height: 60px; font-size: 22px; border-radius: 10px; border: 1px solid #4a3d5c;
+    background: #241b30; color: #f0e6d2; cursor: pointer;
+  }
+  #keypad button:active { background: #382b48; }
+  .key-clear { color: #ffcc4d !important; }
+  .key-enter { color: #7ee787 !important; grid-column: span 1; }
+
+  #feedback {
+    margin-top: 20px; font-size: 20px; font-weight: bold; min-height: 30px; text-align: center;
+  }
+  .fb-wrong { color: #ff5c5c; }
+  .fb-right { color: #7ee787; }
+
+  #end-screen {
+    text-align: center; margin-top: 40px; font-size: 26px;
+  }
+  #end-screen.success { color: #7ee787; }
+  #end-screen.fail { color: #ff5c5c; }
+
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 首頁：選擇教室 ============ -->
+<div id="home">
+  <h1>🎃 萬聖節密室逃脫</h1>
+  <p class="sub">請選擇你們的闖關教室</p>
+  <div class="room-grid" id="room-grid"></div>
+</div>
+
+<!-- ============ 教室大螢幕 ============ -->
+<div id="room-screen" class="hidden">
+  <button class="back-btn" onclick="goHome()">← 返回首頁</button>
+  <button class="reset-btn" onclick="resetRoom()">🔄 重置（換下一組）</button>
+
+  <div id="story-box"></div>
+  <div id="countdown-hint"></div>
+
+  <div id="challenge-area" class="hidden">
+    <div id="timer" class="t-safe">05:00</div>
+    <div id="color-clue-wrap" style="text-align:center;"><span id="color-clue"></span></div>
+    <div id="keypad-wrap">
+      <div id="pw-display"></div>
+      <div id="keypad"></div>
+    </div>
+    <div id="feedback"></div>
+  </div>
+
+  <div id="end-screen" class="hidden"></div>
+</div>
+
+<script>
+/* ================= 教室設定區（老師可自行修改）================= */
+const ROOMS = [
+  {
+    id: "library",
+    icon: "📚",
+    name: "圖書館",
+    desc: "女巫的藏書室",
+    bg: "linear-gradient(135deg,#1a1230,#3a2a4a)",
+    story: "歡迎來到女巫的藏書室...\n女巫非常喜歡看書，這裡藏著她最珍貴的禁忌之書。\n如果 5 分鐘內找不到書中密碼並輸入解鎖，\n書架將會坍塌，把你們永遠封印在書堆之中...",
+    timeLimit: 300,
+    password: "1031"
+  },
+  {
+    id: "lohas",
+    icon: "🕸️",
+    name: "樂活教室",
+    desc: "蜘蛛的絲網迷宮",
+    bg: "linear-gradient(135deg,#1a2a1a,#2f4a2f)",
+    story: "歡迎來到蜘蛛的絲網迷宮...\n八隻眼睛正注視著你們的一舉一動。\n找出藏在絲網中的數字，5 分鐘內脫困，\n否則就成為晚餐的一部分...",
+    timeLimit: 300,
+    password: "2468"
+  },
+  {
+    id: "e-class1",
+    icon: "🧟",
+    name: "e化教室1",
+    desc: "殭屍實驗室",
+    bg: "linear-gradient(135deg,#241a10,#4a3320)",
+    story: "歡迎來到殭屍實驗室...\n瘋狂科學家的最後一組配方就藏在這裡。\n5 分鐘內找出正確的解藥密碼，\n否則實驗室的殭屍血清將會外洩...",
+    timeLimit: 300,
+    password: "1225"
+  },
+  {
+    id: "special9",
+    icon: "🎃",
+    name: "專科教室9",
+    desc: "南瓜庭院",
+    bg: "linear-gradient(135deg,#2a1a10,#4a2f10)",
+    story: "歡迎來到南瓜庭院...\n傑克南瓜燈守護著通往出口的秘密。\n5 分鐘內找出南瓜身上刻的密碼，\n否則庭院大門將永遠封閉...",
+    timeLimit: 300,
+    password: "0913"
+  }
+];
+/* 四色密碼對照表：四間教室共用同一套邏輯（依企劃書設定） */
+const COLOR_CODES = {
+  red:    { name: "紅色", code: "582", cls: "clue-red" },
+  yellow: { name: "黃色", code: "314", cls: "clue-yellow" },
+  blue:   { name: "藍色", code: "709", cls: "clue-blue" },
+  green:  { name: "綠色", code: "946", cls: "clue-green" }
+};
+/* ================================================================ */
+
+let currentRoom = null;
+let currentColor = null;
+let timeLeft = 0;
+let timerInterval = null;
+let pwInput = "";
+let audioCtx = null;
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function beep(freq, dur, type, vol) {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || "sine";
+  osc.frequency.value = freq;
+  gain.gain.value = vol || 0.15;
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start();
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+  osc.stop(ctx.currentTime + dur);
+}
+function playWrong() { beep(180, 0.3, "sawtooth", 0.18); }
+function playRight() {
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((f, i) => setTimeout(() => beep(f, 0.25, "sine", 0.15), i * 130));
+}
+function playTimeout() {
+  [0,1,2].forEach(i => setTimeout(() => beep(140, 0.4, "square", 0.2), i * 450));
+}
+function playTick() { beep(880, 0.05, "sine", 0.06); }
+
+/* ---------- 首頁渲染 ---------- */
+function renderHome() {
+  const grid = document.getElementById("room-grid");
+  grid.innerHTML = "";
+  ROOMS.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "room-card";
+    card.onclick = () => enterRoom(r.id);
+    card.innerHTML = `<div class="icon">${r.icon}</div>
+      <div class="name">${r.name}</div>
+      <div class="desc">${r.desc}</div>`;
+    grid.appendChild(card);
+  });
+}
+renderHome();
+
+function goHome() {
+  clearInterval(timerInterval);
+  document.getElementById("home").classList.remove("hidden");
+  document.getElementById("room-screen").classList.add("hidden");
+}
+
+function enterRoom(id) {
+  currentRoom = ROOMS.find(r => r.id === id);
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("room-screen").classList.remove("hidden");
+  document.getElementById("room-screen").style.background = currentRoom.bg;
+  resetRoom();
+}
+
+function resetRoom() {
+  clearInterval(timerInterval);
+  timeLeft = currentRoom.timeLimit;
+  pwInput = "";
+  const colorKeys = Object.keys(COLOR_CODES);
+  currentColor = colorKeys[Math.floor(Math.random() * colorKeys.length)];
+  document.getElementById("countdown-hint").textContent = "";
+  document.getElementById("challenge-area").classList.add("hidden");
+  document.getElementById("end-screen").classList.add("hidden");
+  document.getElementById("end-screen").className = "hidden";
+  document.getElementById("feedback").textContent = "";
+  typeStory(currentRoom.story, beginCountdown);
+  buildKeypad();
+}
+
+/* ---------- 打字機效果，播完後執行 callback ---------- */
+function typeStory(text, onDone) {
+  const box = document.getElementById("story-box");
+  box.innerHTML = "";
+  let i = 0;
+  const speed = 45;
+  function step() {
+    if (i <= text.length) {
+      box.innerHTML = text.slice(0, i).replace(/\n/g, "<br>") + '<span id="story-cursor">▍</span>';
+      i++;
+      setTimeout(step, speed);
+    } else if (onDone) {
+      onDone();
+    }
+  }
+  step();
+}
+
+/* ---------- 故事播完後，自動倒數 3 秒開始 ---------- */
+function beginCountdown() {
+  const hint = document.getElementById("countdown-hint");
+  let n = 3;
+  hint.textContent = `挑戰即將開始… ${n}`;
+  beep(660, 0.15, "sine", 0.12);
+  const iv = setInterval(() => {
+    n--;
+    if (n > 0) {
+      hint.textContent = `挑戰即將開始… ${n}`;
+      beep(660, 0.15, "sine", 0.12);
+    } else {
+      clearInterval(iv);
+      hint.textContent = "";
+      beep(990, 0.2, "sine", 0.14);
+      startChallenge();
+    }
+  }, 1000);
+}
+
+/* ---------- 開始挑戰 ---------- */
+function startChallenge() {
+  document.getElementById("challenge-area").classList.remove("hidden");
+  const clue = document.getElementById("color-clue");
+  const info = COLOR_CODES[currentColor];
+  clue.textContent = `女巫最討厭「${info.name}」的解藥！`;
+  clue.className = info.cls;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 10 && timeLeft > 0) playTick();
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      showEnd(false);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.max(0, Math.floor(timeLeft / 60)).toString().padStart(2, "0");
+  const s = Math.max(0, timeLeft % 60).toString().padStart(2, "0");
+  const el = document.getElementById("timer");
+  el.textContent = `${m}:${s}`;
+  el.className = timeLeft <= 10 ? "t-danger" : (timeLeft <= 60 ? "t-warn" : "t-safe");
+}
+
+/* ---------- 數字鍵盤 ---------- */
+function buildKeypad() {
+  const pad = document.getElementById("keypad");
+  pad.innerHTML = "";
+  document.getElementById("pw-display").textContent = "";
+  const keys = ["1","2","3","4","5","6","7","8","9","清除","0","確認"];
+  keys.forEach(k => {
+    const btn = document.createElement("button");
+    btn.textContent = k;
+    if (k === "清除") btn.classList.add("key-clear");
+    if (k === "確認") btn.classList.add("key-enter");
+    btn.onclick = () => handleKey(k);
+    pad.appendChild(btn);
+  });
+}
+
+function handleKey(k) {
+  if (k === "清除") {
+    pwInput = "";
+  } else if (k === "確認") {
+    checkPassword();
+    return;
+  } else {
+    if (pwInput.length < 8) pwInput += k;
+  }
+  document.getElementById("pw-display").textContent = pwInput;
+}
+
+function checkPassword() {
+  const fb = document.getElementById("feedback");
+  if (pwInput === COLOR_CODES[currentColor].code) {
+    fb.textContent = "";
+    clearInterval(timerInterval);
+    playRight();
+    showEnd(true);
+  } else {
+    fb.textContent = "❌ 密碼錯誤，請再試一次";
+    fb.className = "fb-wrong";
+    playWrong();
+    const wrap = document.getElementById("keypad-wrap");
+    wrap.classList.add("shake");
+    setTimeout(() => wrap.classList.remove("shake"), 400);
+    pwInput = "";
+    document.getElementById("pw-display").textContent = "";
+  }
+}
+
+function showEnd(success) {
+  document.getElementById("challenge-area").classList.add("hidden");
+  const end = document.getElementById("end-screen");
+  end.classList.remove("hidden");
+  if (success) {
+    end.className = "success";
+    end.innerHTML = `🎉 恭喜過關！<br><span style="font-size:16px;">請前往下一個關卡</span>`;
+  } else {
+    end.className = "fail";
+    end.innerHTML = `⏰ 時間到！<br><span style="font-size:16px;">請按上方「重置」按鈕再挑戰一次</span>`;
+    playTimeout();
+  }
+}
+</script>
+</body>
+</html>
