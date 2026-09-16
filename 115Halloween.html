@@ -4,7 +4,13 @@
 <meta charset="UTF-8">
 <title>萬聖節密室逃脫</title>
 <style>
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+  html, body { -webkit-touch-callout: none; }
+  #fullscreen-btn {
+    margin-top: 10px; font-size: 15px; padding: 8px 20px; background: #241b30;
+    border: 1px solid #4a3d5c; color: #f0e6d2; border-radius: 8px; cursor: pointer;
+  }
+  #fullscreen-btn:hover { border-color: #ff8c2b; }
   body {
     margin: 0;
     font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
@@ -122,6 +128,7 @@
 <div id="home">
   <h1>🎃 萬聖節密室逃脫</h1>
   <p class="sub">請選擇你們的闖關教室</p>
+  <button id="fullscreen-btn" onclick="enterFullscreen()">🖥️ 進入全螢幕鎖定模式（按 ESC 離開）</button>
   <div class="room-grid" id="room-grid"></div>
 </div>
 
@@ -198,6 +205,46 @@ const COLOR_CODES = {
   green:  { name: "綠色", code: "946", cls: "clue-green" }
 };
 /* ================================================================ */
+
+/* ================= 鎖定機制：禁右鍵 / 全螢幕 / 鍵盤白名單 ================= */
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+function enterFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else if (el.msRequestFullscreen) el.msRequestFullscreen();
+}
+
+/* 只放行：0-9 數字、Enter(確認)、Backspace/Delete(清除)。
+   Esc 不攔截，交由瀏覽器原生離開全螢幕。其餘按鍵一律阻擋。 */
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") return; // 讓瀏覽器處理離開全螢幕
+  if (e.key >= "0" && e.key <= "9") {
+    e.preventDefault();
+    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+      handleKey(e.key);
+    }
+    return;
+  }
+  if (e.key === "Enter") {
+    e.preventDefault();
+    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+      handleKey("確認");
+    }
+    return;
+  }
+  if (e.key === "Backspace" || e.key === "Delete") {
+    e.preventDefault();
+    if (currentRoom && !document.getElementById("challenge-area").classList.contains("hidden")) {
+      handleKey("清除");
+    }
+    return;
+  }
+  e.preventDefault(); // 阻擋 F5、Ctrl+R、Alt+Tab 快捷鍵觸發、其餘所有按鍵
+}, true);
+/* ================================================================ */
+
 
 let currentRoom = null;
 let currentColor = null;
