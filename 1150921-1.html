@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>語文勇者傳說：終極進階篇 - 五年級國語學習扶助</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        legend: {
+                            gold: '#fbbf24',
+                            darkbg: '#0f172a',
+                            panel: '#1e293b',
+                            accent: '#6366f1',
+                            crimson: '#ef4444',
+                            emerald: '#10b981',
+                            mana: '#3b82f6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        cute: ['"ZCOOL KuaiLe"', '"Noto Sans TC"', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #0b0f19;
+            color: #f8fafc;
+        }
+
+        /* Floating Damage Text Animation */
+        @keyframes floatDamage {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { opacity: 1; transform: translateY(-25px) scale(1.3); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1); }
+        }
+        .damage-floater {
+            position: absolute;
+            animation: floatDamage 0.9s ease-out forwards;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 50;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* Shake and Slash Effects */
+        @keyframes shakeMonster {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-10px, 5px) rotate(-4deg); }
+            40% { transform: translate(10px, -5px) rotate(4deg); }
+            60% { transform: translate(-6px, 3px); }
+            80% { transform: translate(6px, -3px); }
+        }
+        .animate-hit { animation: shakeMonster 0.4s ease-in-out; }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.8); }
+        }
+        .glow-box { animation: pulseGlow 2.5s infinite; }
+
+        .rpg-btn {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
+        }
+        .rpg-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden relative">
+
+    <header class="bg-slate-900/95 border-b-2 border-amber-500/50 p-2.5 sm:p-3 sticky top-0 z-40 backdrop-blur-md shadow-xl">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            
+            <!-- Hero Stats Box -->
+            <div class="flex items-center gap-3 bg-slate-950/80 px-3 py-1.5 rounded-2xl border border-slate-700">
+                <div id="playerAvatar" onclick="openClassModal()" class="text-3xl bg-amber-500/20 p-1.5 rounded-xl cursor-pointer hover:scale-105 transition border border-amber-500/40" title="點擊切換職業">
+                    🛡️
+                </div>
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span id="playerClassName" class="text-xs font-black bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full">聖騎士</span>
+                        <span id="playerLevel" class="text-xs font-bold text-amber-300">Lv.1</span>
+                        <span id="playerTitle" class="text-[11px] text-slate-400">初級勇者</span>
+                    </div>
+
+                    <!-- HP, MP & EXP Bars -->
+                    <div class="flex items-center gap-2 text-[10px]">
+                        <!-- HP -->
+                        <div class="w-20 sm:w-24 bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700 relative">
+                            <div id="hpBar" class="bg-gradient-to-r from-red-600 to-emerald-500 h-full w-full transition-all duration-300"></div>
+                        </div>
+                        <span id="hpText" class="text-slate-300 font-bold min-w-[55px]">100/100</span>
+
+                        <!-- MP -->
+                        <div class="w-16 sm:w-20 bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700 relative">
+                            <div id="mpBar" class="bg-blue-500 h-full w-full transition-all duration-300"></div>
+                        </div>
+                        <span id="mpText" class="text-blue-300 font-bold min-w-[45px]">50/50</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats & Action Buttons -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Gold -->
+                <div class="flex items-center gap-1.5 bg-amber-950/70 border border-amber-500/50 px-3 py-1.5 rounded-xl text-amber-300 font-black text-xs sm:text-sm">
+                    <span class="text-base">🪙</span>
+                    <span id="playerGold">100</span>
+                </div>
+
+                <!-- Sound Toggle -->
+                <button onclick="toggleSound()" id="soundBtn" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-base" title="音效切換">
+                    🔊
+                </button>
+
+                <!-- Diagnostic Dashboard Button -->
+                <button onclick="openDiagnosticModal()" class="rpg-btn bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                    📊 <span>分析表</span>
+                </button>
+
+                <!-- Shop Button -->
+                <button onclick="openShopModal()" class="rpg-btn bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs flex items-center gap-1">
+                    🛒 <span>裝備店</span>
+                </button>
+
+                <!-- Teacher Management Panel -->
+                <button onclick="openTeacherModal()" class="rpg-btn bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-2.5 py-1.5 rounded-xl text-xs border border-slate-600">
+                    ⚙️ <span>備課</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-5 flex flex-col justify-center relative">
+
+        <!-- VIEW 1: MAIN MAP & GAME MODES SELECTION -->
+        <section id="mapView" class="space-y-6">
+            <div class="text-center space-y-2">
+                <h1 class="text-3xl sm:text-5xl font-black font-cute text-amber-400 tracking-wider drop-shadow-lg">
+                    ⚔️ 語文勇者傳說：終極進階篇
+                </h1>
+                <p class="text-slate-300 text-xs sm:text-sm">考驗五年級高階國語字音字形、成語活用、修辭學與長文推論！</p>
+            </div>
+
+            <!-- Game Mode Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <!-- Zone 1 -->
+                <div onclick="startZone(1)" class="rpg-btn cursor-pointer bg-slate-800/90 border-2 border-emerald-500/60 hover:border-emerald-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-emerald-500/20 text-emerald-300 p-2.5 rounded-xl text-3xl">🔤</div>
+                        <div id="starsZone1" class="text-amber-400 text-xs font-black">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">聖域一</span>
+                        <h3 class="font-bold text-base text-emerald-300 mt-1">字音字形與錯字陷阱</h3>
+                        <p class="text-slate-400 text-xs mt-1">挑戰多音字辨析、同音異字與高階錯別字挑錯。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/60 pt-2">
+                        <span>守護者：雙面音魔 👺</span>
+                        <span class="text-emerald-400 font-bold">進攻 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 2 -->
+                <div onclick="startZone(2)" class="rpg-btn cursor-pointer bg-slate-800/90 border-2 border-sky-500/60 hover:border-sky-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-sky-500/20 text-sky-300 p-2.5 rounded-xl text-3xl">📜</div>
+                        <div id="starsZone2" class="text-amber-400 text-xs font-black">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded">聖域二</span>
+                        <h3 class="font-bold text-base text-sky-300 mt-1">高階成語與情境活用</h3>
+                        <p class="text-slate-400 text-xs mt-1">成語語境替換、近義反義成語與誤用辨析。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/60 pt-2">
+                        <span>守護者：成語幻象獸 🐺</span>
+                        <span class="text-sky-400 font-bold">進攻 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 3 -->
+                <div onclick="startZone(3)" class="rpg-btn cursor-pointer bg-slate-800/90 border-2 border-purple-500/60 hover:border-purple-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-purple-500/20 text-purple-300 p-2.5 rounded-xl text-3xl">🎭</div>
+                        <div id="starsZone3" class="text-amber-400 text-xs font-black">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">聖域三</span>
+                        <h3 class="font-bold text-base text-purple-300 mt-1">修辭學大總動員</h3>
+                        <p class="text-slate-400 text-xs mt-1">比喻、擬人、排比、設問與激問、誇張高階辨析。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/60 pt-2">
+                        <span>守護者：修辭魔導師 🧙‍♂️</span>
+                        <span class="text-purple-400 font-bold">進攻 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 4 -->
+                <div onclick="startZone(4)" class="rpg-btn cursor-pointer bg-slate-800/90 border-2 border-amber-500/60 hover:border-amber-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-amber-500/20 text-amber-300 p-2.5 rounded-xl text-3xl">🧩</div>
+                        <div id="starsZone4" class="text-amber-400 text-xs font-black">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded">聖域四</span>
+                        <h3 class="font-bold text-base text-amber-300 mt-1">邏輯複句與句型卡片</h3>
+                        <p class="text-slate-400 text-xs mt-1">轉折、遞進、假設、條件與選擇複句重組。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/60 pt-2">
+                        <span>守護者：邏輯巨魔 🗿</span>
+                        <span class="text-amber-400 font-bold">進攻 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 5 -->
+                <div onclick="startZone(5)" class="rpg-btn cursor-pointer bg-slate-800/90 border-2 border-rose-500/60 hover:border-rose-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-rose-500/20 text-rose-300 p-2.5 rounded-xl text-3xl">📖</div>
+                        <div id="starsZone5" class="text-amber-400 text-xs font-black">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded">聖域五</span>
+                        <h3 class="font-bold text-base text-rose-300 mt-1">深度閱讀與長文推論</h3>
+                        <p class="text-slate-400 text-xs mt-1">臺灣生態、氣候變遷長文閱讀與作者意圖推論。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/60 pt-2">
+                        <span>守護者：智慧遠古龍 🐉</span>
+                        <span class="text-rose-400 font-bold">進攻 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Special Mode: Sentence Arena -->
+                <div onclick="startSentenceArena()" class="rpg-btn cursor-pointer bg-gradient-to-br from-indigo-950 to-purple-900 border-2 border-indigo-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition shadow-lg">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-indigo-500/20 text-indigo-300 p-2.5 rounded-xl text-3xl">⚔️</div>
+                        <span class="text-[10px] bg-indigo-500 text-white font-bold px-2 py-0.5 rounded-full">句型競技場</span>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-base text-indigo-200">句子拼圖極限競技場</h3>
+                        <p class="text-slate-300 text-xs mt-1">專攻句型重組卡片！將被打亂的句子快速點擊排序發動大招！</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-indigo-300 font-bold border-t border-indigo-700/60 pt-2">
+                        <span>專項訓練 🎯</span>
+                        <span>開始挑戰 ➔</span>
+                    </div>
+                </div>
+
+                <!-- Special Mode: Endless Boss Tower -->
+                <div onclick="startBossMode()" class="rpg-btn cursor-pointer bg-gradient-to-br from-red-950 to-slate-900 border-2 border-red-500 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition shadow-lg col-span-1 md:col-span-2 lg:col-span-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-red-500/20 text-red-400 p-2.5 rounded-xl text-3xl">🔥</div>
+                            <div>
+                                <h3 class="font-bold text-lg text-red-400">無盡魔王試煉塔 (Endless Boss Tower)</h3>
+                                <p class="text-slate-300 text-xs">混合所有高階難題！每爬一層怪獸血量增加，累積連擊 Combo 賺取雙倍金幣！</p>
+                            </div>
+                        </div>
+                        <span class="bg-red-600 text-white font-black px-4 py-2 rounded-xl text-xs animate-pulse">無盡刷幣 ⚡</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- VIEW 2: BATTLE ARENA SCREEN -->
+        <section id="battleView" class="hidden space-y-4 relative">
+            
+            <!-- Floating Damage Container Overlay -->
+            <div id="damageOverlay" class="absolute inset-0 pointer-events-none z-50"></div>
+
+            <!-- Battle Header Card -->
+            <div class="bg-slate-900/90 border-2 border-slate-700 rounded-3xl p-4 sm:p-5 shadow-2xl relative overflow-hidden">
+                <!-- Zone Header & Exit -->
+                <div class="flex justify-between items-center border-b border-slate-700/80 pb-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <span id="battleZoneTitle" class="font-bold text-amber-400 text-sm">聖域一：字音字形</span>
+                        <span id="questionCounter" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700">1 / 5</span>
+                    </div>
+                    
+                    <!-- Countdown Timer Bar -->
+                    <div id="timerContainer" class="flex items-center gap-2">
+                        <span class="text-xs text-amber-300 font-bold">⏱️</span>
+                        <div class="w-24 sm:w-32 bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-700">
+                            <div id="timerFill" class="bg-amber-400 h-full w-full transition-all duration-200"></div>
+                        </div>
+                        <span id="timerText" class="text-xs font-mono font-bold text-amber-300">20s</span>
+                    </div>
+
+                    <button onclick="exitToMap()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-xl transition border border-slate-600">
+                        🚪 撤退
+                    </button>
+                </div>
+
+                <!-- Battle Stage Graphics -->
+                <div class="flex items-center justify-around gap-4 my-1 relative min-h-[140px]">
+                    <!-- Player Hero Side -->
+                    <div class="flex flex-col items-center relative">
+                        <div id="battleHero" class="text-5xl sm:text-6xl transition-transform duration-200">🛡️</div>
+                        <span id="battleHeroName" class="text-xs text-slate-300 font-bold mt-1">聖騎士</span>
+                    </div>
+
+                    <!-- Combo & Attack Indicators -->
+                    <div class="text-center">
+                        <div id="comboCounter" class="hidden text-amber-400 font-black text-lg sm:text-2xl animate-bounce">
+                            🔥 連擊 x<span id="comboNum">1</span>
+                        </div>
+                    </div>
+
+                    <!-- Monster Side -->
+                    <div class="flex flex-col items-center relative">
+                        <div id="monsterAvatar" class="text-6xl sm:text-7xl transition-transform duration-200">👺</div>
+                        <span id="monsterName" class="text-xs font-bold text-red-400 mt-1">雙面音魔</span>
+                        <!-- Monster Health Bar -->
+                        <div class="w-32 sm:w-40 bg-slate-950 h-3 rounded-full overflow-hidden mt-1 border border-red-900/80 relative">
+                            <div id="monsterHpFill" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                            <span id="monsterHpText" class="absolute inset-0 text-[9px] font-bold text-white flex items-center justify-center">100/100</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Hero Skills Bar -->
+                <div class="flex justify-center gap-2 border-t border-slate-800 pt-3 mt-2">
+                    <button onclick="useSkill('5050')" id="skill5050Btn" class="rpg-btn bg-slate-800 hover:bg-slate-700 border border-indigo-500/50 text-indigo-300 font-bold px-3 py-1 rounded-xl text-xs flex items-center gap-1">
+                        🪄 <span>排除錯誤 (30 MP)</span>
+                    </button>
+                    <button onclick="useSkill('time')" id="skillTimeBtn" class="rpg-btn bg-slate-800 hover:bg-slate-700 border border-blue-500/50 text-blue-300 font-bold px-3 py-1 rounded-xl text-xs flex items-center gap-1">
+                        ⏳ <span>時間暫停 (+15s/20 MP)</span>
+                    </button>
+                    <button onclick="useSkill('double')" id="skillDoubleBtn" class="rpg-btn bg-slate-800 hover:bg-slate-700 border border-amber-500/50 text-amber-300 font-bold px-3 py-1 rounded-xl text-xs flex items-center gap-1">
+                        💥 <span>雙倍爆擊 (40 MP)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- QUESTION DISPLAY BOX -->
+            <div id="questionBox" class="bg-slate-900/90 border-2 border-amber-500/50 rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
+                
+                <!-- Reading Passage Block -->
+                <div id="passageContainer" class="hidden bg-slate-950 p-4 rounded-2xl border border-slate-800 max-h-52 overflow-y-auto text-xs sm:text-sm text-slate-200 leading-relaxed shadow-inner">
+                    <div class="text-amber-400 font-bold text-xs mb-1.5 flex items-center gap-1">
+                        📖 閱讀文章：
+                    </div>
+                    <p id="passageText">短文載入中...</p>
+                </div>
+
+                <!-- Question Title & Category Badge -->
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span id="questionCategoryTag" class="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-md">字音字形</span>
+                        <span id="questionTypeTag" class="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-md">單選題</span>
+                    </div>
+                    <h2 id="questionText" class="text-base sm:text-lg font-bold text-slate-100 mt-2 leading-snug">
+                        題目載入中...
+                    </h2>
+                </div>
+
+                <!-- OPTIONS CONTAINER 1: Multiple Choice Options -->
+                <div id="multipleChoiceContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <!-- Dynamic Option Buttons -->
+                </div>
+
+                <!-- OPTIONS CONTAINER 2: Interactive Sentence Card Sorting -->
+                <div id="sentenceReorderContainer" class="hidden space-y-4 pt-1">
+                    <div class="text-xs text-slate-400">請按順序點擊下方卡片組成完整句子：</div>
+                    
+                    <!-- Selected Cards Area -->
+                    <div id="selectedTokensArea" class="min-h-[56px] bg-slate-950 p-3 rounded-2xl border-2 border-dashed border-amber-500/40 flex flex-wrap gap-2 items-center">
+                        <!-- User clicked tokens -->
+                    </div>
+
+                    <!-- Available Word Pool -->
+                    <div id="availableTokensPool" class="flex flex-wrap gap-2 p-1">
+                        <!-- Available tokens -->
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-1">
+                        <button onclick="resetSentenceTokens()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-xl border border-slate-700">重置排序</button>
+                        <button onclick="submitSentenceAnswer()" class="rpg-btn text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2 rounded-xl">發動攻擊 🚀</button>
+                    </div>
+                </div>
+
+                <!-- Question Explanation / Feedback -->
+                <div id="feedbackBox" class="hidden p-3.5 rounded-2xl text-xs sm:text-sm font-bold flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div id="feedbackText" class="space-y-1">提示訊息</div>
+                    <button id="nextBtn" onclick="nextQuestion()" class="hidden rpg-btn bg-amber-500 text-slate-950 font-black px-5 py-2 rounded-xl text-xs self-end sm:self-auto">
+                        下一題 ➔
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- MODAL 1: DIAGNOSTIC DASHBOARD (學習能力診斷分析表) -->
+    <div id="diagnosticModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-indigo-500/80 rounded-3xl p-5 sm:p-7 max-w-xl w-full max-h-[85vh] flex flex-col space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-xl font-bold text-indigo-300 flex items-center gap-2">
+                    📊 國語學習能力診斷分析表
+                </h2>
+                <button onclick="closeDiagnosticModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-4 text-xs pr-1">
+                <p class="text-slate-400">系統即時追蹤你在五年級國語各大向度的答題表現與精通程度：</p>
+                
+                <!-- Category 1 -->
+                <div class="space-y-1 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between font-bold text-slate-200">
+                        <span>字音字形與錯字辨析</span>
+                        <span id="diagStat1">0 / 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="diagBar1" class="bg-emerald-500 h-full w-0% transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- Category 2 -->
+                <div class="space-y-1 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between font-bold text-slate-200">
+                        <span>高階成語與情境活用</span>
+                        <span id="diagStat2">0 / 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="diagBar2" class="bg-sky-500 h-full w-0% transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- Category 3 -->
+                <div class="space-y-1 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between font-bold text-slate-200">
+                        <span>修辭學大總動員</span>
+                        <span id="diagStat3">0 / 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="diagBar3" class="bg-purple-500 h-full w-0% transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- Category 4 -->
+                <div class="space-y-1 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between font-bold text-slate-200">
+                        <span>邏輯複句與句型重組</span>
+                        <span id="diagStat4">0 / 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="diagBar4" class="bg-amber-500 h-full w-0% transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- Category 5 -->
+                <div class="space-y-1 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                    <div class="flex justify-between font-bold text-slate-200">
+                        <span>深度閱讀與長文推論</span>
+                        <span id="diagStat5">0 / 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="diagBar5" class="bg-rose-500 h-full w-0% transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- Weakness Advice Box -->
+                <div id="weaknessAdviceBox" class="bg-indigo-950/60 border border-indigo-500/40 p-3.5 rounded-2xl text-indigo-200 leading-relaxed">
+                    💡 學習建議：繼續多挑戰各聖域，系統會為你點亮強項與弱點！
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL 2: CLASS SELECTION MODAL -->
+    <div id="classModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 sm:p-7 max-w-xl w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-xl font-bold text-amber-400 flex items-center gap-2">
+                    ⚔️ 選擇勇者職業
+                </h2>
+                <button onclick="closeClassModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3" id="classGrid">
+                <!-- Dynamic injected class options -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL 3: EQUIPMENT SHOP MODAL -->
+    <div id="shopModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-5 sm:p-7 max-w-2xl w-full max-h-[85vh] flex flex-col space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="text-xl font-bold text-amber-400 flex items-center gap-2">
+                    🛒 傳說裝備商店
+                </h2>
+                <button onclick="closeShopModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-4 pr-1">
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 mb-2">武器神器 (提升攻擊力)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="weaponsShopGrid"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 mb-2">防具胸甲 (提升最大血量與護盾)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="armorsShopGrid"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 mb-2">特殊飾品 (暴擊/額外時間/加成)</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="accessoriesShopGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL 4: TEACHER MANAGEMENT PANEL -->
+    <div id="teacherModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-sky-500/80 rounded-3xl p-5 sm:p-7 max-w-3xl w-full max-h-[90vh] flex flex-col space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div>
+                    <h2 class="text-xl font-bold text-sky-400 flex items-center gap-2">
+                        ⚙️ 教師備課與題庫管理系統
+                    </h2>
+                    <p class="text-xs text-slate-400">支援自訂新增/刪除題庫、匯入/匯出 JSON 檔案與調整答題計時器</p>
+                </div>
+                <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-2 text-xs">
+                <button onclick="showTeacherTab('questions')" id="tabBtnQuestions" class="bg-sky-600 text-white font-bold px-3 py-1.5 rounded-xl">題庫總覽</button>
+                <button onclick="showTeacherTab('add')" id="tabBtnAdd" class="bg-slate-800 text-slate-300 font-bold px-3 py-1.5 rounded-xl">新增題目</button>
+                <button onclick="showTeacherTab('settings')" id="tabBtnSettings" class="bg-slate-800 text-slate-300 font-bold px-3 py-1.5 rounded-xl">遊戲參數設定</button>
+                <button onclick="resetStudentData()" class="bg-red-950 hover:bg-red-900 text-red-200 font-bold px-3 py-1.5 rounded-xl ml-auto border border-red-800">⚠️ 重置學生紀錄</button>
+            </div>
+
+            <!-- Tab 1: Question Bank List -->
+            <div id="teacherTabQuestions" class="flex-1 overflow-y-auto space-y-3 text-xs pr-1">
+                <div class="flex justify-between items-center gap-2">
+                    <span class="text-slate-400">目前總題數：<span id="teacherTotalCount" class="text-amber-400 font-bold">0</span> 題</span>
+                    <div class="flex gap-2">
+                        <button onclick="exportQuestionBankJSON()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded-xl border border-slate-600">📥 匯出 JSON 題庫</button>
+                        <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded-xl border border-slate-600 cursor-pointer">
+                            📤 匯入 JSON 題庫
+                            <input type="file" id="importJsonInput" accept=".json" onchange="importQuestionBankJSON(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+                <div id="teacherQuestionList" class="space-y-2"></div>
+            </div>
+
+            <!-- Tab 2: Add Custom Question Form -->
+            <div id="teacherTabAdd" class="hidden flex-1 overflow-y-auto space-y-3 text-xs pr-1">
+                <form id="addQuestionForm" onsubmit="handleAddQuestion(event)" class="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">對應聖域：</label>
+                            <select id="addQZone" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                                <option value="1">聖域一：字音字形與錯字</option>
+                                <option value="2">聖域二：成語與情境活用</option>
+                                <option value="3">聖域三：修辭學大總動員</option>
+                                <option value="4">聖域四：邏輯複句與句型</option>
+                                <option value="5">聖域五：深度閱讀與長文</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">題型類別：</label>
+                            <select id="addQType" onchange="toggleFormTypeInputs()" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                                <option value="mc">單選題 (Multiple Choice)</option>
+                                <option value="reorder">句型重組題 (Sentence Ordering)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-1">題目敘述：</label>
+                        <input type="text" id="addQText" required placeholder="例如：請問下列何者屬於「激問」修辭？" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                    </div>
+
+                    <div id="readingPassageInput" class="hidden">
+                        <label class="block text-amber-300 font-bold mb-1">閱讀文章內容（閱讀題選填）：</label>
+                        <textarea id="addQPassage" rows="3" placeholder="請輸入閱讀文章..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200"></textarea>
+                    </div>
+
+                    <div id="mcOptionsInputs" class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 A (正確答案)：</label>
+                            <input type="text" id="addQOptA" placeholder="正確答案" class="w-full bg-slate-800 border border-emerald-600/60 rounded-xl p-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 B：</label>
+                            <input type="text" id="addQOptB" placeholder="誘答選項" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 C：</label>
+                            <input type="text" id="addQOptC" placeholder="誘答選項" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 D：</label>
+                            <input type="text" id="addQOptD" placeholder="誘答選項" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                        </div>
+                    </div>
+
+                    <div id="reorderOptionsInputs" class="hidden">
+                        <label class="block text-amber-300 font-bold mb-1">句子正確順序卡片（請用半形逗號 , 隔開）：</label>
+                        <input type="text" id="addQTokens" placeholder="例如：雖然天氣不好,但我們依然,準時出發,前往目的地。" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-1">解析與教學提示：</label>
+                        <input type="text" id="addQExplanation" placeholder="答錯或答對時顯示的觀念說明" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200">
+                    </div>
+
+                    <button type="submit" class="rpg-btn w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl text-sm">
+                        ➕ 儲存並新增至題庫
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tab 3: Game Settings -->
+            <div id="teacherTabSettings" class="hidden flex-1 overflow-y-auto space-y-4 text-xs pr-1">
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-bold text-amber-400 text-sm">⏱️ 每題答題限時時間設定</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="setTimerConfig(0)" id="timerOpt0" class="p-2.5 rounded-xl border text-center font-bold">不限時</button>
+                        <button onclick="setTimerConfig(30)" id="timerOpt30" class="p-2.5 rounded-xl border text-center font-bold">輕鬆 30 秒</button>
+                        <button onclick="setTimerConfig(20)" id="timerOpt20" class="p-2.5 rounded-xl border text-center font-bold">標準 20 秒</button>
+                        <button onclick="setTimerConfig(10)" id="timerOpt10" class="p-2.5 rounded-xl border text-center font-bold">極限 10 秒</button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="font-bold text-amber-400 text-sm">👾 怪獸血量難度倍率</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setMonsterHpConfig(1.0)" id="mhpOpt1" class="p-2.5 rounded-xl border text-center font-bold">標準 (1.0x)</button>
+                        <button onclick="setMonsterHpConfig(1.5)" id="mhpOpt15" class="p-2.5 rounded-xl border text-center font-bold">進階 (1.5x)</button>
+                        <button onclick="setMonsterHpConfig(2.0)" id="mhpOpt2" class="p-2.5 rounded-xl border text-center font-bold">魔王 (2.0x)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL 5: VICTORY / RESULTS -->
+    <div id="victoryModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-4 border-amber-500 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-5 shadow-2xl">
+            <div class="text-6xl animate-bounce">🏆</div>
+            <h2 class="text-2xl sm:text-3xl font-black font-cute text-amber-400">聖域戰鬥勝利！</h2>
+            
+            <div class="flex justify-center gap-2 text-3xl" id="victoryStars">
+                ⭐ ⭐ ⭐
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-2xl space-y-2 text-xs sm:text-sm text-slate-300 border border-slate-800">
+                <div class="flex justify-between">
+                    <span>答對題數：</span>
+                    <span id="resCorrectCount" class="font-bold text-emerald-400">5 / 5</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>獲得金幣：</span>
+                    <span id="resGoldEarned" class="font-bold text-amber-400">+80 🪙</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>獲得經驗：</span>
+                    <span id="resXpEarned" class="font-bold text-sky-400">+120 XP</span>
+                </div>
+            </div>
+
+            <p class="text-xs text-amber-200/90 font-bold">
+                你的國語字音、成語與閱讀戰力大突破！
+            </p>
+
+            <button onclick="closeVictoryModal()" class="rpg-btn w-full bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black py-3 rounded-2xl text-base">
+                返回地圖 🗺️
+            </button>
+        </div>
+    </div>
+
+
+    <footer class="bg-slate-950 text-slate-500 text-[11px] text-center py-2 border-t border-slate-800">
+        五年級國語學習扶助專用高階教材 ‧ 語文勇者傳說：終極進階篇 ⚔️
+    </footer>
+
+    <script>
+        /* Web Audio API Sound Synthesizer */
+        let audioCtx = null;
+        let isSoundOn = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            document.getElementById('soundBtn').textContent = isSoundOn ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!isSoundOn) return;
+            initAudio();
+
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.setValueAtTime(110, now + 0.15);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'attack') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(500, now);
+                    osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'crit') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.25);
+                    gain.gain.setValueAtTime(0.35, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'skill') {
+                    const freqs = [400, 600, 900, 1200];
+                    freqs.forEach((f, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(f, now + i * 0.05);
+                        g.gain.setValueAtTime(0.15, now + i * 0.05);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.2);
+                        o.start(now + i * 0.05);
+                        o.stop(now + i * 0.05 + 0.2);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+
+        /* Player RPG State Data */
+        let player = {
+            classId: 'paladin', // paladin, element, ninja, scholar
+            level: 1,
+            xp: 0,
+            gold: 100,
+            hp: 100,
+            maxHp: 100,
+            mp: 50,
+            maxMp: 50,
+            atk: 25,
+            critRate: 0.1, // 10%
+            xpBonus: 1.0,
+            weapon: 'w_wood',
+            armor: 'a_cloth',
+            accessory: null,
+            zoneStars: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            // Category diagnostic tracking
+            diagAttempts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            diagCorrect: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+
+        const heroClasses = {
+            paladin: { name: '聖騎士', avatar: '🛡️', hp: 140, mp: 40, atk: 25, crit: 0.1, desc: '血量超高，容錯率強！' },
+            element: { name: '元素使', avatar: '🧙‍♂️', hp: 90, mp: 80, atk: 30, crit: 0.15, desc: '魔力充足，可多次發動排除錯誤技能！' },
+            ninja: { name: '影武者', avatar: '🥷', hp: 100, mp: 50, atk: 35, crit: 0.35, desc: '高暴擊率，容易造成雙倍傷害！' },
+            scholar: { name: '博學導師', avatar: '🎓', hp: 100, mp: 60, atk: 25, crit: 0.1, xpBonus: 1.5, desc: '獲得金幣與經驗值提升 50%！' }
+        };
+
+        let gameSettings = {
+            timerSeconds: 20, // 0 = unlimited, 30, 20, 10
+            monsterHpMult: 1.0
+        };
+
+        const defaultAdvancedQuestions = [
+            // Category 1: 字音字形與錯字陷阱 (Zone 1)
+            {
+                id: 'z1_adv_1',
+                zone: 1,
+                type: 'mc',
+                text: '請問下列句子中的「冠」字，何者的讀音與其他三者「不同」？',
+                options: [
+                    '小華在這次田徑比賽中勇奪「冠」軍。',
+                    '國王戴上了璀璨的皇「冠」。',
+                    '植物花朵上的花「冠」顏色十分鮮艷。',
+                    '這隻公雞頭上長著紅色的雞「冠」。'
+                ],
+                answer: '小華在這次田徑比賽中勇奪「冠」軍。',
+                explanation: '冠軍讀作「ㄍㄨㄢˋ」（第四聲）；皇冠、花冠、雞冠均讀作「ㄍㄨㄢ」（第一聲）。'
+            },
+            {
+                id: 'z1_adv_2',
+                zone: 1,
+                type: 'mc',
+                text: '「這部電影的劇情非常精采，讓人讚不絕口。」請問句中引號內的詞，哪一個字寫錯了？',
+                options: [
+                    '「精采」應改為「精彩」或同字通用，但「絕」字不應改',
+                    '「讚」應改為「暫」',
+                    '「絕」應改為「決」',
+                    '完全沒有錯別字'
+                ],
+                answer: '完全沒有錯別字',
+                explanation: '「讚不絕口」字形完全正確，形容不斷讚賞！'
+            },
+            {
+                id: 'z1_adv_3',
+                zone: 1,
+                type: 'mc',
+                text: '下列各組同音字，哪一組的字形組合完全正確？',
+                options: [
+                    '不可思「議」／「意」見領袖',
+                    '莫「名」其妙／「明」辨是非',
+                    '「載」歌載舞／三年五「載」',
+                    '「融」會貫通／祝「融」肆虐'
+                ],
+                answer: '莫「名」其妙／「明」辨是非',
+                explanation: '「莫名其妙」意為無法說明其奇妙之處，故用「名」；「明辨是非」用「明」。'
+            },
+            {
+                id: 'z1_adv_4',
+                zone: 1,
+                type: 'mc',
+                text: '請問「下載」的「載」字，正確讀音是什麼？',
+                options: ['ㄗㄞˋ (四聲)', 'ㄗㄞˇ (三聲)', 'ㄗㄞ (一聲)', 'ㄗㄚˊ (二聲)'],
+                answer: 'ㄗㄞˋ (四聲)',
+                explanation: '裝載、下載、載歌載舞均讀作「ㄗㄞˋ」；記載、三年五載讀作「ㄗㄞˇ」。'
+            },
+
+            // Category 2: 高階成語與情境活用 (Zone 2)
+            {
+                id: 'z2_adv_1',
+                zone: 2,
+                type: 'mc',
+                text: '「這幅畫已經繪製得相當精美，你再隨意塗抹只是（ ），反而破壞了原本的美感。」括號中最適合填入哪個成語？',
+                options: ['畫蛇添足', '錦上添花', '巧奪天工', '畫龍點睛'],
+                answer: '畫蛇添足',
+                explanation: '「畫蛇添足」比喻多此一舉，反而把事情弄糟糕。'
+            },
+            {
+                id: 'z2_adv_2',
+                zone: 2,
+                type: 'mc',
+                text: '下列何者的意思與「胸有成竹」最為「接近」？',
+                options: ['成竹在胸', '杞人憂天', '臨陣磨槍', '茫然不知'],
+                answer: '成竹在胸',
+                explanation: '兩者皆比喻做事之前心中已有完整的謀劃與把握。'
+            },
+            {
+                id: 'z2_adv_3',
+                zone: 2,
+                type: 'mc',
+                text: '「這場演講精彩萬分，台下觀眾（ ），掌聲久久沒有停歇。」請問括號中何者使用「不恰當」？',
+                options: ['門庭冷落', '座無虛席', '熱烈迴響', '拍案叫絕'],
+                answer: '門庭冷落',
+                explanation: '「門庭冷落」形容十分冷清、沒有賓客，與熱烈的演講場合相反。'
+            },
+            {
+                id: 'z2_adv_4',
+                zone: 2,
+                type: 'mc',
+                text: '「雪中送炭」與「錦上添花」這兩句成語的關係是：',
+                options: ['近義詞', '反義詞', '沒有關係', '互為因果'],
+                answer: '反義詞',
+                explanation: '「雪中送炭」是艱難時給予援助；「錦上添花」是好上加好。'
+            },
+
+            // Category 3: 修辭學大總動員 (Zone 3)
+            {
+                id: 'z3_adv_1',
+                zone: 3,
+                type: 'mc',
+                text: '「海浪像一隻狂暴的猛獸，張牙舞爪地撲向岸邊。」這句話主要使用了哪兩種修辭法？',
+                options: ['比喻與擬人', '誇張與排比', '設問與引用', '頂真與回文'],
+                answer: '比喻與擬人',
+                explanation: '「像...猛獸」為比喻；「張牙舞爪地撲向」賦予海浪人類與動物動作，為擬人。'
+            },
+            {
+                id: 'z3_adv_2',
+                zone: 3,
+                type: 'mc',
+                text: '「難道我們不應該為保護地球環境盡一份心力嗎？」這句話屬於設問修辭中的哪一種？',
+                options: ['激問（答案在問題反面）', '設問（自問自答）', '提問', '疑問'],
+                answer: '激問（答案在問題反面）',
+                explanation: '「難道不應該嗎？」是用反問語氣激發思考，答案顯而易見是「當然應該」。'
+            },
+            {
+                id: 'z3_adv_3',
+                zone: 3,
+                type: 'mc',
+                text: '「這間圖書館安靜得連一根針掉在地上的聲音都聽得見。」這句話使用了什麼修辭法？',
+                options: ['誇張', '排比', '擬物', '映襯'],
+                answer: '誇張',
+                explanation: '極力誇大安靜的程度，屬於誇張修辭。'
+            },
+            {
+                id: 'z3_adv_4',
+                zone: 3,
+                type: 'mc',
+                text: '「什麼是真正的勇敢？真正的勇敢是在面對困難時依然堅持做正確的事。」這屬於哪種設問？',
+                options: ['自問自答（提問）', '激問', '懸問', '疑問'],
+                answer: '自問自答（提問）',
+                explanation: '先提出問題，緊接著由自己回答問題，屬於提問（自問自答）。'
+            },
+
+            // Category 4: 邏輯複句與句型卡片 (Zone 4)
+            {
+                id: 'z4_adv_1',
+                zone: 4,
+                type: 'mc',
+                text: '「（ ）明天的戶外教學下大雨，我們（ ）將活動改在室內體育館舉行。」括號中應填入哪組複句連接詞？',
+                options: ['如果...就...', '雖然...但是...', '不但...而且...', '與其...不如...'],
+                answer: '如果...就...',
+                explanation: '這屬於「假設複句」，前句提出假設情況，後句說明結果。'
+            },
+            {
+                id: 'z4_adv_2',
+                zone: 4,
+                type: 'reorder',
+                text: '請將下列被打亂的句型卡片，排列為語意通順的完整句子：',
+                tokens: ['雖然這個任務', '極具挑戰性', '，', '但只要我們團結一心', '，', '就一定能克服困難', '。'],
+                answerTokens: ['雖然這個任務', '極具挑戰性', '，', '但只要我們團結一心', '，', '就一定能克服困難', '。'],
+                explanation: '結合轉折複句（雖然...但...）與條件複句（只要...就...）。'
+            },
+            {
+                id: 'z4_adv_3',
+                zone: 4,
+                type: 'reorder',
+                text: '請將下列被打亂的句型卡片，排列為語意通順的遞進複句：',
+                tokens: ['小華', '不但課業表現優異', '，', '而且熱心助人', '，', '深受大家的喜愛', '。'],
+                answerTokens: ['小華', '不但課業表現優異', '，', '而且熱心助人', '，', '深受大家的喜愛', '。'],
+                explanation: '遞進複句「不但...而且...」，語意層層遞進。'
+            },
+
+            // Category 5: 深度閱讀與長文推論 (Zone 5)
+            {
+                id: 'z5_adv_1',
+                zone: 5,
+                type: 'mc',
+                passage: '「臺灣特有種櫻花鉤吻鮭是冰河時期的冰河孑遺生物。在數萬年前的冰河時期，臺灣的大甲溪上游水溫較低，適合牠們生存。隨著冰河退去、氣候暖化，牠們無法回到大海，只能被封閉在高山溪流中。近年來由於水質污染與棲地破壞，櫻花鉤吻鮭數量急劇減少，成為保育類瀕危物種。」',
+                text: '根據文章，櫻花鉤吻鮭為什麼無法像一般鮭魚一樣洄游至大海？',
+                options: [
+                    '因為冰河退去後氣候變暖，且地形限制將牠們封閉在高山溪流中',
+                    '因為牠們討厭大海的鹹水',
+                    '因為牠們找不到前往海洋的地圖',
+                    '因為高山溪流中的食物比海洋豐富'
+                ],
+                answer: '因為冰河退去後氣候變暖，且地形限制將牠們封閉在高山溪流中',
+                explanation: '文章明確說明「隨著冰河退去、氣候暖化，牠們無法回到大海，只能被封閉在高山溪流中」。'
+            },
+            {
+                id: 'z5_adv_2',
+                zone: 5,
+                type: 'mc',
+                passage: '「全球氣候變遷正深刻影響著極地生態。在北極，海冰融化的速度遠超科學家的預期。北極熊仰賴海冰作為獵捕海豹的平台，當海冰減少，牠們必須游過更長的距離才能找到食物，導致許多北極熊因體力不支或飢餓而死亡。保護極地生態已是全人類刻不容緩的責任。」',
+                text: '這篇文章主要想表達的的核心主張是什麼？',
+                options: [
+                    '呼籲全人類重視氣候變遷並採取行動保護極地生態',
+                    '介紹北極熊最喜歡吃的食物是海豹',
+                    '說明北極熊是世界上游泳速度最快的動物',
+                    '鼓勵大家去北極觀光旅遊'
+                ],
+                answer: '呼籲全人類重視氣候變遷並採取行動保護極地生態',
+                explanation: '文章尾句「保護極地生態已是全人類刻不容緩的責任」即為文章核心主張。'
+            }
+        ];
+
+        let customQuestions = [];
+
+
+        function loadGameData() {
+            try {
+                const savedPlayer = localStorage.getItem('mandarin_legend_player');
+                if (savedPlayer) {
+                    player = { ...player, ...JSON.parse(savedPlayer) };
+                }
+                const savedQuestions = localStorage.getItem('mandarin_legend_custom_q');
+                if (savedQuestions) {
+                    customQuestions = JSON.parse(savedQuestions);
+                }
+                const savedSettings = localStorage.getItem('mandarin_legend_settings');
+                if (savedSettings) {
+                    gameSettings = { ...gameSettings, ...JSON.parse(savedSettings) };
+                }
+            } catch (e) {
+                console.log("Load error:", e);
+            }
+            updateUIHeader();
+            updateMapStars();
+        }
+
+        function saveGameData() {
+            try {
+                localStorage.setItem('mandarin_legend_player', JSON.stringify(player));
+                localStorage.setItem('mandarin_legend_custom_q', JSON.stringify(customQuestions));
+                localStorage.setItem('mandarin_legend_settings', JSON.stringify(gameSettings));
+            } catch (e) {
+                console.log("Save error:", e);
+            }
+        }
+
+        function updateUIHeader() {
+            const cls = heroClasses[player.classId] || heroClasses.paladin;
+            document.getElementById('playerAvatar').textContent = cls.avatar;
+            document.getElementById('playerClassName').textContent = cls.name;
+            document.getElementById('playerLevel').textContent = `Lv.${player.level}`;
+            document.getElementById('playerGold').textContent = player.gold;
+            
+            document.getElementById('hpText').textContent = `${player.hp}/${player.maxHp}`;
+            document.getElementById('hpBar').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+
+            document.getElementById('mpText').textContent = `${player.mp}/${player.maxMp}`;
+            document.getElementById('mpBar').style.width = `${Math.max(0, (player.mp / player.maxMp) * 100)}%`;
+        }
+
+        function updateMapStars() {
+            for (let z = 1; z <= 5; z++) {
+                const starsCount = player.zoneStars[z] || 0;
+                let starStr = '☆☆☆';
+                if (starsCount === 3) starStr = '⭐⭐⭐';
+                else if (starsCount === 2) starStr = '⭐⭐☆';
+                else if (starsCount === 1) starStr = '⭐☆☆';
+                const el = document.getElementById(`starsZone${z}`);
+                if (el) el.textContent = starStr;
+            }
+        }
+
+        function getAllQuestions() {
+            return [...defaultAdvancedQuestions, ...customQuestions];
+        }
+
+
+        let currentZone = 1;
+        let isBossMode = false;
+        let isSentenceArena = false;
+        let currentQuestionIndex = 0;
+        let activeQuestions = [];
+        let monsterHp = 100;
+        let monsterMaxHp = 100;
+        let combo = 0;
+        let correctCount = 0;
+        let selectedSentenceTokens = [];
+        let questionTimerInterval = null;
+        let timeLeft = 20;
+        let activeDoubleSkill = false;
+
+        function startZone(zoneNum) {
+            initAudio();
+            currentZone = zoneNum;
+            isBossMode = false;
+            isSentenceArena = false;
+
+            const allQ = getAllQuestions();
+            activeQuestions = allQ.filter(q => q.zone === zoneNum);
+            
+            if (activeQuestions.length === 0) {
+                alert("該聖域尚無題目，請至教師專區新增題目！");
+                return;
+            }
+
+            activeQuestions.sort(() => Math.random() - 0.5);
+
+            const zoneData = {
+                1: { name: '雙面音魔', avatar: '👺', hp: 100, title: '聖域一：字音字形與錯字' },
+                2: { name: '成語幻象獸', avatar: '🐺', hp: 120, title: '聖域二：高階成語活用' },
+                3: { name: '修辭魔導師', avatar: '🧙‍♂️', hp: 140, title: '聖域三：修辭學大總動員' },
+                4: { name: '邏輯巨魔', avatar: '🗿', hp: 160, title: '聖域四：邏輯複句與句型' },
+                5: { name: '智慧遠古龍', avatar: '🐉', hp: 200, title: '聖域五：深度閱讀與推論' }
+            };
+
+            const z = zoneData[zoneNum] || { name: '魔物', avatar: '👾', hp: 100, title: '聖域挑戰' };
+            document.getElementById('monsterName').textContent = z.name;
+            document.getElementById('monsterAvatar').textContent = z.avatar;
+            document.getElementById('battleZoneTitle').textContent = z.title;
+
+            monsterMaxHp = Math.round(z.hp * gameSettings.monsterHpMult);
+            monsterHp = monsterMaxHp;
+
+            initBattleSession();
+        }
+
+        function startBossMode() {
+            initAudio();
+            isBossMode = true;
+            isSentenceArena = false;
+            currentZone = 99;
+
+            const allQ = getAllQuestions();
+            activeQuestions = [...allQ].sort(() => Math.random() - 0.5);
+
+            document.getElementById('monsterName').textContent = '無盡火龍魔王';
+            document.getElementById('monsterAvatar').textContent = '🐉';
+            document.getElementById('battleZoneTitle').textContent = '🔥 無盡魔王試煉塔';
+
+            monsterMaxHp = Math.round(350 * gameSettings.monsterHpMult);
+            monsterHp = monsterMaxHp;
+
+            initBattleSession();
+        }
+
+        function startSentenceArena() {
+            initAudio();
+            isSentenceArena = true;
+            isBossMode = false;
+            currentZone = 4;
+
+            const allQ = getAllQuestions();
+            activeQuestions = allQ.filter(q => q.type === 'reorder').sort(() => Math.random() - 0.5);
+
+            if (activeQuestions.length === 0) {
+                alert("題庫中尚無句型重組題目！");
+                return;
+            }
+
+            document.getElementById('monsterName').textContent = '句型守門人';
+            document.getElementById('monsterAvatar').textContent = '⚔️';
+            document.getElementById('battleZoneTitle').textContent = '⚔️ 句子拼圖極限競技場';
+
+            monsterMaxHp = Math.round(200 * gameSettings.monsterHpMult);
+            monsterHp = monsterMaxHp;
+
+            initBattleSession();
+        }
+
+        function initBattleSession() {
+            currentQuestionIndex = 0;
+            combo = 0;
+            correctCount = 0;
+            activeDoubleSkill = false;
+
+            player.hp = player.maxHp;
+            player.mp = player.maxMp;
+
+            updateUIHeader();
+            updateMonsterHpBar();
+
+            document.getElementById('mapView').classList.add('hidden');
+            document.getElementById('battleView').classList.remove('hidden');
+
+            const cls = heroClasses[player.classId] || heroClasses.paladin;
+            document.getElementById('battleHero').textContent = cls.avatar;
+            document.getElementById('battleHeroName').textContent = cls.name;
+
+            renderQuestion();
+        }
+
+        function exitToMap() {
+            clearInterval(questionTimerInterval);
+            document.getElementById('battleView').classList.add('hidden');
+            document.getElementById('mapView').classList.remove('hidden');
+        }
+
+        function updateMonsterHpBar() {
+            const pct = Math.max(0, (monsterHp / monsterMaxHp) * 100);
+            document.getElementById('monsterHpFill').style.width = `${pct}%`;
+            document.getElementById('monsterHpText').textContent = `${monsterHp}/${monsterMaxHp}`;
+        }
+
+        function startTimer() {
+            clearInterval(questionTimerInterval);
+            if (gameSettings.timerSeconds <= 0) {
+                document.getElementById('timerContainer').classList.add('hidden');
+                return;
+            }
+            document.getElementById('timerContainer').classList.remove('hidden');
+
+            timeLeft = gameSettings.timerSeconds;
+            updateTimerUI();
+
+            questionTimerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    clearInterval(questionTimerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timerText').textContent = `${timeLeft}s`;
+            const pct = (timeLeft / gameSettings.timerSeconds) * 100;
+            document.getElementById('timerFill').style.width = `${pct}%`;
+        }
+
+        function handleTimeOut() {
+            playSound('wrong');
+            showFloatingText('時間到！ -20 HP', '#ef4444', 'hero');
+            player.hp = Math.max(10, player.hp - 20);
+            updateUIHeader();
+
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.className = 'p-3.5 rounded-2xl text-xs sm:text-sm font-bold flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-red-950/90 text-red-200 border border-red-800';
+            document.getElementById('feedbackText').innerHTML = '⏰ 答題時間到了！受到 20 點傷害。';
+            document.getElementById('nextBtn').classList.remove('hidden');
+            feedbackBox.classList.remove('hidden');
+        }
+
+
+        function renderQuestion() {
+            clearInterval(questionTimerInterval);
+            document.getElementById('feedbackBox').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+
+            if (currentQuestionIndex >= activeQuestions.length) {
+                handleVictory();
+                return;
+            }
+
+            const q = activeQuestions[currentQuestionIndex];
+            document.getElementById('questionCounter').textContent = `${currentQuestionIndex + 1} / ${activeQuestions.length}`;
+            document.getElementById('questionText').textContent = q.text;
+
+            const categoryNames = {
+                1: '字音字形',
+                2: '成語活用',
+                3: '修辭學',
+                4: '邏輯複句',
+                5: '深度閱讀'
+            };
+            document.getElementById('questionCategoryTag').textContent = categoryNames[q.zone] || '綜合挑戰';
+
+            const passageContainer = document.getElementById('passageContainer');
+            if (q.passage) {
+                passageContainer.classList.remove('hidden');
+                document.getElementById('passageText').textContent = q.passage;
+            } else {
+                passageContainer.classList.add('hidden');
+            }
+
+            const mcContainer = document.getElementById('multipleChoiceContainer');
+            const reorderContainer = document.getElementById('sentenceReorderContainer');
+
+            if (q.type === 'reorder') {
+                mcContainer.classList.add('hidden');
+                reorderContainer.classList.remove('hidden');
+                document.getElementById('questionTypeTag').textContent = '句型重組卡片';
+                initSentenceReorder(q);
+            } else {
+                reorderContainer.classList.add('hidden');
+                mcContainer.classList.remove('hidden');
+                document.getElementById('questionTypeTag').textContent = '單選題';
+
+                mcContainer.innerHTML = '';
+                const opts = [...q.options].sort(() => Math.random() - 0.5);
+                opts.forEach(optText => {
+                    const btn = document.createElement('button');
+                    btn.className = 'rpg-btn w-full text-left bg-slate-800/90 hover:bg-slate-700 text-slate-100 p-3.5 rounded-2xl border border-slate-700 font-bold text-xs sm:text-sm flex items-center gap-2 transition';
+                    btn.innerHTML = `<span class="bg-amber-500/20 text-amber-300 w-6 h-6 rounded-lg flex items-center justify-center text-xs">?</span> ${optText}`;
+                    btn.onclick = () => handleAnswer(optText, q);
+                    mcContainer.appendChild(btn);
+                });
+            }
+
+            startTimer();
+        }
+
+        /* Sentence Sorting Cards */
+        function initSentenceReorder(q) {
+            selectedSentenceTokens = [];
+            renderSentenceTokens(q);
+        }
+
+        function renderSentenceTokens(q) {
+            const selectedArea = document.getElementById('selectedTokensArea');
+            const poolArea = document.getElementById('availableTokensPool');
+
+            selectedArea.innerHTML = '';
+            poolArea.innerHTML = '';
+
+            selectedSentenceTokens.forEach((token, idx) => {
+                const badge = document.createElement('span');
+                badge.className = 'bg-amber-500 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs cursor-pointer shadow hover:bg-amber-400 transition';
+                badge.textContent = token;
+                badge.onclick = () => {
+                    selectedSentenceTokens.splice(idx, 1);
+                    renderSentenceTokens(q);
+                };
+                selectedArea.appendChild(badge);
+            });
+
+            const available = q.tokens.filter(t => {
+                const inSel = selectedSentenceTokens.filter(st => st === t).length;
+                const inTot = q.tokens.filter(tot => tot === t).length;
+                return inSel < inTot;
+            });
+
+            available.forEach(token => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold px-3 py-1.5 rounded-xl text-xs border border-slate-600 transition';
+                btn.textContent = token;
+                btn.onclick = () => {
+                    selectedSentenceTokens.push(token);
+                    renderSentenceTokens(q);
+                };
+                poolArea.appendChild(btn);
+            });
+        }
+
+        function resetSentenceTokens() {
+            const q = activeQuestions[currentQuestionIndex];
+            selectedSentenceTokens = [];
+            renderSentenceTokens(q);
+        }
+
+        function submitSentenceAnswer() {
+            const q = activeQuestions[currentQuestionIndex];
+            const isCorrect = JSON.stringify(selectedSentenceTokens) === JSON.stringify(q.answerTokens);
+            handleAnswerResult(isCorrect, q);
+        }
+
+        function handleAnswer(selectedOpt, q) {
+            const isCorrect = (selectedOpt === q.answer);
+            handleAnswerResult(isCorrect, q);
+        }
+
+
+        /* Hero Skills */
+        function useSkill(type) {
+            initAudio();
+            const q = activeQuestions[currentQuestionIndex];
+
+            if (type === '5050') {
+                if (player.mp < 30) { alert("魔力 MP 不足！"); return; }
+                if (q.type !== 'mc') { alert("此技能僅限單選題使用！"); return; }
+                
+                player.mp -= 30;
+                updateUIHeader();
+                playSound('skill');
+
+                const btns = Array.from(document.getElementById('multipleChoiceContainer').children);
+                let removed = 0;
+                btns.forEach(btn => {
+                    if (!btn.textContent.includes(q.answer) && removed < 2) {
+                        btn.style.opacity = '0.2';
+                        btn.disabled = true;
+                        removed++;
+                    }
+                });
+                showFloatingText('智慧之光！', '#6366f1', 'hero');
+            } else if (type === 'time') {
+                if (player.mp < 20) { alert("魔力 MP 不足！"); return; }
+                player.mp -= 20;
+                timeLeft += 15;
+                updateUIHeader();
+                updateTimerUI();
+                playSound('skill');
+                showFloatingText('時間增加 +15s', '#3b82f6', 'hero');
+            } else if (type === 'double') {
+                if (player.mp < 40) { alert("魔力 MP 不足！"); return; }
+                player.mp -= 40;
+                activeDoubleSkill = true;
+                updateUIHeader();
+                playSound('skill');
+                showFloatingText('雙倍爆擊已準備！', '#f59e0b', 'hero');
+            }
+        }
+
+
+        function handleAnswerResult(isCorrect, q) {
+            clearInterval(questionTimerInterval);
+
+            // Record diagnostics
+            player.diagAttempts[q.zone] = (player.diagAttempts[q.zone] || 0) + 1;
+            if (isCorrect) player.diagCorrect[q.zone] = (player.diagCorrect[q.zone] || 0) + 1;
+
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackText = document.getElementById('feedbackText');
+            const nextBtn = document.getElementById('nextBtn');
+            const comboEl = document.getElementById('comboCounter');
+
+            feedbackBox.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+
+            if (isCorrect) {
+                correctCount++;
+                combo++;
+
+                // Damage Calculation
+                let isCrit = Math.random() < player.critRate;
+                let damage = player.atk + (combo * 4);
+                if (isCrit) damage = Math.round(damage * 1.8);
+                if (activeDoubleSkill) {
+                    damage *= 2;
+                    activeDoubleSkill = false;
+                }
+
+                if (isCrit) playSound('crit');
+                else playSound('attack');
+
+                monsterHp = Math.max(0, monsterHp - damage);
+                updateMonsterHpBar();
+
+                // Animate Monster Shake
+                const monsterEl = document.getElementById('monsterAvatar');
+                monsterEl.classList.add('animate-hit');
+                setTimeout(() => monsterEl.classList.remove('animate-hit'), 400);
+
+                showFloatingText(`${isCrit ? '🔥 暴擊 ' : ''}-${damage} HP`, isCrit ? '#f59e0b' : '#ef4444', 'monster');
+
+                // Reward Gold
+                const goldGained = Math.round((8 + combo * 2) * player.xpBonus);
+                player.gold += goldGained;
+                player.mp = Math.min(player.maxMp, player.mp + 10); // Recover MP on correct answer
+                updateUIHeader();
+
+                feedbackBox.className = 'p-3.5 rounded-2xl text-xs sm:text-sm font-bold flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-emerald-950/90 text-emerald-200 border border-emerald-800';
+                feedbackText.innerHTML = `✅ 答對了！造成 ${damage} 點傷害！ (🪙+${goldGained}, MP+10)<br><span class="text-xs font-normal opacity-90">${q.explanation || ''}</span>`;
+
+                if (combo > 1) {
+                    comboEl.classList.remove('hidden');
+                    document.getElementById('comboNum').textContent = combo;
+                }
+            } else {
+                playSound('wrong');
+                combo = 0;
+                comboEl.classList.add('hidden');
+
+                player.hp = Math.max(10, player.hp - 15);
+                updateUIHeader();
+
+                showFloatingText('-15 HP', '#ef4444', 'hero');
+
+                feedbackBox.className = 'p-3.5 rounded-2xl text-xs sm:text-sm font-bold flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-red-950/90 text-red-200 border border-red-800';
+                feedbackText.innerHTML = `❌ 答錯囉！受到 15 點傷害。<br><span class="text-xs font-normal opacity-90">${q.explanation || '請閱讀詳細觀念再接再厲！'}</span>`;
+            }
+
+            saveGameData();
+        }
+
+        function showFloatingText(text, color, target) {
+            const overlay = document.getElementById('damageOverlay');
+            const el = document.createElement('div');
+            el.className = 'damage-floater text-lg sm:text-xl';
+            el.style.color = color;
+            el.textContent = text;
+
+            if (target === 'monster') {
+                el.style.right = '20%';
+                el.style.top = '25%';
+            } else {
+                el.style.left = '20%';
+                el.style.top = '25%';
+            }
+
+            overlay.appendChild(el);
+            setTimeout(() => el.remove(), 900);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+
+        function handleVictory() {
+            playSound('correct');
+
+            const total = activeQuestions.length;
+            const ratio = correctCount / total;
+            let stars = 1;
+            if (ratio >= 0.9) stars = 3;
+            else if (ratio >= 0.6) stars = 2;
+
+            if (!isBossMode && !isSentenceArena) {
+                if (stars > (player.zoneStars[currentZone] || 0)) {
+                    player.zoneStars[currentZone] = stars;
+                }
+            }
+
+            const goldReward = Math.round((correctCount * 15 + stars * 20) * player.xpBonus);
+            const xpReward = Math.round(correctCount * 25 * player.xpBonus);
+
+            player.gold += goldReward;
+            player.xp += xpReward;
+
+            // Level Up Check
+            if (player.xp >= player.level * 120) {
+                player.level++;
+                player.maxHp += 20;
+                player.maxMp += 10;
+                player.atk += 5;
+                player.hp = player.maxHp;
+                player.mp = player.maxMp;
+            }
+
+            saveGameData();
+            updateUIHeader();
+            updateMapStars();
+
+            document.getElementById('resCorrectCount').textContent = `${correctCount} / ${total}`;
+            document.getElementById('resGoldEarned').textContent = `+${goldReward} 🪙`;
+            document.getElementById('resXpEarned').textContent = `+${xpReward} XP`;
+
+            let starStr = '⭐☆☆';
+            if (stars === 3) starStr = '⭐⭐⭐';
+            else if (stars === 2) starStr = '⭐⭐☆';
+            document.getElementById('victoryStars').textContent = starStr;
+
+            document.getElementById('victoryModal').classList.remove('hidden');
+        }
+
+        function closeVictoryModal() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            exitToMap();
+        }
+
+
+        function openClassModal() {
+            renderClassGrid();
+            document.getElementById('classModal').classList.remove('hidden');
+        }
+        function closeClassModal() {
+            document.getElementById('classModal').classList.add('hidden');
+        }
+
+        function renderClassGrid() {
+            const grid = document.getElementById('classGrid');
+            grid.innerHTML = '';
+            Object.keys(heroClasses).forEach(id => {
+                const c = heroClasses[id];
+                const isCurrent = player.classId === id;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border flex flex-col justify-between space-y-2 cursor-pointer transition ${
+                    isCurrent ? 'border-amber-500 bg-amber-500/20' : 'border-slate-800 bg-slate-950'
+                }`;
+                card.onclick = () => {
+                    player.classId = id;
+                    player.maxHp = c.hp;
+                    player.maxMp = c.mp;
+                    player.atk = c.atk;
+                    player.critRate = c.crit;
+                    player.xpBonus = c.xpBonus || 1.0;
+                    player.hp = player.maxHp;
+                    player.mp = player.maxMp;
+                    saveGameData();
+                    updateUIHeader();
+                    closeClassModal();
+                };
+                card.innerHTML = `
+                    <div class="text-3xl">${c.avatar}</div>
+                    <div>
+                        <div class="font-bold text-slate-100 text-sm">${c.name}</div>
+                        <div class="text-[10px] text-slate-400 mt-1">${c.desc}</div>
+                    </div>
+                    <div class="text-[10px] font-bold text-amber-300">HP:${c.hp} | ATK:${c.atk}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+
+        /* Diagnostic Dashboard Logic */
+        function openDiagnosticModal() {
+            for (let z = 1; z <= 5; z++) {
+                const att = player.diagAttempts[z] || 0;
+                const corr = player.diagCorrect[z] || 0;
+                const pct = att > 0 ? Math.round((corr / att) * 100) : 0;
+
+                document.getElementById(`diagStat${z}`).textContent = `${corr} / ${att} (${pct}%)`;
+                document.getElementById(`diagBar${z}`).style.width = `${pct}%`;
+            }
+            document.getElementById('diagnosticModal').classList.remove('hidden');
+        }
+        function closeDiagnosticModal() {
+            document.getElementById('diagnosticModal').classList.add('hidden');
+        }
+
+
+        /* Shop Equipment Logic */
+        const shopItems = {
+            weapons: [
+                { id: 'w_wood', name: '練習木劍', atk: 5, price: 0 },
+                { id: 'w_steel', name: '智慧精鋼劍', atk: 18, price: 100 },
+                { id: 'w_legend', name: '語文傳奇聖劍', atk: 35, price: 250 }
+            ],
+            armors: [
+                { id: 'a_cloth', name: '冒險布衣', hp: 0, price: 0 },
+                { id: 'a_iron', name: '知識鎖子甲', hp: 50, price: 120 },
+                { id: 'a_dragon', name: '聖龍守護鎧甲', hp: 120, price: 300 }
+            ],
+            accessories: [
+                { id: 'acc_crit', name: '幸運魔晶', desc: '暴擊率 +20%', price: 150 },
+                { id: 'acc_gold', name: '導師金章', desc: '金幣與經驗值 +30%', price: 200 }
+            ]
+        };
+
+        function openShopModal() {
+            renderShop();
+            document.getElementById('shopModal').classList.remove('hidden');
+        }
+        function closeShopModal() {
+            document.getElementById('shopModal').classList.add('hidden');
+        }
+
+        function renderShop() {
+            const wGrid = document.getElementById('weaponsShopGrid');
+            wGrid.innerHTML = '';
+            shopItems.weapons.forEach(item => {
+                const isEquipped = player.weapon === item.id;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border flex flex-col justify-between ${isEquipped ? 'border-amber-500 bg-amber-500/20' : 'border-slate-800 bg-slate-950'}`;
+                card.innerHTML = `
+                    <div class="font-bold text-xs text-slate-200">${item.name}</div>
+                    <div class="text-[10px] text-amber-300">攻擊力 +${item.atk}</div>
+                    ${isEquipped ? '<span class="text-[10px] text-amber-400 font-bold">裝備中</span>' :
+                      `<button onclick="buyWeapon('${item.id}', ${item.price}, ${item.atk})" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg">🪙 ${item.price}</button>`}
+                `;
+                wGrid.appendChild(card);
+            });
+
+            const aGrid = document.getElementById('armorsShopGrid');
+            aGrid.innerHTML = '';
+            shopItems.armors.forEach(item => {
+                const isEquipped = player.armor === item.id;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border flex flex-col justify-between ${isEquipped ? 'border-amber-500 bg-amber-500/20' : 'border-slate-800 bg-slate-950'}`;
+                card.innerHTML = `
+                    <div class="font-bold text-xs text-slate-200">${item.name}</div>
+                    <div class="text-[10px] text-emerald-300">最大血量 +${item.hp}</div>
+                    ${isEquipped ? '<span class="text-[10px] text-amber-400 font-bold">裝備中</span>' :
+                      `<button onclick="buyArmor('${item.id}', ${item.price}, ${item.hp})" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg">🪙 ${item.price}</button>`}
+                `;
+                aGrid.appendChild(card);
+            });
+
+            const accGrid = document.getElementById('accessoriesShopGrid');
+            accGrid.innerHTML = '';
+            shopItems.accessories.forEach(item => {
+                const isEquipped = player.accessory === item.id;
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border flex flex-col justify-between ${isEquipped ? 'border-amber-500 bg-amber-500/20' : 'border-slate-800 bg-slate-950'}`;
+                card.innerHTML = `
+                    <div class="font-bold text-xs text-slate-200">${item.name}</div>
+                    <div class="text-[10px] text-sky-300">${item.desc}</div>
+                    ${isEquipped ? '<span class="text-[10px] text-amber-400 font-bold">裝備中</span>' :
+                      `<button onclick="buyAccessory('${item.id}', ${item.price})" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg">🪙 ${item.price}</button>`}
+                `;
+                accGrid.appendChild(card);
+            });
+        }
+
+        function buyWeapon(id, price, atkBonus) {
+            if (player.gold >= price) {
+                player.gold -= price;
+                player.weapon = id;
+                player.atk = 25 + atkBonus;
+                saveGameData();
+                updateUIHeader();
+                renderShop();
+            } else { alert("金幣不足喔！"); }
+        }
+
+        function buyArmor(id, price, hpBonus) {
+            if (player.gold >= price) {
+                player.gold -= price;
+                player.armor = id;
+                player.maxHp = 100 + hpBonus;
+                player.hp = player.maxHp;
+                saveGameData();
+                updateUIHeader();
+                renderShop();
+            } else { alert("金幣不足喔！"); }
+        }
+
+        function buyAccessory(id, price) {
+            if (player.gold >= price) {
+                player.gold -= price;
+                player.accessory = id;
+                if (id === 'acc_crit') player.critRate = 0.3;
+                if (id === 'acc_gold') player.xpBonus = 1.3;
+                saveGameData();
+                updateUIHeader();
+                renderShop();
+            } else { alert("金幣不足喔！"); }
+        }
+
+
+        function openTeacherModal() {
+            renderTeacherList();
+            updateTeacherSettingsUI();
+            document.getElementById('teacherModal').classList.remove('hidden');
+        }
+        function closeTeacherModal() {
+            document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        function showTeacherTab(tabName) {
+            document.getElementById('teacherTabQuestions').classList.add('hidden');
+            document.getElementById('teacherTabAdd').classList.add('hidden');
+            document.getElementById('teacherTabSettings').classList.add('hidden');
+
+            document.getElementById('tabBtnQuestions').className = 'bg-slate-800 text-slate-300 font-bold px-3 py-1.5 rounded-xl';
+            document.getElementById('tabBtnAdd').className = 'bg-slate-800 text-slate-300 font-bold px-3 py-1.5 rounded-xl';
+            document.getElementById('tabBtnSettings').className = 'bg-slate-800 text-slate-300 font-bold px-3 py-1.5 rounded-xl';
+
+            if (tabName === 'questions') {
+                document.getElementById('teacherTabQuestions').classList.remove('hidden');
+                document.getElementById('tabBtnQuestions').className = 'bg-sky-600 text-white font-bold px-3 py-1.5 rounded-xl';
+                renderTeacherList();
+            } else if (tabName === 'add') {
+                document.getElementById('teacherTabAdd').classList.remove('hidden');
+                document.getElementById('tabBtnAdd').className = 'bg-sky-600 text-white font-bold px-3 py-1.5 rounded-xl';
+            } else if (tabName === 'settings') {
+                document.getElementById('teacherTabSettings').classList.remove('hidden');
+                document.getElementById('tabBtnSettings').className = 'bg-sky-600 text-white font-bold px-3 py-1.5 rounded-xl';
+            }
+        }
+
+        function renderTeacherList() {
+            const list = document.getElementById('teacherQuestionList');
+            list.innerHTML = '';
+            const allQ = getAllQuestions();
+            document.getElementById('teacherTotalCount').textContent = allQ.length;
+
+            allQ.forEach(q => {
+                const isCustom = q.id.startsWith('custom_');
+                const card = document.createElement('div');
+                card.className = 'bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center gap-2';
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded">聖域 ${q.zone}</span>
+                            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">${q.type === 'mc' ? '單選題' : '重組題'}</span>
+                            ${isCustom ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded">自訂題</span>' : ''}
+                        </div>
+                        <p class="text-slate-200 font-bold text-xs">${q.text}</p>
+                    </div>
+                    ${isCustom ? `<button onclick="deleteCustomQuestion('${q.id}')" class="text-red-400 hover:text-red-300 text-xs bg-red-950 p-1.5 rounded-lg border border-red-800">刪除</button>` : ''}
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function toggleFormTypeInputs() {
+            const type = document.getElementById('addQType').value;
+            if (type === 'reorder') {
+                document.getElementById('mcOptionsInputs').classList.add('hidden');
+                document.getElementById('reorderOptionsInputs').classList.remove('hidden');
+            } else {
+                document.getElementById('mcOptionsInputs').classList.remove('hidden');
+                document.getElementById('reorderOptionsInputs').classList.add('hidden');
+            }
+        }
+
+        function handleAddQuestion(event) {
+            event.preventDefault();
+            const zone = parseInt(document.getElementById('addQZone').value);
+            const type = document.getElementById('addQType').value;
+            const text = document.getElementById('addQText').value.trim();
+            const exp = document.getElementById('addQExplanation').value.trim();
+            const passage = document.getElementById('addQPassage').value.trim();
+
+            const newQ = {
+                id: `custom_${Date.now()}`,
+                zone: zone,
+                type: type,
+                text: text,
+                explanation: exp
+            };
+
+            if (passage) newQ.passage = passage;
+
+            if (type === 'reorder') {
+                const tokensStr = document.getElementById('addQTokens').value.trim();
+                const tokens = tokensStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                newQ.tokens = tokens;
+                newQ.answerTokens = tokens;
+            } else {
+                const optA = document.getElementById('addQOptA').value.trim();
+                const optB = document.getElementById('addQOptB').value.trim();
+                const optC = document.getElementById('addQOptC').value.trim();
+                const optD = document.getElementById('addQOptD').value.trim();
+                newQ.options = [optA, optB, optC, optD];
+                newQ.answer = optA;
+            }
+
+            customQuestions.push(newQ);
+            saveGameData();
+            document.getElementById('addQuestionForm').reset();
+            alert("✅ 新增自訂題目成功！");
+            showTeacherTab('questions');
+        }
+
+        function deleteCustomQuestion(id) {
+            customQuestions = customQuestions.filter(q => q.id !== id);
+            saveGameData();
+            renderTeacherList();
+        }
+
+        /* JSON Export/Import */
+        function exportQuestionBankJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getAllQuestions(), null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "Mandarin_Quest_Questions.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importQuestionBankJSON(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        customQuestions = imported.map((q, idx) => ({ ...q, id: `custom_imp_${Date.now()}_${idx}` }));
+                        saveGameData();
+                        alert("✅ 匯入題庫成功！");
+                        renderTeacherList();
+                    }
+                } catch (err) {
+                    alert("⚠️ 格式不正確，請確認為有效的 JSON 檔案！");
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        /* Game Settings */
+        function setTimerConfig(sec) {
+            gameSettings.timerSeconds = sec;
+            saveGameData();
+            updateTeacherSettingsUI();
+        }
+
+        function setMonsterHpConfig(mult) {
+            gameSettings.monsterHpMult = mult;
+            saveGameData();
+            updateTeacherSettingsUI();
+        }
+
+        function updateTeacherSettingsUI() {
+            const sec = gameSettings.timerSeconds;
+            document.getElementById('timerOpt0').className = sec === 0 ? 'p-2.5 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold' : 'p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold';
+            document.getElementById('timerOpt30').className = sec === 30 ? 'p-2.5 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold' : 'p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold';
+            document.getElementById('timerOpt20').className = sec === 20 ? 'p-2.5 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold' : 'p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold';
+            document.getElementById('timerOpt10').className = sec === 10 ? 'p-2.5 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold' : 'p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold';
+
+            const mult = gameSettings.monsterHpMult;
+            document.getElementById('mhpOpt1').className = mult === 1.0 ? 'p-2.5 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold' : 'p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold';
+            document.getElementById('mhpOpt15').className = mult === 1.5 ? 'p-2.5 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold' : 'p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold';
+            document.getElementById('mhpOpt2').className = mult === 2.0 ? 'p-2.5 rounded-xl border border-amber-500 bg-amber-500/20 text-amber-300 font-bold' : 'p-2.5 rounded-xl border border-slate-700 bg-slate-900 text-slate-300 font-bold';
+        }
+
+        function resetStudentData() {
+            if (confirm("⚠️ 確定要清空學生所有的等級、金幣、診斷紀錄與裝備嗎？")) {
+                localStorage.removeItem('mandarin_legend_player');
+                player = {
+                    classId: 'paladin',
+                    level: 1, xp: 0, gold: 100, hp: 100, maxHp: 100, mp: 50, maxMp: 50, atk: 25, critRate: 0.1, xpBonus: 1.0,
+                    weapon: 'w_wood', armor: 'a_cloth', accessory: null,
+                    zoneStars: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                    diagAttempts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+                    diagCorrect: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+                };
+                saveGameData();
+                updateUIHeader();
+                updateMapStars();
+                alert("已順利重置紀錄！");
+            }
+        }
+
+        // Initialize on Load
+        window.onload = function() {
+            loadGameData();
+        };
+    </script>
+</body>
+</html>
