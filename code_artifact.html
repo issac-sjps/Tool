@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>語文勇者大冒險 - 五年級國語學習扶助</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for playful typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        rpg: {
+                            gold: '#f59e0b',
+                            wood: '#854d0e',
+                            darkwood: '#451a03',
+                            bg: '#fef3c7',
+                            card: '#ffffff',
+                            primary: '#4f46e5',
+                            danger: '#ef4444',
+                            success: '#10b981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        cute: ['"ZCOOL KuaiLe"', '"Noto Sans TC"', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #1e1b4b;
+            color: #1e293b;
+        }
+
+        .bg-pattern {
+            background-image: radial-gradient(#4338ca 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Custom RPG UI Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s infinite;
+        }
+
+        @keyframes hit-shake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-8px, 5px) rotate(-5deg); }
+            40% { transform: translate(8px, -5px) rotate(5deg); }
+            60% { transform: translate(-5px, 3px) rotate(-2deg); }
+            80% { transform: translate(5px, -3px) rotate(2deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .animate-shake {
+            animation: hit-shake 0.4s ease-in-out;
+        }
+
+        @keyframes attack-slash {
+            0% { opacity: 0; transform: scale(0.5) rotate(-45deg); }
+            50% { opacity: 1; transform: scale(1.2) rotate(0deg); }
+            100% { opacity: 0; transform: scale(1.5) rotate(45deg); }
+        }
+        .slash-effect {
+            animation: attack-slash 0.3s ease-out forwards;
+        }
+
+        .rpg-box {
+            border: 4px solid #b45309;
+            box-shadow: 0 8px 0 #78350f, inset 0 2px 4px rgba(255, 255, 255, 0.4);
+            border-radius: 1.25rem;
+        }
+
+        .rpg-button {
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+        }
+        .rpg-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        /* Scrollbar styles for modal & question panel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between overflow-x-hidden select-none">
+
+    <!-- TOP HEADER / PLAYER STATS BAR -->
+    <header class="bg-slate-800/90 backdrop-blur-md border-b-4 border-amber-600 p-3 sticky top-0 z-30 shadow-lg">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Hero Stats -->
+            <div class="flex items-center gap-3 bg-slate-900/80 px-3 py-1.5 rounded-2xl border border-amber-500/30">
+                <div id="playerAvatar" class="text-3xl bg-amber-500/20 p-1 rounded-xl cursor-pointer hover:scale-110 transition" onclick="openShop()" title="點擊更換造型">⚔️</div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="playerTitle" class="text-xs bg-amber-500 text-slate-950 font-bold px-2 py-0.5 rounded-full">語文初學者</span>
+                        <span id="playerLevel" class="text-xs text-amber-300 font-bold">Lv.1</span>
+                    </div>
+                    <!-- HP Bar -->
+                    <div class="w-28 bg-slate-700 h-3 rounded-full overflow-hidden mt-1 border border-slate-600 relative">
+                        <div id="hpFill" class="bg-gradient-to-r from-red-500 to-green-500 h-full w-full transition-all duration-300"></div>
+                        <span id="hpText" class="absolute inset-0 text-[9px] font-black text-white flex items-center justify-center drop-shadow">100/100</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Currency & Actions -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Gold Coins -->
+                <div class="flex items-center gap-1.5 bg-amber-950/80 border border-amber-500/50 px-3 py-1.5 rounded-xl text-amber-300 font-bold text-sm">
+                    <span class="text-lg">🪙</span>
+                    <span id="playerGold">0</span>
+                </div>
+
+                <!-- Sound Toggle -->
+                <button id="soundBtn" onclick="toggleSound()" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-xl border border-slate-500 text-lg" title="音效設定">
+                    🔊
+                </button>
+
+                <!-- Shop Button -->
+                <button onclick="openShop()" class="rpg-button bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black px-3 py-1.5 rounded-xl text-sm flex items-center gap-1">
+                    🛒 <span>商店</span>
+                </button>
+
+                <!-- Teacher Panel Button -->
+                <button onclick="openTeacherPanel()" class="rpg-button bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold px-3 py-1.5 rounded-xl text-xs border border-slate-500">
+                    ⚙️ <span>教師備課</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-5 flex flex-col justify-center">
+
+        <!-- VIEW 1: RPG ADVENTURE MAP -->
+        <section id="mapView" class="space-y-6">
+            <div class="text-center space-y-2">
+                <h1 class="text-3xl sm:text-4xl font-black font-cute text-amber-400 tracking-wide drop-shadow-md">
+                    🗺️ 語文勇者大冒險
+                </h1>
+                <p class="text-slate-300 text-xs sm:text-sm">選擇學習關卡挑戰魔王！完成任務賺取金幣與星級榮譽。</p>
+            </div>
+
+            <!-- RPG Zone Map Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <!-- Zone 1 -->
+                <div onclick="startZone(1)" class="rpg-button cursor-pointer bg-slate-800/90 border-2 border-emerald-500/60 hover:border-emerald-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-emerald-500/20 text-emerald-300 p-2.5 rounded-xl text-2xl">🌲</div>
+                        <div id="starsZone1" class="text-amber-400 text-sm font-bold">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-lg text-emerald-300">第一關：部首與形近字森林</h3>
+                        <p class="text-slate-400 text-xs mt-1">練習部件組合、形近字辨析與字義辨別。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+                        <span>怪獸：木頭怪 🪵</span>
+                        <span class="text-emerald-400 font-bold">點擊挑戰 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 2 -->
+                <div onclick="startZone(2)" class="rpg-button cursor-pointer bg-slate-800/90 border-2 border-sky-500/60 hover:border-sky-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-sky-500/20 text-sky-300 p-2.5 rounded-xl text-2xl">🔍</div>
+                        <div id="starsZone2" class="text-amber-400 text-sm font-bold">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-lg text-sky-300">第二關：錯別字大搜尋</h3>
+                        <p class="text-slate-400 text-xs mt-1">找出句子與詞語中的同音錯別字。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+                        <span>怪獸：錯字幽靈 👻</span>
+                        <span class="text-sky-400 font-bold">點擊挑戰 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 3 -->
+                <div onclick="startZone(3)" class="rpg-button cursor-pointer bg-slate-800/90 border-2 border-purple-500/60 hover:border-purple-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-purple-500/20 text-purple-300 p-2.5 rounded-xl text-2xl">🌀</div>
+                        <div id="starsZone3" class="text-amber-400 text-sm font-bold">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-lg text-purple-300">第三關：詞語與成語迷宮</h3>
+                        <p class="text-slate-400 text-xs mt-1">精通高年級常用成語、近義反義詞填空。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+                        <span>怪獸：迷宮史萊姆 🧪</span>
+                        <span class="text-purple-400 font-bold">點擊挑戰 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 4 -->
+                <div onclick="startZone(4)" class="rpg-button cursor-pointer bg-slate-800/90 border-2 border-amber-500/60 hover:border-amber-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-amber-500/20 text-amber-300 p-2.5 rounded-xl text-2xl">🏰</div>
+                        <div id="starsZone4" class="text-amber-400 text-sm font-bold">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-lg text-amber-300">第四關：句型重組與連接詞城堡</h3>
+                        <p class="text-slate-400 text-xs mt-1">互動點擊組合完整句子，掌握複句連接詞。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+                        <span>怪獸：城堡石膏像 🗿</span>
+                        <span class="text-amber-400 font-bold">點擊挑戰 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Zone 5 -->
+                <div onclick="startZone(5)" class="rpg-button cursor-pointer bg-slate-800/90 border-2 border-rose-500/60 hover:border-rose-400 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-rose-500/20 text-rose-300 p-2.5 rounded-xl text-2xl">🗼</div>
+                        <div id="starsZone5" class="text-amber-400 text-sm font-bold">☆☆☆</div>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-lg text-rose-300">第五關：閱讀小偵探終極塔</h3>
+                        <p class="text-slate-400 text-xs mt-1">短文閱讀理解、5W1H分析與主旨推論。</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+                        <span>怪獸：智慧高塔魔王 🧙‍♂️</span>
+                        <span class="text-rose-400 font-bold">點擊挑戰 ⚔️</span>
+                    </div>
+                </div>
+
+                <!-- Infinite Boss Tower Challenge -->
+                <div onclick="startBossMode()" class="rpg-button cursor-pointer bg-gradient-to-br from-red-950 to-slate-900 border-2 border-red-500 p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition shadow-lg shadow-red-950/50">
+                    <div class="flex justify-between items-start">
+                        <div class="bg-red-500/20 text-red-400 p-2.5 rounded-xl text-2xl">🔥</div>
+                        <span class="text-xs bg-red-600 text-white font-bold px-2 py-0.5 rounded-full animate-pulse">無盡速刷</span>
+                    </div>
+                    <div class="mt-3">
+                        <h3 class="font-bold text-lg text-red-400">終極 Boss 刷金幣擂台</h3>
+                        <p class="text-slate-300 text-xs mt-1">混合所有題型！限時快速回答，賺取雙倍金幣與等級經驗！</p>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-red-300 font-bold">
+                        <span>極限挑戰 🐉</span>
+                        <span>開始挑戰 ⚡</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- VIEW 2: BATTLE ARENA SCREEN -->
+        <section id="battleView" class="hidden space-y-4">
+            
+            <!-- Battle Status Bar & Monster Card -->
+            <div class="bg-slate-800/90 border-2 border-slate-700 rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden">
+                <!-- Zone Header & Exit -->
+                <div class="flex justify-between items-center border-b border-slate-700/80 pb-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span id="battleZoneTitle" class="font-bold text-amber-400 text-sm sm:text-base">第一關：部首森林</span>
+                        <span id="questionCounter" class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">1 / 5</span>
+                    </div>
+                    <button onclick="exitToMap()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-xl transition">
+                        🚪 離開戰鬥
+                    </button>
+                </div>
+
+                <!-- Battle Stage Graphic Area -->
+                <div class="flex flex-col sm:flex-row items-center justify-around gap-4 my-2 relative min-h-[160px]">
+                    <!-- Player Hero Avatar Side -->
+                    <div class="flex flex-col items-center">
+                        <div id="battleHero" class="text-5xl sm:text-6xl animate-float transition-all duration-300">⚔️</div>
+                        <span id="battleHeroName" class="text-xs text-slate-300 font-bold mt-2">勇者</span>
+                        <!-- Pet Companion if active -->
+                        <span id="battlePet" class="text-2xl mt-1 hidden" title="寵物夥伴">🐱</span>
+                    </div>
+
+                    <!-- Versus / Combo Effect Display -->
+                    <div class="text-center">
+                        <div id="comboCounter" class="hidden text-amber-400 font-black text-xl sm:text-2xl animate-bounce">
+                            🔥 連擊 x<span id="comboNum">1</span>
+                        </div>
+                        <div id="slashEffect" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl z-20 pointer-events-none slash-effect">
+                            💥
+                        </div>
+                    </div>
+
+                    <!-- Monster Side -->
+                    <div class="flex flex-col items-center">
+                        <div id="monsterAvatar" class="text-6xl sm:text-7xl animate-pulse-subtle">🪵</div>
+                        <span id="monsterName" class="text-sm font-bold text-red-400 mt-2">木頭怪</span>
+                        <!-- Monster Health Bar -->
+                        <div class="w-32 bg-slate-900 h-3 rounded-full overflow-hidden mt-1 border border-red-900 relative">
+                            <div id="monsterHpFill" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUESTION DISPLAY BOX -->
+            <div id="questionBox" class="bg-slate-800/90 border-2 border-amber-500/50 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
+                
+                <!-- Reading Passage Block (For Reading Comprehension Zone) -->
+                <div id="passageContainer" class="hidden bg-slate-900/90 p-4 rounded-2xl border border-slate-700 max-h-48 overflow-y-auto text-sm text-slate-200 leading-relaxed">
+                    <div class="text-amber-400 font-bold text-xs mb-1">📖 閱讀文章：</div>
+                    <p id="passageText">短文載入中...</p>
+                </div>
+
+                <!-- Question Text -->
+                <div class="space-y-1">
+                    <span id="questionTag" class="text-[10px] sm:text-xs font-bold bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-lg">單選題</span>
+                    <h2 id="questionText" class="text-base sm:text-xl font-bold text-slate-100 mt-2 leading-snug">
+                        題目載入中...
+                    </h2>
+                </div>
+
+                <!-- OPTIONS CONTAINER 1: Multiple Choice Options -->
+                <div id="multipleChoiceContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <!-- Dynamic option buttons injected via JS -->
+                </div>
+
+                <!-- OPTIONS CONTAINER 2: Sentence Reordering Drag/Click Tokens -->
+                <div id="sentenceReorderContainer" class="hidden space-y-4 pt-2">
+                    <div class="text-xs text-slate-400">點擊下方詞語卡片，依正確順序組成句子：</div>
+                    
+                    <!-- Selected Answer Tokens Area -->
+                    <div id="selectedTokensArea" class="min-h-[50px] bg-slate-900 p-3 rounded-2xl border-2 border-dashed border-slate-600 flex flex-wrap gap-2 items-center">
+                        <!-- Clicked tokens appear here -->
+                    </div>
+
+                    <!-- Available Word Pool -->
+                    <div id="availableTokensPool" class="flex flex-wrap gap-2 p-2">
+                        <!-- Words to click -->
+                    </div>
+
+                    <!-- Submit Sentence Button -->
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button onclick="resetSentenceTokens()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-2 rounded-xl">重置</button>
+                        <button onclick="submitSentenceAnswer()" class="rpg-button text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl">確認送出 🚀</button>
+                    </div>
+                </div>
+
+                <!-- Question Feedback & Hint area -->
+                <div id="feedbackBox" class="hidden p-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center justify-between">
+                    <span id="feedbackText">提示訊息</span>
+                    <button id="nextBtn" onclick="nextQuestion()" class="hidden rpg-button bg-amber-500 text-slate-950 font-black px-4 py-1.5 rounded-xl text-xs">
+                        下一題 ➔
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- MODAL 1: LEVEL VICTORY / RESULTS MODAL -->
+    <div id="victoryModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-4 border-amber-500 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-5 animate-pulse-subtle shadow-2xl">
+            <div class="text-6xl">🏆</div>
+            <h2 class="text-2xl sm:text-3xl font-black font-cute text-amber-400">挑戰成功！</h2>
+            
+            <div class="flex justify-center gap-2 text-3xl" id="victoryStars">
+                ⭐ ⭐ ⭐
+            </div>
+
+            <div class="bg-slate-900/80 p-4 rounded-2xl space-y-2 text-sm text-slate-300">
+                <div class="flex justify-between">
+                    <span>答對題數：</span>
+                    <span id="resCorrectCount" class="font-bold text-emerald-400">5 / 5</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>獲得金幣：</span>
+                    <span id="resGoldEarned" class="font-bold text-amber-400">+50 🪙</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>獲得 XP：</span>
+                    <span id="resXpEarned" class="font-bold text-sky-400">+100 XP</span>
+                </div>
+            </div>
+
+            <p id="victoryEncouragement" class="text-xs text-amber-200/90 font-bold">
+                太棒了！你的國語詞彙與閱讀戰力大增！
+            </p>
+
+            <button onclick="closeVictoryModal()" class="rpg-button w-full bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black py-3 rounded-2xl text-base">
+                返回地圖 🗺️
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: HERO SHOP & CUSTOMIZATION -->
+    <div id="shopModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-amber-500/80 rounded-3xl p-5 sm:p-7 max-w-2xl w-full max-h-[85vh] flex flex-col space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h2 class="text-xl font-bold text-amber-400 flex items-center gap-2">
+                    🛒 勇者補給商店
+                </h2>
+                <button onclick="closeShop()" class="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <!-- Shop Items Grid -->
+            <div class="flex-1 overflow-y-auto space-y-4 pr-1">
+                <!-- Avatars Section -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 mb-2">英雄造型角色</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="avatarShopGrid">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+
+                <!-- Titles Section -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 mb-2">榮譽稱號</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="titleShopGrid">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+
+                <!-- Pets Section -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 mb-2">跟隨寵物夥伴</h3>
+                    <div class="grid grid-cols-3 gap-3" id="petShopGrid">
+                        <!-- JS injected -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: TEACHER MANAGEMENT PANEL (教師備課專區) -->
+    <div id="teacherModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-sky-500/80 rounded-3xl p-5 sm:p-7 max-w-3xl w-full max-h-[90vh] flex flex-col space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h2 class="text-xl font-bold text-sky-400 flex items-center gap-2">
+                        ⚙️ 教師備課與題庫管理專區
+                    </h2>
+                    <p class="text-xs text-slate-400">可檢視題庫、新增自訂題目或重置學生進度</p>
+                </div>
+                <button onclick="closeTeacherPanel()" class="text-slate-400 hover:text-white text-xl">✕</button>
+            </div>
+
+            <!-- Tabs / Action Buttons -->
+            <div class="flex flex-wrap gap-2 border-b border-slate-700 pb-2 text-xs">
+                <button onclick="showTeacherTab('questions')" id="tabBtnQuestions" class="bg-sky-600 text-white font-bold px-3 py-1.5 rounded-xl">題庫列表</button>
+                <button onclick="showTeacherTab('add')" id="tabBtnAdd" class="bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-xl">新增題目</button>
+                <button onclick="resetStudentData()" class="bg-red-900/80 hover:bg-red-800 text-red-200 font-bold px-3 py-1.5 rounded-xl ml-auto">⚠️ 重置學生紀錄</button>
+            </div>
+
+            <!-- Tab Content 1: Question Bank List -->
+            <div id="teacherTabQuestions" class="flex-1 overflow-y-auto space-y-3 text-xs pr-1">
+                <div id="teacherQuestionList" class="space-y-2">
+                    <!-- JS Injected -->
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Add Custom Question Form -->
+            <div id="teacherTabAdd" class="hidden flex-1 overflow-y-auto space-y-3 text-xs pr-1">
+                <form id="addQuestionForm" onsubmit="handleAddQuestion(event)" class="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-700">
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-1">選擇關卡類別：</label>
+                        <select id="addQZone" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-slate-200">
+                            <option value="1">第一關：部首與形近字</option>
+                            <option value="2">第二關：錯別字大搜尋</option>
+                            <option value="3">第三關：詞語與成語</option>
+                            <option value="4">第四關：句型與連接詞</option>
+                            <option value="5">第五關：短文閱讀理解</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-1">題目文字：</label>
+                        <input type="text" id="addQText" required placeholder="例如：請問「氵」+「青」組成什麼字？" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-slate-200">
+                    </div>
+
+                    <div id="readingPassageInput" class="hidden">
+                        <label class="block text-amber-300 font-bold mb-1">閱讀短文內容（第五關選填）：</label>
+                        <textarea id="addQPassage" rows="3" placeholder="請輸入閱讀文章..." class="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-slate-200"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 A（正確答案）：</label>
+                            <input type="text" id="addQOptA" required placeholder="正確答案" class="w-full bg-slate-800 border border-emerald-600/60 rounded-xl p-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 B：</label>
+                            <input type="text" id="addQOptB" required placeholder="誘答選項" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 C：</label>
+                            <input type="text" id="addQOptC" required placeholder="誘答選項" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-slate-300 font-bold mb-1">選項 D：</label>
+                            <input type="text" id="addQOptD" required placeholder="誘答選項" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-slate-200">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-300 font-bold mb-1">解析／提示訊息：</label>
+                        <input type="text" id="addQExplanation" placeholder="答錯或答對時的說明提示" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-2 text-slate-200">
+                    </div>
+
+                    <button type="submit" class="rpg-button w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">
+                        ➕ 儲存並加入題庫
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 text-slate-500 text-[11px] text-center py-2 border-t border-slate-800">
+        五年級國語學習扶助專用教材 ‧ 語文勇者大冒險 ⚔️
+    </footer>
+
+    <script>
+        let audioCtx = null;
+        let isSoundOn = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            document.getElementById('soundBtn').textContent = isSoundOn ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!isSoundOn) return;
+            initAudio();
+
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    // Ascending chime
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    // Low buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.setValueAtTime(110, now + 0.15);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } else if (type === 'attack') {
+                    // Quick sweep
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'victory') {
+                    // Fanfare note sequence
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const subOsc = audioCtx.createOscillator();
+                        const subGain = audioCtx.createGain();
+                        subOsc.connect(subGain);
+                        subGain.connect(audioCtx.destination);
+                        subOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        subGain.gain.setValueAtTime(0.2, now + idx * 0.12);
+                        subGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.25);
+                        subOsc.start(now + idx * 0.12);
+                        subOsc.stop(now + idx * 0.12 + 0.25);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+
+        // Built-in Questions Bank tailored for Grade 5 Remedial Mandarin (學習扶助/補救教學)
+        const defaultQuestions = [
+            // Zone 1: 部首與形近字
+            {
+                id: 'z1_1',
+                zone: 1,
+                type: 'mc',
+                text: '請問「氵」（三點水）加上「青」可以組成哪一個字？',
+                options: ['清', '晴', '請', '睛'],
+                answer: '清',
+                explanation: '「氵」與水有關，如「清水」；「日」與太陽有關，如「晴天」。'
+            },
+            {
+                id: 'z1_2',
+                zone: 1,
+                type: 'mc',
+                text: '「眼睛」的「睛」字，部首是什麼？',
+                options: ['目部', '日部', '言部', '水部'],
+                answer: '目部',
+                explanation: '眼睛與視覺有關，所以是「目」字旁。'
+            },
+            {
+                id: 'z1_3',
+                zone: 1,
+                type: 'mc',
+                text: '「太陽出來了，今天是一個（ ）朗的好天氣。」括號中應填入哪個字？',
+                options: ['晴', '睛', '清', '情'],
+                answer: '晴',
+                explanation: '陽光明媚為「晴天」（日部）。'
+            },
+            {
+                id: 'z1_4',
+                zone: 1,
+                type: 'mc',
+                text: '下列哪一組字的「部首」完全相同？',
+                options: ['河、海、湖', '稿、積、語', '休、體、詞', '花、草、樹'],
+                answer: '河、海、湖',
+                explanation: '「河、海、湖」都是「氵」（水部）。'
+            },
+
+            // Zone 2: 錯別字大搜尋
+            {
+                id: 'z2_1',
+                zone: 2,
+                type: 'mc',
+                text: '「他今天穿得非常『漂亮』去參加宴會。」請問引號中的詞哪裡有錯字？',
+                options: ['「漂」應改為「飄」', '「亮」應改為「諒」', '「漂」應改為「標」', '沒有錯字'],
+                answer: '沒有錯字',
+                explanation: '「漂亮」字形正確！'
+            },
+            {
+                id: 'z2_2',
+                zone: 2,
+                type: 'mc',
+                text: '「哥哥在賽跑中跌倒了，非常『心通』。」哪一個字寫錯了？',
+                options: ['「通」應改為「痛」', '「心」應改為「新」', '「跌」應改為「鐵」', '沒有錯字'],
+                answer: '「通」應改為「痛」',
+                explanation: '感覺疼痛應寫作「心痛」。'
+            },
+            {
+                id: 'z2_3',
+                zone: 2,
+                type: 'mc',
+                text: '下列哪一個句子「沒有」錯別字？',
+                options: [
+                    '弟弟平時非常貪玩，常常忘記寫作業。',
+                    '大家要保持安靜，不要打惱別人。',
+                    '媽媽買了新鮮的水草回家煮湯。',
+                    '他做錯事卻不肯察悔。'
+                ],
+                answer: '弟弟平時非常貪玩，常常忘記寫作業。',
+                explanation: '其餘選項含錯字：「打惱(擾)」、「水草(果)」、「察(懺)悔」。'
+            },
+
+            // Zone 3: 詞語與成語迷宮
+            {
+                id: 'z3_1',
+                zone: 3,
+                type: 'mc',
+                text: '「守株待（ ）」是比喻拘泥守舊，不知變通。括號中應填入哪種動物？',
+                options: ['兔', '狗', '馬', '虎'],
+                answer: '兔',
+                explanation: '成語為「守株待兔」。'
+            },
+            {
+                id: 'z3_2',
+                zone: 3,
+                type: 'mc',
+                text: '「雪中送炭」的意思最接近下列何者？',
+                options: [
+                    '在別人有困難時給予適時的幫助',
+                    '下雪的時候去買木炭',
+                    '錦上添花，好上加好',
+                    '把木炭當作禮物送人'
+                ],
+                answer: '在別人有困難時給予適時的幫助',
+                explanation: '「雪中送炭」比喻在人艱難急迫時給予援助。'
+            },
+            {
+                id: 'z3_3',
+                zone: 3,
+                type: 'mc',
+                text: '「這幅畫已經很完美了，你再塗塗改改簡直是（ ）。」',
+                options: ['畫蛇添足', '井底之蛙', '對牛彈琴', '亡羊補牢'],
+                answer: '畫蛇添足',
+                explanation: '比喻多此一舉，反而把事情弄糟糕。'
+            },
+
+            // Zone 4: 句型與連接詞城堡
+            {
+                id: 'z4_1',
+                zone: 4,
+                type: 'mc',
+                text: '「（ ）今天下著大雨，（ ）我們依然準時抵達學校。」括號中應填入哪一組連接詞？',
+                options: [
+                    '雖然...但是...',
+                    '因為...所以...',
+                    '不但...而且...',
+                    '只要...就...'
+                ],
+                answer: '雖然...但是...',
+                explanation: '這是轉折複句，前文與後文語意轉折時使用。'
+            },
+            {
+                id: 'z4_2',
+                zone: 4,
+                type: 'reorder',
+                text: '請將下列詞語重組為通順的句子：',
+                tokens: ['因為', '昨晚沒睡好', '，', '所以', '小華今天', '上課一直在打瞌睡', '。'],
+                answerTokens: ['因為', '昨晚沒睡好', '，', '所以', '小華今天', '上課一直在打瞌睡', '。'],
+                explanation: '「因為...所以...」表因果關係複句。'
+            },
+            {
+                id: 'z4_3',
+                zone: 4,
+                type: 'reorder',
+                text: '請將下列詞語重組為通順的句子：',
+                tokens: ['小明', '不但', '功課優異', '，', '而且', '樂於助人', '。'],
+                answerTokens: ['小明', '不但', '功課優異', '，', '而且', '樂於助人', '。'],
+                explanation: '「不但...而且...」表遞進複句。'
+            },
+
+            // Zone 5: 閱讀小偵探終極塔
+            {
+                id: 'z5_1',
+                zone: 5,
+                type: 'mc',
+                passage: '「小蜂鳥是世界上體型最小的鳥類。雖然牠們體長只有幾公分，但飛行的本領非常高超。牠們每秒鐘可以振動翅膀幾十次，甚至能懸停在空中吸食花蜜。為了尋找充足的食物，小蜂鳥每年秋天都會橫渡浩瀚的墨西哥灣，展現驚人的毅力。」',
+                text: '根據文章，小蜂鳥為什麼要進行長途遷徙？',
+                options: ['為了尋找充足的食物', '為了和朋友比賽飛行', '為了躲避天敵獵捕', '為了找地方築巢'],
+                answer: '為了尋找充足的食物',
+                explanation: '文章明確提到「為了尋找充足的食物，小蜂鳥每年秋天都會橫渡浩瀚的墨西哥灣」。'
+            },
+            {
+                id: 'z5_2',
+                zone: 5,
+                type: 'mc',
+                passage: '「小蜂鳥是世界上體型最小的鳥類。雖然牠們體長只有幾公分，但飛行的本領非常高超。牠們每秒鐘可以振動翅膀幾十次，甚至能懸停在空中吸食花蜜。為了尋找充足的食物，小蜂鳥每年秋天都會橫渡浩瀚的墨西哥灣，展現驚人的毅力。」',
+                text: '這篇文章主要想傳達什麼樣的精神或訊息？',
+                options: [
+                    '身材雖小卻擁有驚人毅力與高超本領',
+                    '鳥類飛行時速度越快越安全',
+                    '蜂鳥非常喜歡吃甜食',
+                    '墨西哥灣是一個很危險的地方'
+                ],
+                answer: '身材雖小卻擁有驚人毅力與高超本領',
+                explanation: '文章強調蜂鳥體型微小卻能力高超並展現驚人毅力。'
+            }
+        ];
+
+        // Player Data State (Saved in LocalStorage)
+        let player = {
+            level: 1,
+            xp: 0,
+            gold: 50,
+            hp: 100,
+            maxHp: 100,
+            avatar: '⚔️',
+            title: '語文初學者',
+            pet: null,
+            unlockedAvatars: ['⚔️'],
+            unlockedTitles: ['語文初學者'],
+            unlockedPets: [],
+            zoneStars: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+
+        // Custom added questions from teacher
+        let customQuestions = [];
+
+        // Active Battle Session State
+        let currentZone = 1;
+        let isBossMode = false;
+        let currentQuestionIndex = 0;
+        let activeQuestions = [];
+        let monsterHp = 100;
+        let monsterMaxHp = 100;
+        let combo = 0;
+        let correctAnswersCount = 0;
+        let selectedSentenceTokens = [];
+
+        function loadGameData() {
+            try {
+                const savedPlayer = localStorage.getItem('mandarin_hero_player');
+                if (savedPlayer) {
+                    player = { ...player, ...JSON.parse(savedPlayer) };
+                }
+                const savedQuestions = localStorage.getItem('mandarin_hero_custom_q');
+                if (savedQuestions) {
+                    customQuestions = JSON.parse(savedQuestions);
+                }
+            } catch (e) {
+                console.log("LocalStorage Load Error:", e);
+            }
+            updateUIHeader();
+            updateMapStars();
+        }
+
+        function saveGameData() {
+            try {
+                localStorage.setItem('mandarin_hero_player', JSON.stringify(player));
+                localStorage.setItem('mandarin_hero_custom_q', JSON.stringify(customQuestions));
+            } catch (e) {
+                console.log("LocalStorage Save Error:", e);
+            }
+        }
+
+        function updateUIHeader() {
+            document.getElementById('playerAvatar').textContent = player.avatar;
+            document.getElementById('playerTitle').textContent = player.title;
+            document.getElementById('playerLevel').textContent = `Lv.${player.level}`;
+            document.getElementById('playerGold').textContent = player.gold;
+            document.getElementById('hpText').textContent = `${player.hp}/${player.maxHp}`;
+            const hpPercent = Math.max(0, (player.hp / player.maxHp) * 100);
+            document.getElementById('hpFill').style.width = `${hpPercent}%`;
+            
+            // Pet display in battle
+            const petEl = document.getElementById('battlePet');
+            if (player.pet) {
+                petEl.textContent = player.pet;
+                petEl.classList.remove('hidden');
+            } else {
+                petEl.classList.add('hidden');
+            }
+        }
+
+        function updateMapStars() {
+            for (let z = 1; z <= 5; z++) {
+                const starsCount = player.zoneStars[z] || 0;
+                let starStr = '☆☆☆';
+                if (starsCount === 3) starStr = '⭐⭐⭐';
+                else if (starsCount === 2) starStr = '⭐⭐☆';
+                else if (starsCount === 1) starStr = '⭐☆☆';
+                document.getElementById(`starsZone${z}`).textContent = starStr;
+            }
+        }
+
+
+        function getAllQuestions() {
+            return [...defaultQuestions, ...customQuestions];
+        }
+
+        function startZone(zoneNum) {
+            initAudio();
+            currentZone = zoneNum;
+            isBossMode = false;
+            
+            const allQ = getAllQuestions();
+            activeQuestions = allQ.filter(q => q.zone === zoneNum);
+            
+            if (activeQuestions.length === 0) {
+                alert("此關卡尚無題目！");
+                return;
+            }
+
+            // Shuffle questions for variety
+            activeQuestions.sort(() => Math.random() - 0.5);
+
+            // Set Monster attributes based on Zone
+            const monsterData = {
+                1: { name: '木頭怪', avatar: '🪵', hp: 100 },
+                2: { name: '錯字幽靈', avatar: '👻', hp: 120 },
+                3: { name: '迷宮史萊姆', avatar: '🧪', hp: 140 },
+                4: { name: '城堡石膏像', avatar: '🗿', hp: 160 },
+                5: { name: '智慧高塔魔王', avatar: '🧙‍♂️', hp: 200 }
+            };
+
+            const m = monsterData[zoneNum] || { name: '學習小妖', avatar: '👾', hp: 100 };
+            document.getElementById('monsterName').textContent = m.name;
+            document.getElementById('monsterAvatar').textContent = m.avatar;
+            monsterMaxHp = m.hp;
+            monsterHp = m.hp;
+            
+            const titles = {
+                1: '第一關：部首與形近字森林',
+                2: '第二關：錯別字大搜尋',
+                3: '第三關：詞語與成語迷宮',
+                4: '第四關：句型與連接詞城堡',
+                5: '第五關：閱讀小偵探終極塔'
+            };
+            document.getElementById('battleZoneTitle').textContent = titles[zoneNum];
+
+            initBattleScreen();
+        }
+
+        function startBossMode() {
+            initAudio();
+            isBossMode = true;
+            currentZone = 99;
+
+            const allQ = getAllQuestions();
+            // Shuffle all questions
+            activeQuestions = [...allQ].sort(() => Math.random() - 0.5);
+
+            document.getElementById('monsterName').textContent = '無盡火龍魔王';
+            document.getElementById('monsterAvatar').textContent = '🐉';
+            monsterMaxHp = 300;
+            monsterHp = 300;
+            document.getElementById('battleZoneTitle').textContent = '🔥 終極 Boss 刷金幣擂台';
+
+            initBattleScreen();
+        }
+
+        function initBattleScreen() {
+            currentQuestionIndex = 0;
+            combo = 0;
+            correctAnswersCount = 0;
+            player.hp = player.maxHp;
+
+            updateUIHeader();
+            updateMonsterHpBar();
+
+            document.getElementById('mapView').classList.add('hidden');
+            document.getElementById('battleView').classList.remove('hidden');
+            
+            document.getElementById('battleHero').textContent = player.avatar;
+            document.getElementById('battleHeroName').textContent = player.title;
+
+            renderQuestion();
+        }
+
+        function exitToMap() {
+            document.getElementById('battleView').classList.add('hidden');
+            document.getElementById('mapView').classList.remove('hidden');
+        }
+
+        function updateMonsterHpBar() {
+            const percent = Math.max(0, (monsterHp / monsterMaxHp) * 100);
+            document.getElementById('monsterHpFill').style.width = `${percent}%`;
+        }
+
+
+        function renderQuestion() {
+            // Reset Feedback Box
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+
+            if (currentQuestionIndex >= activeQuestions.length) {
+                // All questions finished, level complete!
+                handleLevelVictory();
+                return;
+            }
+
+            const q = activeQuestions[currentQuestionIndex];
+            document.getElementById('questionCounter').textContent = `${currentQuestionIndex + 1} / ${activeQuestions.length}`;
+            document.getElementById('questionText').textContent = q.text;
+
+            // Passage container for reading items
+            const passageContainer = document.getElementById('passageContainer');
+            if (q.passage) {
+                passageContainer.classList.remove('hidden');
+                document.getElementById('passageText').textContent = q.passage;
+            } else {
+                passageContainer.classList.add('hidden');
+            }
+
+            // Hide/Show option containers based on type
+            const mcContainer = document.getElementById('multipleChoiceContainer');
+            const reorderContainer = document.getElementById('sentenceReorderContainer');
+
+            if (q.type === 'reorder') {
+                mcContainer.classList.add('hidden');
+                reorderContainer.classList.remove('hidden');
+                document.getElementById('questionTag').textContent = '句型重組題';
+                initSentenceReorder(q);
+            } else {
+                reorderContainer.classList.add('hidden');
+                mcContainer.classList.remove('hidden');
+                document.getElementById('questionTag').textContent = '單選題';
+                
+                mcContainer.innerHTML = '';
+                // Shuffle options for fair challenge
+                const opts = [...q.options].sort(() => Math.random() - 0.5);
+                opts.forEach(optText => {
+                    const btn = document.createElement('button');
+                    btn.className = 'rpg-button w-full text-left bg-slate-700/80 hover:bg-slate-600 text-slate-100 p-3.5 rounded-2xl border border-slate-600 font-bold text-sm sm:text-base flex items-center gap-2 transition';
+                    btn.innerHTML = `<span class="bg-amber-500/20 text-amber-300 w-6 h-6 rounded-lg flex items-center justify-center text-xs">?</span> ${optText}`;
+                    btn.onclick = () => handleMcAnswer(optText, q);
+                    mcContainer.appendChild(btn);
+                });
+            }
+        }
+
+        /* Interactive Sentence Reordering (Zone 4) */
+        function initSentenceReorder(question) {
+            selectedSentenceTokens = [];
+            renderSentenceTokens(question);
+        }
+
+        function renderSentenceTokens(question) {
+            const selectedArea = document.getElementById('selectedTokensArea');
+            const poolArea = document.getElementById('availableTokensPool');
+
+            selectedArea.innerHTML = '';
+            poolArea.innerHTML = '';
+
+            // Selected tokens
+            selectedSentenceTokens.forEach((token, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-sm cursor-pointer shadow hover:bg-amber-400 transition';
+                badge.textContent = token;
+                badge.onclick = () => {
+                    selectedSentenceTokens.splice(index, 1);
+                    renderSentenceTokens(question);
+                };
+                selectedArea.appendChild(badge);
+            });
+
+            // Available tokens
+            const available = question.tokens.filter(t => {
+                const countInSelected = selectedSentenceTokens.filter(st => st === t).length;
+                const countInTotal = question.tokens.filter(tot => tot === t).length;
+                return countInSelected < countInTotal;
+            });
+
+            available.forEach(token => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold px-3 py-1.5 rounded-xl text-sm border border-slate-500 shadow transition';
+                btn.textContent = token;
+                btn.onclick = () => {
+                    selectedSentenceTokens.push(token);
+                    renderSentenceTokens(question);
+                };
+                poolArea.appendChild(btn);
+            });
+        }
+
+        function resetSentenceTokens() {
+            const q = activeQuestions[currentQuestionIndex];
+            selectedSentenceTokens = [];
+            renderSentenceTokens(q);
+        }
+
+        function submitSentenceAnswer() {
+            const q = activeQuestions[currentQuestionIndex];
+            const isCorrect = JSON.stringify(selectedSentenceTokens) === JSON.stringify(q.answerTokens);
+            processAnswerResult(isCorrect, q);
+        }
+
+        function handleMcAnswer(selectedOpt, question) {
+            const isCorrect = (selectedOpt === question.answer);
+            processAnswerResult(isCorrect, question);
+        }
+
+
+        function processAnswerResult(isCorrect, question) {
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackText = document.getElementById('feedbackText');
+            const nextBtn = document.getElementById('nextBtn');
+            const comboEl = document.getElementById('comboCounter');
+
+            feedbackBox.classList.remove('hidden', 'bg-emerald-900/80', 'text-emerald-200', 'bg-red-900/80', 'text-red-200');
+
+            if (isCorrect) {
+                playSound('correct');
+                playSound('attack');
+                
+                correctAnswersCount++;
+                combo++;
+                
+                // Show Slash effect
+                const slash = document.getElementById('slashEffect');
+                slash.classList.remove('hidden');
+                setTimeout(() => slash.classList.add('hidden'), 300);
+
+                // Animate Hero Attack Shake Monster
+                const monsterEl = document.getElementById('monsterAvatar');
+                monsterEl.classList.add('animate-shake');
+                setTimeout(() => monsterEl.classList.remove('animate-shake'), 400);
+
+                // Damage Monster
+                const damage = 25 + (combo * 5);
+                monsterHp = Math.max(0, monsterHp - damage);
+                updateMonsterHpBar();
+
+                // Reward Gold
+                player.gold += 5;
+                updateUIHeader();
+
+                feedbackBox.classList.add('bg-emerald-900/80', 'text-emerald-200');
+                feedbackText.innerHTML = `✅ 答對了！造成 ${damage} 點傷害！ (🪙+5) ${question.explanation ? '<br><span class="text-xs font-normal opacity-90">' + question.explanation + '</span>' : ''}`;
+
+                if (combo > 1) {
+                    comboEl.classList.remove('hidden');
+                    document.getElementById('comboNum').textContent = combo;
+                }
+            } else {
+                playSound('wrong');
+                combo = 0;
+                comboEl.classList.add('hidden');
+
+                // Monster hits Hero
+                player.hp = Math.max(10, player.hp - 15);
+                updateUIHeader();
+
+                feedbackBox.classList.add('bg-red-900/80', 'text-red-200');
+                feedbackText.innerHTML = `❌ 答錯囉！受到 15 點傷害。<br><span class="text-xs font-normal opacity-90">${question.explanation || '再接再厲！看清楚題目再思考一下！'}</span>`;
+            }
+
+            nextBtn.classList.remove('hidden');
+            saveGameData();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+
+
+        function handleLevelVictory() {
+            playSound('victory');
+
+            // Calculate stars based on accuracy
+            const total = activeQuestions.length;
+            const ratio = correctAnswersCount / total;
+            let starsEarned = 1;
+            if (ratio >= 0.9) starsEarned = 3;
+            else if (ratio >= 0.6) starsEarned = 2;
+
+            if (!isBossMode) {
+                const prevStars = player.zoneStars[currentZone] || 0;
+                if (starsEarned > prevStars) {
+                    player.zoneStars[currentZone] = starsEarned;
+                }
+            }
+
+            // Reward Gold & XP
+            const goldReward = correctAnswersCount * 10 + (starsEarned * 10);
+            const xpReward = correctAnswersCount * 20;
+
+            player.gold += goldReward;
+            player.xp += xpReward;
+
+            // Level up check (100 XP per level)
+            if (player.xp >= player.level * 100) {
+                player.level++;
+                player.maxHp += 20;
+                player.hp = player.maxHp;
+                playSound('victory');
+            }
+
+            saveGameData();
+            updateUIHeader();
+            updateMapStars();
+
+            // Populate Modal Display
+            document.getElementById('resCorrectCount').textContent = `${correctAnswersCount} / ${total}`;
+            document.getElementById('resGoldEarned').textContent = `+${goldReward} 🪙`;
+            document.getElementById('resXpEarned').textContent = `+${xpReward} XP`;
+
+            let starDisplay = '⭐☆☆';
+            if (starsEarned === 3) starDisplay = '⭐⭐⭐';
+            else if (starsEarned === 2) starDisplay = '⭐⭐☆';
+            document.getElementById('victoryStars').textContent = starDisplay;
+
+            document.getElementById('victoryModal').classList.remove('hidden');
+        }
+
+        function closeVictoryModal() {
+            document.getElementById('victoryModal').classList.add('hidden');
+            exitToMap();
+        }
+
+
+        const shopData = {
+            avatars: [
+                { id: '⚔️', name: '小勇者', price: 0 },
+                { id: '🧙‍♂️', name: '大法師', price: 50 },
+                { id: '🥷', name: '忍者', price: 80 },
+                { id: '👸', name: '公主', price: 100 },
+                { id: '🤖', name: '機器人', price: 150 }
+            ],
+            titles: [
+                { name: '語文初學者', price: 0 },
+                { name: '錯字克星', price: 40 },
+                { name: '成語大師', price: 70 },
+                { name: '閱讀神偵探', price: 100 },
+                { name: '國語傳奇勇者', price: 200 }
+            ],
+            pets: [
+                { id: '🐱', name: '小貓咪', price: 60 },
+                { id: '🦉', name: '智慧貓頭鷹', price: 100 },
+                { id: '🐉', name: '小飛龍', price: 180 }
+            ]
+        };
+
+        function openShop() {
+            initAudio();
+            renderShop();
+            document.getElementById('shopModal').classList.remove('hidden');
+        }
+
+        function closeShop() {
+            document.getElementById('shopModal').classList.add('hidden');
+        }
+
+        function renderShop() {
+            // Avatars
+            const avatarGrid = document.getElementById('avatarShopGrid');
+            avatarGrid.innerHTML = '';
+            shopData.avatars.forEach(item => {
+                const unlocked = player.unlockedAvatars.includes(item.id);
+                const isEquipped = (player.avatar === item.id);
+
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border text-center flex flex-col items-center justify-between gap-1 ${
+                    isEquipped ? 'border-amber-500 bg-amber-500/20' : 'border-slate-700 bg-slate-900/60'
+                }`;
+                card.innerHTML = `
+                    <div class="text-3xl my-1">${item.id}</div>
+                    <div class="text-xs font-bold text-slate-200">${item.name}</div>
+                    ${
+                        isEquipped ? '<span class="text-[10px] text-amber-400 font-bold">使用中</span>' :
+                        unlocked ? `<button onclick="equipAvatar('${item.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded-lg">裝備</button>` :
+                        `<button onclick="buyAvatar('${item.id}', ${item.price})" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg">🪙 ${item.price}</button>`
+                    }
+                `;
+                avatarGrid.appendChild(card);
+            });
+
+            // Titles
+            const titleGrid = document.getElementById('titleShopGrid');
+            titleGrid.innerHTML = '';
+            shopData.titles.forEach(item => {
+                const unlocked = player.unlockedTitles.includes(item.name);
+                const isEquipped = (player.title === item.name);
+
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border flex items-center justify-between gap-2 ${
+                    isEquipped ? 'border-amber-500 bg-amber-500/20' : 'border-slate-700 bg-slate-900/60'
+                }`;
+                card.innerHTML = `
+                    <div>
+                        <div class="text-xs font-bold text-slate-200">${item.name}</div>
+                    </div>
+                    ${
+                        isEquipped ? '<span class="text-[10px] text-amber-400 font-bold">配戴中</span>' :
+                        unlocked ? `<button onclick="equipTitle('${item.name}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded-lg">配戴</button>` :
+                        `<button onclick="buyTitle('${item.name}', ${item.price})" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg">🪙 ${item.price}</button>`
+                    }
+                `;
+                titleGrid.appendChild(card);
+            });
+
+            // Pets
+            const petGrid = document.getElementById('petShopGrid');
+            petGrid.innerHTML = '';
+            shopData.pets.forEach(item => {
+                const unlocked = player.unlockedPets.includes(item.id);
+                const isEquipped = (player.pet === item.id);
+
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-2xl border text-center flex flex-col items-center justify-between gap-1 ${
+                    isEquipped ? 'border-amber-500 bg-amber-500/20' : 'border-slate-700 bg-slate-900/60'
+                }`;
+                card.innerHTML = `
+                    <div class="text-3xl my-1">${item.id}</div>
+                    <div class="text-xs font-bold text-slate-200">${item.name}</div>
+                    ${
+                        isEquipped ? '<span class="text-[10px] text-amber-400 font-bold">隨行中</span>' :
+                        unlocked ? `<button onclick="equipPet('${item.id}')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded-lg">帶上</button>` :
+                        `<button onclick="buyPet('${item.id}', ${item.price})" class="text-[10px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2 py-1 rounded-lg">🪙 ${item.price}</button>`
+                    }
+                `;
+                petGrid.appendChild(card);
+            });
+        }
+
+        function buyAvatar(id, price) {
+            if (player.gold >= price) {
+                player.gold -= price;
+                player.unlockedAvatars.push(id);
+                player.avatar = id;
+                saveGameData();
+                updateUIHeader();
+                renderShop();
+                playSound('victory');
+            } else {
+                alert("金幣不足喔！多多挑戰關卡獲得金幣吧！");
+            }
+        }
+
+        function equipAvatar(id) {
+            player.avatar = id;
+            saveGameData();
+            updateUIHeader();
+            renderShop();
+        }
+
+        function buyTitle(name, price) {
+            if (player.gold >= price) {
+                player.gold -= price;
+                player.unlockedTitles.push(name);
+                player.title = name;
+                saveGameData();
+                updateUIHeader();
+                renderShop();
+                playSound('victory');
+            } else {
+                alert("金幣不足喔！");
+            }
+        }
+
+        function equipTitle(name) {
+            player.title = name;
+            saveGameData();
+            updateUIHeader();
+            renderShop();
+        }
+
+        function buyPet(id, price) {
+            if (player.gold >= price) {
+                player.gold -= price;
+                player.unlockedPets.push(id);
+                player.pet = id;
+                saveGameData();
+                updateUIHeader();
+                renderShop();
+                playSound('victory');
+            } else {
+                alert("金幣不足喔！");
+            }
+        }
+
+        function equipPet(id) {
+            player.pet = id;
+            saveGameData();
+            updateUIHeader();
+            renderShop();
+        }
+
+
+        function openTeacherPanel() {
+            initAudio();
+            renderTeacherQuestionList();
+            document.getElementById('teacherModal').classList.remove('hidden');
+        }
+
+        function closeTeacherPanel() {
+            document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        function showTeacherTab(tabName) {
+            const tabQuestions = document.getElementById('teacherTabQuestions');
+            const tabAdd = document.getElementById('teacherTabAdd');
+            const btnQ = document.getElementById('tabBtnQuestions');
+            const btnAdd = document.getElementById('tabBtnAdd');
+
+            if (tabName === 'questions') {
+                tabQuestions.classList.remove('hidden');
+                tabAdd.classList.add('hidden');
+                btnQ.className = 'bg-sky-600 text-white font-bold px-3 py-1.5 rounded-xl';
+                btnAdd.className = 'bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-xl';
+                renderTeacherQuestionList();
+            } else {
+                tabQuestions.classList.add('hidden');
+                tabAdd.classList.remove('hidden');
+                btnQ.className = 'bg-slate-700 text-slate-300 font-bold px-3 py-1.5 rounded-xl';
+                btnAdd.className = 'bg-sky-600 text-white font-bold px-3 py-1.5 rounded-xl';
+            }
+        }
+
+        function renderTeacherQuestionList() {
+            const listContainer = document.getElementById('teacherQuestionList');
+            listContainer.innerHTML = '';
+
+            const allQ = getAllQuestions();
+            allQ.forEach((q, idx) => {
+                const isCustom = q.id.startsWith('custom_');
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900/80 p-3 rounded-xl border border-slate-700 flex justify-between items-center gap-2';
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded-md">第 ${q.zone} 關</span>
+                            ${isCustom ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md">自訂題目</span>' : ''}
+                        </div>
+                        <p class="text-slate-200 font-bold text-xs">${q.text}</p>
+                        <p class="text-slate-400 text-[11px]">答案：<span class="text-emerald-400">${q.answer || (q.answerTokens ? q.answerTokens.join('') : '')}</span></p>
+                    </div>
+                    ${
+                        isCustom ? `<button onclick="deleteCustomQuestion('${q.id}')" class="text-red-400 hover:text-red-300 text-xs bg-red-950/50 p-1.5 rounded-lg border border-red-800">刪除</button>` : ''
+                    }
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function handleAddQuestion(event) {
+            event.preventDefault();
+            const zone = parseInt(document.getElementById('addQZone').value);
+            const text = document.getElementById('addQText').value.trim();
+            const optA = document.getElementById('addQOptA').value.trim();
+            const optB = document.getElementById('addQOptB').value.trim();
+            const optC = document.getElementById('addQOptC').value.trim();
+            const optD = document.getElementById('addQOptD').value.trim();
+            const exp = document.getElementById('addQExplanation').value.trim();
+            const passage = document.getElementById('addQPassage').value.trim();
+
+            const newQ = {
+                id: `custom_${Date.now()}`,
+                zone: zone,
+                type: 'mc',
+                text: text,
+                options: [optA, optB, optC, optD],
+                answer: optA,
+                explanation: exp
+            };
+
+            if (passage) {
+                newQ.passage = passage;
+            }
+
+            customQuestions.push(newQ);
+            saveGameData();
+
+            // Reset Form
+            document.getElementById('addQuestionForm').reset();
+            alert("✅ 新增自訂題目成功！已加入題庫中。");
+            showTeacherTab('questions');
+        }
+
+        function deleteCustomQuestion(id) {
+            customQuestions = customQuestions.filter(q => q.id !== id);
+            saveGameData();
+            renderTeacherQuestionList();
+        }
+
+        function resetStudentData() {
+            if (confirm("⚠️ 確定要重置學生所有的等級、金幣與關卡星級嗎？（自訂題庫會保留）")) {
+                localStorage.removeItem('mandarin_hero_player');
+                player = {
+                    level: 1,
+                    xp: 0,
+                    gold: 50,
+                    hp: 100,
+                    maxHp: 100,
+                    avatar: '⚔️',
+                    title: '語文初學者',
+                    pet: null,
+                    unlockedAvatars: ['⚔️'],
+                    unlockedTitles: ['語文初學者'],
+                    unlockedPets: [],
+                    zoneStars: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+                };
+                saveGameData();
+                updateUIHeader();
+                updateMapStars();
+                alert("已完成重置！");
+            }
+        }
+
+        // Toggle Zone 5 reading input display in teacher panel
+        document.getElementById('addQZone').addEventListener('change', function(e) {
+            const passageInput = document.getElementById('readingPassageInput');
+            if (e.target.value === '5') {
+                passageInput.classList.remove('hidden');
+            } else {
+                passageInput.classList.add('hidden');
+            }
+        });
+
+        // Initialize on load
+        window.onload = function() {
+            loadGameData();
+        };
+    </script>
+</body>
+</html>
