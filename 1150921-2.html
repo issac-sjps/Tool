@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>語文勇者傳說：終極進階篇 (大字清晰特化版)</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Custom Styling for Large Text, Animations, and Game Aesthetics -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Zen+Maru+Gothic:wght@700;900&display=swap');
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .font-maru {
+      font-family: 'Zen Maru Gothic', 'Noto Sans TC', sans-serif;
+    }
+
+    /* 題目文字特化放大 (2.2rem - 2.5rem / 32px-40px) */
+    .question-text {
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem) !important;
+      line-height: 1.5 !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.03em;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(245, 158, 11, 0.3);
+    }
+
+    /* 閱讀測驗文章特化放大 (1.4rem - 1.6rem, 行高2.0) */
+    .reading-passage {
+      font-size: clamp(1.3rem, 2.3vw, 1.65rem) !important;
+      line-height: 2.1 !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.05em;
+      color: #1e293b;
+      background-color: #fffbeb;
+      border: 3px solid #f59e0b;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 20px rgba(0,0,0,0.25);
+    }
+
+    /* 答題選項按鈕特化放大 (1.3rem - 1.5rem) */
+    .option-btn {
+      font-size: clamp(1.2rem, 2vw, 1.55rem) !important;
+      font-weight: 700 !important;
+      line-height: 1.4;
+      padding: 1.1rem 1.4rem !important;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    .option-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    }
+    .option-btn:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    /* 句型拼圖卡片 (1.5rem - 1.8rem) */
+    .word-card {
+      font-size: clamp(1.4rem, 2.5vw, 1.85rem) !important;
+      font-weight: 900 !important;
+      padding: 0.8rem 1.3rem !important;
+      transition: all 0.2s ease;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    }
+    .word-card:hover {
+      transform: scale(1.08) rotate(-1deg);
+      z-index: 10;
+    }
+
+    /* 技能與通用大型UI文字 */
+    .ui-large-text {
+      font-size: clamp(1.15rem, 1.8vw, 1.4rem) !important;
+      font-weight: 700;
+    }
+
+    /* 浮動傷害動畫 */
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      50% { opacity: 1; transform: translateY(-30px) scale(1.3); }
+      100% { opacity: 0; transform: translateY(-60px) scale(1); }
+    }
+    .damage-popup {
+      position: absolute;
+      animation: floatUp 0.9s ease-out forwards;
+      font-weight: 900;
+      font-size: 2.2rem;
+      pointer-events: none;
+      z-index: 50;
+      text-shadow: 0 0 10px rgba(0,0,0,0.9), 2px 2px 0 #000;
+    }
+
+    /* 怪物震動傷害動畫 */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-12px) rotate(-3deg); }
+      40% { transform: translateX(12px) rotate(3deg); }
+      60% { transform: translateX(-8px) rotate(-1deg); }
+      80% { transform: translateX(8px) rotate(1deg); }
+    }
+    .shake-anim {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    /* BOSS呼吸浮動感 */
+    @keyframes bossFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .boss-float {
+      animation: bossFloat 3s ease-in-out infinite;
+    }
+
+    /* 自訂極簡捲軸 */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f59e0b;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #d97706;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen overflow-x-hidden selection:bg-amber-500 selection:text-slate-900">
+
+  <!-- 頂部英雄資訊欄 -->
+  <header class="bg-slate-900/90 border-b-2 border-amber-500/50 backdrop-blur-md sticky top-0 z-40 px-4 py-3 shadow-2xl">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- LOGO & Title -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="showScreen('hero-select')">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30 ring-2 ring-amber-300">
+          <i class="fa-solid fa-dragon"></i>
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-black font-maru text-amber-400 tracking-wide flex items-center gap-2">
+            語文勇者傳說 <span class="text-xs md:text-sm bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/40">終極進階大字版</span>
+          </h1>
+          <p class="text-xs text-slate-400 hidden sm:block">國語學習扶助 ‧ 視力友善 ‧ 全效能升級</p>
+        </div>
+      </div>
+
+      <!-- 玩家狀態快顯 (等級、金幣、稱號) -->
+      <div class="flex items-center gap-3 md:gap-6 bg-slate-800/80 px-4 py-2 rounded-2xl border border-slate-700/80 shadow-inner">
+        <!-- 職業卡 -->
+        <div class="flex items-center gap-2">
+          <span id="header-hero-icon" class="text-2xl text-amber-400"><i class="fa-solid fa-shield-halved"></i></span>
+          <div class="text-left">
+            <div id="header-hero-name" class="text-sm font-bold text-slate-200">聖騎士</div>
+            <div id="header-hero-title" class="text-xs text-amber-400 font-semibold">【字霸勇者】</div>
+          </div>
+        </div>
+
+        <!-- 等級與經驗 -->
+        <div class="flex flex-col min-w-[90px]">
+          <div class="flex justify-between text-xs font-extrabold text-amber-300 mb-0.5">
+            <span>LV.<span id="player-level">1</span></span>
+            <span id="player-exp-text">0/100</span>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2.5 overflow-hidden border border-slate-600">
+            <div id="player-exp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- 金幣 -->
+        <div class="flex items-center gap-1.5 font-black text-yellow-400 text-lg md:text-xl">
+          <i class="fa-solid fa-coins text-amber-400 animate-pulse"></i>
+          <span id="player-coins">250</span>
+        </div>
+
+        <!-- 音效開關 -->
+        <button id="sfx-toggle-btn" onclick="toggleAudio()" class="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 text-amber-300 flex items-center justify-center transition-all text-lg shadow-md" title="音效開關">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主內容容器 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
+
+    <!-- 畫面 1: 勇者職業選擇 / 主選單 -->
+    <section id="screen-hero-select" class="screen-view active flex flex-col gap-6">
+      <div class="text-center max-w-3xl mx-auto space-y-3">
+        <h2 class="text-3xl md:text-5xl font-black font-maru bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 drop-shadow-md">
+          選擇你的語文勇者職業
+        </h2>
+        <p class="ui-large-text text-slate-300">
+          掌握字形、成語、修辭與閱讀理解，擊敗知識魔王！
+        </p>
+      </div>
+
+      <!-- 4大職業卡片網格 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        <!-- 聖騎士 -->
+        <div onclick="selectHero('paladin')" class="hero-card cursor-pointer bg-slate-800/90 hover:bg-slate-800 rounded-3xl p-6 border-3 border-slate-700 hover:border-amber-400 transition-all duration-300 transform hover:-translate-y-2 shadow-xl flex flex-col justify-between group">
+          <div>
+            <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 class="text-2xl font-black text-amber-300 mb-1">聖騎士</h3>
+            <p class="text-xs text-amber-200/80 mb-3 font-semibold">被動：生命值高、減傷護盾</p>
+            <p class="text-slate-300 text-sm leading-relaxed mb-4">
+              擅長穩紮穩打的防禦型勇者。擁有高達 150 點生命值，答錯時扣血減少 30%。
+            </p>
+          </div>
+          <div class="bg-slate-900/70 p-3 rounded-2xl text-xs text-amber-300/90 border border-slate-700">
+            <span class="font-bold">主動技能：</span>【聖光護盾】答錯不扣血並恢復20HP
+          </div>
+        </div>
+
+        <!-- 元素使 -->
+        <div onclick="selectHero('elementalist')" class="hero-card cursor-pointer bg-slate-800/90 hover:bg-slate-800 rounded-3xl p-6 border-3 border-slate-700 hover:border-cyan-400 transition-all duration-300 transform hover:-translate-y-2 shadow-xl flex flex-col justify-between group">
+          <div>
+            <div class="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <h3 class="text-2xl font-black text-cyan-300 mb-1">元素使</h3>
+            <p class="text-xs text-cyan-200/80 mb-3 font-semibold">被動：智慧敏銳、消去錯誤</p>
+            <p class="text-slate-300 text-sm leading-relaxed mb-4">
+              運用元素智慧透視真理。技能可直接刪去兩個錯誤選項，大幅提升答題正確率。
+            </p>
+          </div>
+          <div class="bg-slate-900/70 p-3 rounded-2xl text-xs text-cyan-300/90 border border-slate-700">
+            <span class="font-bold">主動技能：</span>【智慧之光】排除2個錯誤答案 (50/50)
+          </div>
+        </div>
+
+        <!-- 影武者 -->
+        <div onclick="selectHero('shinobi')" class="hero-card cursor-pointer bg-slate-800/90 hover:bg-slate-800 rounded-3xl p-6 border-3 border-slate-700 hover:border-purple-400 transition-all duration-300 transform hover:-translate-y-2 shadow-xl flex flex-col justify-between group">
+          <div>
+            <div class="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-user-ninja"></i>
+            </div>
+            <h3 class="text-2xl font-black text-purple-300 mb-1">影武者</h3>
+            <p class="text-xs text-purple-200/80 mb-3 font-semibold">被動：高暴擊率、掌控時間</p>
+            <p class="text-slate-300 text-sm leading-relaxed mb-4">
+              快如疾風的刺客。答題有 35% 機率引發兩倍暴擊傷害，技能可暫停倒數時間。
+            </p>
+          </div>
+          <div class="bg-slate-900/70 p-3 rounded-2xl text-xs text-purple-300/90 border border-slate-700">
+            <span class="font-bold">主動技能：</span>【時空靜止】時間暫停並增加15秒
+          </div>
+        </div>
+
+        <!-- 博學導師 -->
+        <div onclick="selectHero('scholar')" class="hero-card cursor-pointer bg-slate-800/90 hover:bg-slate-800 rounded-3xl p-6 border-3 border-slate-700 hover:border-emerald-400 transition-all duration-300 transform hover:-translate-y-2 shadow-xl flex flex-col justify-between group">
+          <div>
+            <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-book-bookmark"></i>
+            </div>
+            <h3 class="text-2xl font-black text-emerald-300 mb-1">博學導師</h3>
+            <p class="text-xs text-emerald-200/80 mb-3 font-semibold">被動：金幣經驗雙倍加成</p>
+            <p class="text-slate-300 text-sm leading-relaxed mb-4">
+              博古通今的智者。戰鬥結算獲得額外 50% 經驗與金幣獎勵，成長迅速。
+            </p>
+          </div>
+          <div class="bg-slate-900/70 p-3 rounded-2xl text-xs text-emerald-300/90 border border-slate-700">
+            <span class="font-bold">主動技能：</span>【雙倍爆擊】下一次正確回答造成雙倍傷害
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 模式選擇選單按鈕列 -->
+      <div class="mt-4 bg-slate-900/80 p-6 rounded-3xl border border-amber-500/30 flex flex-wrap justify-center items-center gap-4 shadow-2xl">
+        <button onclick="startStageSelect()" class="px-8 py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black rounded-2xl text-xl shadow-lg shadow-amber-500/30 transform hover:scale-105 transition-all flex items-center gap-3">
+          <i class="fa-solid fa-map-location-dot"></i> 5大冒險關卡
+        </button>
+        <button onclick="startPuzzleArena()" class="px-7 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black rounded-2xl text-xl shadow-lg shadow-indigo-500/30 transform hover:scale-105 transition-all flex items-center gap-3">
+          <i class="fa-solid fa-puzzle-piece"></i> 句型拼圖競技場
+        </button>
+        <button onclick="startEndlessTower()" class="px-7 py-4 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black rounded-2xl text-xl shadow-lg shadow-rose-500/30 transform hover:scale-105 transition-all flex items-center gap-3">
+          <i class="fa-solid fa-dungeon"></i> 無盡 Boss 塔
+        </button>
+        <button onclick="openShop()" class="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-500/50 font-bold rounded-2xl text-lg transform hover:scale-105 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-store"></i> 裝備商店
+        </button>
+        <button onclick="openDiagnostic()" class="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-cyan-300 border-2 border-cyan-500/50 font-bold rounded-2xl text-lg transform hover:scale-105 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie"></i> 學習能力診斷
+        </button>
+        <button onclick="openTeacherPortal()" class="px-6 py-4 bg-slate-800 hover:bg-slate-700 text-emerald-300 border-2 border-emerald-500/50 font-bold rounded-2xl text-lg transform hover:scale-105 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-chalkboard-user"></i> 教師專區
+        </button>
+      </div>
+    </section>
+
+    <!-- 畫面 2: 關卡地圖選擇 -->
+    <section id="screen-stage-select" class="screen-view hidden flex-col gap-6">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+        <div>
+          <h2 class="text-3xl font-black font-maru text-amber-300">冒險地圖選關</h2>
+          <p class="ui-large-text text-slate-300">請挑選欲挑戰的國語核心指標主題：</p>
+        </div>
+        <button onclick="showScreen('hero-select')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-600 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> 返回主選單
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="stages-grid">
+        <!-- 關卡動態渲染於 JS -->
+      </div>
+    </section>
+
+    <!-- 畫面 3: 答題與戰鬥主介面 (超大字特化) -->
+    <section id="screen-battle" class="screen-view hidden flex-col gap-5">
+      
+      <!-- 戰鬥頂部狀態資訊 Bar -->
+      <div class="bg-slate-900/90 p-4 rounded-3xl border-2 border-slate-700 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <span id="battle-stage-tag" class="px-3 py-1 bg-amber-500/20 text-amber-300 font-bold text-sm rounded-lg border border-amber-500/40">
+            關卡 1-1
+          </span>
+          <span id="battle-title" class="ui-large-text font-black text-slate-100">字形與字音辨析</span>
+        </div>
+
+        <!-- Combo & Score -->
+        <div class="flex items-center gap-6">
+          <div class="text-center">
+            <div class="text-xs text-slate-400 font-bold">連擊 COMBO</div>
+            <div id="combo-count" class="text-2xl font-black text-amber-400">0</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xs text-slate-400 font-bold">目前得分</div>
+            <div id="battle-score" class="text-2xl font-black text-yellow-300">0</div>
+          </div>
+          <!-- 倒數計時器 -->
+          <div class="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-2xl border border-slate-600">
+            <i class="fa-solid fa-stopwatch text-amber-400 text-xl"></i>
+            <span id="timer-display" class="text-2xl font-black text-amber-400 font-mono">20</span><span class="text-xs text-slate-400">秒</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 戰鬥動畫對決區 (勇者 vs BOSS) -->
+      <div class="relative bg-slate-950/80 rounded-3xl p-6 border-2 border-amber-500/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-rose-500/5 pointer-events-none"></div>
+
+        <!-- 勇者端狀態 -->
+        <div class="flex items-center gap-4 w-full md:w-1/2 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 shadow-md">
+          <div id="battle-player-avatar" class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-4xl text-amber-300 shrink-0">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center mb-1">
+              <span id="battle-player-name" class="font-black text-lg text-amber-300">聖騎士</span>
+              <span id="battle-player-hp-text" class="text-sm font-bold text-slate-200">150 / 150 HP</span>
+            </div>
+            <!-- 勇者血條 -->
+            <div class="w-full bg-slate-800 rounded-full h-4 border border-slate-700 overflow-hidden">
+              <div id="battle-player-hp-bar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full rounded-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+            <!-- 技能冷卻按鈕列 -->
+            <div class="flex gap-2 mt-3">
+              <button id="skill-btn" onclick="useHeroSkill()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black rounded-xl text-sm shadow-md transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt"></i> 職業技能
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VS 標誌 -->
+        <div class="font-black italic text-2xl text-amber-500/60 font-maru hidden md:block">VS</div>
+
+        <!-- BOSS 端狀態 -->
+        <div class="flex items-center gap-4 w-full md:w-1/2 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 shadow-md">
+          <div class="flex-1 text-right">
+            <div class="flex justify-between items-center mb-1 flex-row-reverse">
+              <span id="boss-name" class="font-black text-lg text-rose-400">錯別字大魔王</span>
+              <span id="boss-hp-text" class="text-sm font-bold text-slate-200">300 / 300 HP</span>
+            </div>
+            <!-- BOSS血條 -->
+            <div class="w-full bg-slate-800 rounded-full h-4 border border-slate-700 overflow-hidden">
+              <div id="boss-hp-bar" class="bg-gradient-to-r from-rose-600 to-red-400 h-full rounded-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+            <div class="text-xs text-rose-300/80 font-bold mt-2">弱點：專注審題 ‧ 釐清文義</div>
+          </div>
+          <div id="boss-avatar-box" class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center text-4xl text-rose-400 shrink-0 boss-float">
+            <i id="boss-icon" class="fa-solid fa-ghost"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 閱讀測驗長文章區 (若本題屬深度閱讀測驗則顯示) -->
+      <div id="reading-passage-box" class="hidden reading-passage rounded-3xl p-6 md:p-8 space-y-3 max-h-72 overflow-y-auto">
+        <div class="flex items-center gap-2 text-amber-800 font-extrabold text-base border-b border-amber-300/60 pb-2 mb-3">
+          <i class="fa-solid fa-book-open"></i> 閱讀測驗引文 (請仔細閱讀後回答問題)
+        </div>
+        <div id="reading-passage-text" class="font-serif">
+          <!-- 文章內容 -->
+        </div>
+      </div>
+
+      <!-- 題目內文區 (超大字特化 2.2rem - 2.5rem) -->
+      <div class="bg-slate-900/90 rounded-3xl p-6 md:p-8 border-2 border-amber-500/50 shadow-2xl relative">
+        <div class="text-xs text-amber-400 font-bold tracking-widest mb-2 uppercase flex items-center gap-2">
+          <i class="fa-solid fa-circle-question"></i> 題目探究 Question
+        </div>
+        <div id="question-text" class="question-text">
+          載入題目中...
+        </div>
+      </div>
+
+      <!-- 答題選項按鈕區 (超大字特化 1.3rem - 1.5rem, 內邊距加大) -->
+      <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 4 個選項按鈕將由 JS 動態產生 -->
+      </div>
+
+      <!-- 答題解析與診斷回饋 Overlay -->
+      <div id="explanation-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-3 border-amber-500/70 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl space-y-5 animate-bounce-in">
+          <div id="result-status-header" class="flex items-center gap-3 text-3xl font-black">
+            <!-- 答對/答錯圖示與標題 -->
+          </div>
+          
+          <div id="result-detail-text" class="ui-large-text text-slate-200 bg-slate-800/80 p-5 rounded-2xl border border-slate-700 leading-relaxed">
+            <!-- 答案解析說明 -->
+          </div>
+
+          <div class="flex justify-end">
+            <button onclick="nextQuestion()" class="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-black rounded-2xl text-xl shadow-lg transition-all transform hover:scale-105">
+              下一題 <i class="fa-solid fa-chevron-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 畫面 4: 句型拼圖極限競技場 -->
+    <section id="screen-puzzle" class="screen-view hidden flex-col gap-6">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+        <div>
+          <h2 class="text-3xl font-black font-maru text-indigo-300 flex items-center gap-2">
+            <i class="fa-solid fa-puzzle-piece"></i> 句型拼圖極限競技場
+          </h2>
+          <p class="ui-large-text text-slate-300">點擊或拖曳下方卡片，重組正確流暢的國語句型：</p>
+        </div>
+        <button onclick="showScreen('hero-select')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-600 transition-all">
+          返回選單
+        </button>
+      </div>
+
+      <!-- 拼圖目標與目前組合區 -->
+      <div class="bg-slate-900/90 rounded-3xl p-6 md:p-8 border-2 border-indigo-500/50 shadow-2xl space-y-6">
+        <div class="flex justify-between items-center text-sm font-bold text-indigo-300">
+          <span>題目目標：將詞組排列成語意通順的複句/修辭句</span>
+          <span>關卡 <span id="puzzle-step">1</span>/5</span>
+        </div>
+
+        <!-- 放置完成區 -->
+        <div class="bg-slate-950/90 rounded-2xl p-6 min-h-[120px] border-2 border-dashed border-indigo-400/50 flex flex-wrap items-center gap-3" id="puzzle-drop-zone">
+          <span class="text-slate-500 text-lg italic select-none">請點擊下方卡片填入此處...</span>
+        </div>
+
+        <!-- 備選詞組卡片區 (超大字 1.5rem - 1.8rem) -->
+        <div class="space-y-2">
+          <div class="text-xs text-slate-400 font-bold">可用的詞組卡片 (點擊選擇/取消)：</div>
+          <div class="flex flex-wrap gap-3" id="puzzle-cards-pool">
+            <!-- 詞組卡片由 JS 動態生成 -->
+          </div>
+        </div>
+
+        <!-- 操作按鈕列 -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+          <button onclick="resetPuzzle()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl border border-slate-600 transition-all">
+            <i class="fa-solid fa-rotate-left"></i> 重設卡片
+          </button>
+          <button onclick="checkPuzzleAnswer()" class="px-8 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-black rounded-2xl text-xl shadow-lg transition-all transform hover:scale-105">
+            驗證拼圖答案 <i class="fa-solid fa-circle-check ml-1"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 畫面 5: 裝備與造型商店 -->
+    <section id="screen-shop" class="screen-view hidden flex-col gap-6">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+        <div>
+          <h2 class="text-3xl font-black font-maru text-yellow-300 flex items-center gap-2">
+            <i class="fa-solid fa-store"></i> 勇者裝備與稱號商店
+          </h2>
+          <p class="ui-large-text text-slate-300">使用冒險獲得的金幣購買造型、強大稱號與夥伴：</p>
+        </div>
+        <button onclick="showScreen('hero-select')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-600">
+          返回選單
+        </button>
+      </div>
+
+      <!-- 商店分頁標籤 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="shop-items-container">
+        <!-- JS 動態生成造型、稱號與夥伴商店項目 -->
+      </div>
+    </section>
+
+    <!-- 畫面 6: 國語學習能力診斷分析表 -->
+    <section id="screen-diagnostic" class="screen-view hidden flex-col gap-6">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+        <div>
+          <h2 class="text-3xl font-black font-maru text-cyan-300 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie"></i> 國語能力學習診斷分析表
+          </h2>
+          <p class="ui-large-text text-slate-300">根據答題紀錄產生的五大國語指標戰力評估：</p>
+        </div>
+        <button onclick="showScreen('hero-select')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-600">
+          返回選單
+        </button>
+      </div>
+
+      <div class="bg-slate-900/90 rounded-3xl p-6 md:p-8 border-2 border-cyan-500/40 shadow-2xl space-y-8">
+        <!-- 五大指標戰力條 -->
+        <div class="space-y-5" id="diagnostic-bars-container">
+          <!-- JS 動態產生 5 大指標（多音/字形、錯別字/成語、修辭學、邏輯複句、深度閱讀） -->
+        </div>
+
+        <!-- 學習建議卡片 (超大字體 1.2rem - 1.4rem) -->
+        <div class="bg-slate-950 p-6 rounded-2xl border border-cyan-500/30 space-y-3">
+          <h3 class="text-xl font-black text-cyan-300 flex items-center gap-2">
+            <i class="fa-solid fa-user-graduate"></i> 教師與系統診斷建議
+          </h3>
+          <p id="diagnostic-recommendation" class="ui-large-text text-slate-200 leading-relaxed">
+            系統正在分析您的答題數據... 保持練習以獲得精準的國語扶助診斷！
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 畫面 7: 教師備課專區 (題庫管理 & 自訂計時器 & JSON匯出匯入) -->
+    <section id="screen-teacher" class="screen-view hidden flex-col gap-6">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+        <div>
+          <h2 class="text-3xl font-black font-maru text-emerald-300 flex items-center gap-2">
+            <i class="fa-solid fa-chalkboard-user"></i> 教師備課與題庫管理專區
+          </h2>
+          <p class="ui-large-text text-slate-300">自訂測驗題目、調整課堂時間與備份 JSON 題庫：</p>
+        </div>
+        <button onclick="showScreen('hero-select')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl border border-slate-600">
+          返回選單
+        </button>
+      </div>
+
+      <div class="bg-slate-900/90 rounded-3xl p-6 md:p-8 border-2 border-emerald-500/40 shadow-2xl space-y-8">
+        
+        <!-- 計時器設定 -->
+        <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h4 class="text-lg font-black text-emerald-300">每題答題時間設定 (秒)</h4>
+            <p class="text-xs text-slate-400">設為 0 可切換為無時間限制模式，適合低年級扶助。</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="number" id="teacher-timer-input" value="20" min="0" max="120" class="w-24 px-4 py-2 bg-slate-800 border border-slate-600 rounded-xl text-center text-xl font-bold text-amber-300" />
+            <button onclick="saveTimerConfig()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all">
+              儲存設定
+            </button>
+          </div>
+        </div>
+
+        <!-- 題庫 JSON 匯出與匯入 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+            <h4 class="text-lg font-black text-amber-300">匯出題庫 (JSON)</h4>
+            <p class="text-xs text-slate-400">備份現有完整題庫至電腦檔案：</p>
+            <button onclick="exportQuestionBank()" class="w-full py-3 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black rounded-xl text-lg transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-download"></i> 下載 JSON 題庫檔
+            </button>
+          </div>
+
+          <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+            <h4 class="text-lg font-black text-cyan-300">匯入題庫 (JSON)</h4>
+            <p class="text-xs text-slate-400">選擇 JSON 題庫檔案進行覆蓋或更新：</p>
+            <input type="file" id="import-json-file" accept=".json" class="hidden" onchange="importQuestionBank(event)" />
+            <button onclick="document.getElementById('import-json-file').click()" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-xl text-lg transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-upload"></i> 上傳 JSON 檔案
+            </button>
+          </div>
+        </div>
+
+        <!-- 新增自訂題目 Form -->
+        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <h4 class="text-xl font-black text-amber-300">快速新增國語題目</h4>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 mb-1">主題分類</label>
+              <select id="new-q-cat" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-200">
+                <option value="cat1">多音字與字形辨析</option>
+                <option value="cat2">錯別字與活用成語</option>
+                <option value="cat3">修辭學大冒險</option>
+                <option value="cat4">邏輯複句與關聯詞</option>
+                <option value="cat5">深度閱讀小偵探</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 mb-1">正確答案 (0 ~ 3)</label>
+              <select id="new-q-correct" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-amber-300 font-bold">
+                <option value="0">選項 (1)</option>
+                <option value="1">選項 (2)</option>
+                <option value="2">選項 (3)</option>
+                <option value="3">選項 (4)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1">題目文字內容</label>
+            <input type="text" id="new-q-text" placeholder="例如：下列哪一個「便」字的意思是便宜？" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 font-bold" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="new-q-opt0" placeholder="選項 1" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-200" />
+            <input type="text" id="new-q-opt1" placeholder="選項 2" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-200" />
+            <input type="text" id="new-q-opt2" placeholder="選項 3" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-200" />
+            <input type="text" id="new-q-opt3" placeholder="選項 4" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-200" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-400 mb-1">詳解說明 (選擇性)</label>
+            <input type="text" id="new-q-explanation" placeholder="解釋為什麼此選項正確..." class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-slate-200" />
+          </div>
+
+          <button onclick="addNewQuestion()" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black rounded-xl text-lg shadow-lg transition-all">
+            <i class="fa-solid fa-plus"></i> 新增此題目至題庫
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 底部頁尾 -->
+  <footer class="bg-slate-950 border-t border-slate-800 py-4 text-center text-xs text-slate-500 mt-auto">
+    《語文勇者傳說：終極進階篇》國語學習扶助專用軟體 ‧ 視力友善超大字設計
+  </footer>
+
+  <!-- JAVASCRIPT GAME ENGINE -->
+  <script>
+
+    // 全域 Web Audio API 音效合成器
+    let audioCtx = null;
+    let audioEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      if (!audioEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.25); // G5
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.3);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'skill') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const btn = document.getElementById('sfx-toggle-btn');
+      btn.innerHTML = audioEnabled 
+        ? '<i class="fa-solid fa-volume-high"></i>' 
+        : '<i class="fa-solid fa-volume-xmark"></i>';
+    }
+
+
+    // 五大國語指標題庫數據
+    const defaultQuestions = [
+      // 1. 多音字與字形辨析 (cat1)
+      {
+        id: "q1",
+        cat: "cat1",
+        text: "下列句子中的「便」字，何者讀音與其他三者不同？",
+        options: ["這間超商購物非常方便", "這本書價格便宜實惠", "請你便中帶個信給他", "他一回家便開始做功課"],
+        correct: 1,
+        explanation: "「便宜」讀作 ㄆㄧㄢˊ ㄧˊ；其餘三者「方便」、「便中」、「一……便……」均讀作 ㄅㄧㄢˋ。"
+      },
+      {
+        id: "q2",
+        cat: "cat1",
+        text: "下列哪一組詞語中的「重」字，讀音完全相同？",
+        options: ["「重」量 / 「重」要", "「重」複 / 「重」新", "「重」修 / 「重」心", "「重」疊 / 「重」大"],
+        correct: 1,
+        explanation: "「重複」與「重新」均讀作 ㄔㄨㄥˊ。其餘組別皆包含 ㄓㄨㄥˋ 與 ㄔㄨㄥˊ 之別。"
+      },
+      {
+        id: "q3",
+        cat: "cat1",
+        text: "下列哪一個選項中的字形完全正確，沒有錯字？",
+        options: ["按部就班", "再接再厲", "川流不息", "以上皆完全正確"],
+        correct: 3,
+        explanation: "「按部就班」、「再接再厲」、「川流不息」均為正確常見常錯字寫法！"
+      },
+
+      // 2. 錯別字與活用成語 (cat2)
+      {
+        id: "q4",
+        cat: "cat2",
+        text: "「弟弟做錯了事，面對媽媽的詢問，一直____，不敢說出真相。」請問空格處最適合填入哪一個成語？",
+        options: ["支吾其詞", "侃侃而談", "口若懸河", "滔滔不絕"],
+        correct: 0,
+        explanation: "「支吾其詞」指說話吞吞吐吐、含糊閃爍，適合形容犯錯不敢坦白。"
+      },
+      {
+        id: "q5",
+        cat: "cat2",
+        text: "下列文句中，何者有錯別字？",
+        options: ["他做事總是兢兢業業，不敢馬虎", "這項任務非常艱鉅，需要大家同心協力", "這篇文章寫得非常精采，引人入勝", "這座公園環境清幽，令人心曠神怡"],
+        correct: 0,
+        explanation: "「兢兢業業」寫法正確，但若題目要選錯別字，請注意「精采/精彩」均通，本題無錯字時選最佳文義對應。"
+      },
+
+      // 3. 修辭學大冒險 (cat3)
+      {
+        id: "q6",
+        cat: "cat3",
+        text: "「太陽公公伸了伸懶腰，從山頭露出了燦爛的微笑。」請問這句話使用了哪一種修辭技巧？",
+        options: ["擬人法 (人性化)", "譬喻法 (打比方)", "排比法", "誇飾法"],
+        correct: 0,
+        explanation: "將太陽賦予人類「伸懶腰」、「微笑」的動作行為，屬於擬人法。"
+      },
+      {
+        id: "q7",
+        cat: "cat3",
+        text: "「這座山高得彷彿能直插雲霄，連小鳥都飛不過去。」請問這句話使用了哪一種修辭技巧？",
+        options: ["誇飾法", "設問法", "對偶法", "映襯法"],
+        correct: 0,
+        explanation: "「直插雲霄、鳥飛不過去」屬於運用客觀不可能誇大描寫的誇飾法。"
+      },
+
+      // 4. 邏輯複句與關聯詞 (cat4)
+      {
+        id: "q8",
+        cat: "cat4",
+        text: "「小明____功課做好了，____將房間打掃得一塵不染。」請問空格處應填入哪一組關聯詞？",
+        options: ["不但……而且…… (遞進複句)", "雖然……但是…… (轉折複句)", "與其……不如…… (選擇複句)", "因為……所以…… (因果複句)"],
+        correct: 0,
+        explanation: "表達程度更進一層的關係，應使用「不但……而且……」遞進複句。"
+      },
+      {
+        id: "q9",
+        cat: "cat4",
+        text: "「____今天下著大雨，比賽____照常舉行。」請問空格最適當的關聯詞是？",
+        options: ["雖然……但是……", "因為……所以……", "只要……就……", "即使……也……"],
+        correct: 0,
+        explanation: "前後語義轉折，使用「雖然……但是……」最具通順邏輯。"
+      },
+
+      // 5. 深度閱讀小偵探 (cat5)
+      {
+        id: "q10",
+        cat: "cat5",
+        text: "根據文章內容，作者想要傳達的核心觀念是什麼？",
+        passage: "古人說：「滴水穿石，非一日之功。」無論學習還是運動，卓越的成就絕非偶然。每天堅持閱讀三十分鐘，一年下來就能累積巨大的知識量。成功的秘訣不在於一時爆發的衝勁，而在于持之以恆的毅力。",
+        options: ["持之以恆與累積的力量是成功的關鍵", "滴水的速度越快越容易穿透石頭", "每天只要爆發一次就能輕鬆成功", "閱讀是世界上唯一重要的運動"],
+        correct: 0,
+        explanation: "文章結尾「成功的秘訣在於持之以恆的毅力」直接揭示了持之以恆與累積的核心觀念。"
+      }
+    ];
+
+
+    // 遊戲狀態 State
+    let gameState = {
+      heroClass: 'paladin',
+      heroHP: 150,
+      heroMaxHP: 150,
+      level: 1,
+      exp: 0,
+      coins: 250,
+      score: 0,
+      combo: 0,
+      selectedStage: 'cat1',
+      currentQuestionIndex: 0,
+      currentQuestions: [],
+      timer: 20,
+      defaultTimerConfig: 20,
+      timerInterval: null,
+      skillUsed: false,
+      doubleDamageNext: false,
+      diagnosticStats: {
+        cat1: { correct: 0, total: 0 },
+        cat2: { correct: 0, total: 0 },
+        cat3: { correct: 0, total: 0 },
+        cat4: { correct: 0, total: 0 },
+        cat5: { correct: 0, total: 0 }
+      },
+      questionBank: JSON.parse(JSON.stringify(defaultQuestions))
+    };
+
+    // 職業屬性
+    const HERO_PROFILES = {
+      paladin: { name: '聖騎士', hp: 150, icon: 'fa-shield-halved', color: 'text-amber-400' },
+      elementalist: { name: '元素使', hp: 100, icon: 'fa-wand-magic-sparkles', color: 'text-cyan-400' },
+      shinobi: { name: '影武者', hp: 110, icon: 'fa-user-ninja', color: 'text-purple-400' },
+      scholar: { name: '博學導師', hp: 120, icon: 'fa-book-bookmark', color: 'text-emerald-400' }
+    };
+
+    // 關卡主題
+    const STAGE_CONFIGS = [
+      { id: 'cat1', name: '多音字與字形辨析', icon: 'fa-font', desc: '破解形近字與多音字迷宮' },
+      { id: 'cat2', name: '錯別字與活用成語', icon: 'fa-spell-check', desc: '捕捉文章錯字並活用四字成語' },
+      { id: 'cat3', name: '修辭學大冒險', icon: 'fa-feather-pointed', desc: '掌握擬人、譬喻、誇飾等修辭技巧' },
+      { id: 'cat4', name: '邏輯複句與關聯詞', icon: 'fa-link', desc: '梳理因果、遞進與轉折複句' },
+      { id: 'cat5', name: '深度閱讀小偵探', icon: 'fa-magnifying-glass font-bold', desc: '閱讀長篇文章並抽絲剝繭找答案' }
+    ];
+
+    // 初始化與畫面切換
+    function showScreen(screenId) {
+      playSound('click');
+      document.querySelectorAll('.screen-view').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('.screen-view').forEach(s => s.classList.remove('flex'));
+      
+      const target = document.getElementById(`screen-${screenId}`);
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('flex');
+      }
+    }
+
+    function selectHero(heroKey) {
+      gameState.heroClass = heroKey;
+      const profile = HERO_PROFILES[heroKey];
+      gameState.heroMaxHP = profile.hp;
+      gameState.heroHP = profile.hp;
+
+      document.getElementById('header-hero-name').innerText = profile.name;
+      document.getElementById('header-hero-icon').className = `text-2xl ${profile.color}`;
+      document.getElementById('header-hero-icon').innerHTML = `<i class="fa-solid ${profile.icon}"></i>`;
+
+      startStageSelect();
+    }
+
+    function startStageSelect() {
+      showScreen('stage-select');
+      const grid = document.getElementById('stages-grid');
+      grid.innerHTML = '';
+
+      STAGE_CONFIGS.forEach((stg, idx) => {
+        const card = document.createElement('div');
+        card.className = "bg-slate-800/90 border-2 border-slate-700 hover:border-amber-400 rounded-3xl p-6 cursor-pointer transition-all hover:-translate-y-1 shadow-xl flex flex-col justify-between";
+        card.onclick = () => startBattle(stg.id);
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-xs font-bold bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/40">關卡 ${idx + 1}</span>
+              <span class="text-amber-400 text-sm"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
+            </div>
+            <h3 class="text-2xl font-black text-amber-300 mb-2 flex items-center gap-2">
+              <i class="fa-solid ${stg.icon}"></i> ${stg.name}
+            </h3>
+            <p class="ui-large-text text-slate-300 leading-relaxed mb-4">${stg.desc}</p>
+          </div>
+          <button class="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black rounded-xl text-lg shadow-md">
+            進入關卡挑戰
+          </button>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 開始戰鬥
+    function startBattle(categoryId) {
+      gameState.selectedStage = categoryId;
+      gameState.currentQuestions = gameState.questionBank.filter(q => q.cat === categoryId);
+      
+      if (gameState.currentQuestions.length === 0) {
+        // 若分類無自訂題則備用
+        gameState.currentQuestions = gameState.questionBank.slice(0, 3);
+      }
+
+      gameState.currentQuestionIndex = 0;
+      gameState.score = 0;
+      gameState.combo = 0;
+      gameState.skillUsed = false;
+      gameState.doubleDamageNext = false;
+      gameState.heroHP = gameState.heroMaxHP;
+
+      showScreen('battle');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      // 重設 UI 與計時器
+      clearInterval(gameState.timerInterval);
+      gameState.timer = gameState.defaultTimerConfig;
+      document.getElementById('timer-display').innerText = gameState.timer;
+
+      const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+      if (!q) {
+        // 關卡破關
+        alert(`🎉 恭喜通關！獲得金幣 +100，經驗 +150！`);
+        addExpAndCoins(150, 100);
+        showScreen('hero-select');
+        return;
+      }
+
+      // 關卡標題
+      const stgObj = STAGE_CONFIGS.find(s => s.id === q.cat) || { name: '綜合測驗' };
+      document.getElementById('battle-title').innerText = stgObj.name;
+      document.getElementById('battle-stage-tag').innerText = `題目 ${gameState.currentQuestionIndex + 1}/${gameState.currentQuestions.length}`;
+      document.getElementById('combo-count').innerText = gameState.combo;
+      document.getElementById('battle-score').innerText = gameState.score;
+
+      // 更新玩家 HP Bar
+      updateHPBars();
+
+      // 閱讀引文處理
+      const readingBox = document.getElementById('reading-passage-box');
+      if (q.passage) {
+        readingBox.classList.remove('hidden');
+        document.getElementById('reading-passage-text').innerText = q.passage;
+      } else {
+        readingBox.classList.add('hidden');
+      }
+
+      // 題目大字內文 (2.2rem - 2.5rem)
+      document.getElementById('question-text').innerText = q.text;
+
+      // 選項按鈕 (1.3rem - 1.5rem)
+      const optionsGrid = document.getElementById('options-grid');
+      optionsGrid.innerHTML = '';
+
+      q.options.forEach((optText, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = "option-btn bg-slate-800/90 hover:bg-slate-700/90 text-slate-100 border-2 border-slate-700 hover:border-amber-400 rounded-2xl flex items-center justify-start gap-4 text-left shadow-lg";
+        btn.onclick = () => answerQuestion(optIdx);
+
+        btn.innerHTML = `
+          <span class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-black shrink-0 border border-amber-500/40">
+            ${optIdx + 1}
+          </span>
+          <span class="flex-1">${optText}</span>
+        `;
+        optionsGrid.appendChild(btn);
+      });
+
+      // 啟動倒數計時器
+      if (gameState.defaultTimerConfig > 0) {
+        gameState.timerInterval = setInterval(() => {
+          gameState.timer--;
+          document.getElementById('timer-display').innerText = gameState.timer;
+          if (gameState.timer <= 0) {
+            clearInterval(gameState.timerInterval);
+            answerQuestion(-1); // 超時視為答錯
+          }
+        }, 1000);
+      }
+    }
+
+    function updateHPBars() {
+      // Player
+      const playerPercent = Math.max(0, (gameState.heroHP / gameState.heroMaxHP) * 100);
+      document.getElementById('battle-player-hp-bar').style.width = `${playerPercent}%`;
+      document.getElementById('battle-player-hp-text').innerText = `${gameState.heroHP} / ${gameState.heroMaxHP} HP`;
+
+      // Boss
+      document.getElementById('boss-hp-bar').style.width = `100%`;
+    }
+
+    function answerQuestion(selectedIdx) {
+      clearInterval(gameState.timerInterval);
+      const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+      const isCorrect = (selectedIdx === q.correct);
+
+      // 診斷紀錄
+      if (!gameState.diagnosticStats[q.cat]) {
+        gameState.diagnosticStats[q.cat] = { correct: 0, total: 0 };
+      }
+      gameState.diagnosticStats[q.cat].total++;
+
+      const modal = document.getElementById('explanation-modal');
+      const header = document.getElementById('result-status-header');
+      const detail = document.getElementById('result-detail-text');
+
+      if (isCorrect) {
+        playSound('correct');
+        gameState.combo++;
+        gameState.score += 100 + (gameState.combo * 20);
+        gameState.diagnosticStats[q.cat].correct++;
+
+        // 傷害算式
+        let damage = 100;
+        if (gameState.heroClass === 'shinobi' && Math.random() < 0.35) {
+          damage *= 2; // 暴擊
+        }
+        if (gameState.doubleDamageNext) {
+          damage *= 2;
+          gameState.doubleDamageNext = false;
+        }
+
+        header.className = "flex items-center gap-3 text-3xl font-black text-emerald-400";
+        header.innerHTML = `<i class="fa-solid fa-circle-check text-4xl"></i> 答對了！造成 ${damage} 點爆擊傷害！`;
+
+        // 動態特效
+        triggerBossShake();
+
+      } else {
+        playSound('wrong');
+        gameState.combo = 0;
+
+        let penaltyHP = 25;
+        if (gameState.heroClass === 'paladin') {
+          penaltyHP = 15; // 聖騎士減傷
+        }
+        gameState.heroHP = Math.max(0, gameState.heroHP - penaltyHP);
+
+        header.className = "flex items-center gap-3 text-3xl font-black text-rose-400";
+        header.innerHTML = `<i class="fa-solid fa-circle-xmark text-4xl"></i> 答錯了！受到 ${penaltyHP} 點扣血懲罰！`;
+      }
+
+      detail.innerHTML = `
+        <div class="font-bold text-amber-300 mb-2">正確答案：(${q.correct + 1}) ${q.options[q.correct]}</div>
+        <div>${q.explanation || '仔細複習相關概念，下一次一定能迎刃而解！'}</div>
+      `;
+
+      modal.classList.remove('hidden');
+      updateHPBars();
+    }
+
+    function triggerBossShake() {
+      const bossAvatar = document.getElementById('boss-avatar-box');
+      bossAvatar.classList.add('shake-anim');
+      setTimeout(() => bossAvatar.classList.remove('shake-anim'), 400);
+    }
+
+    function nextQuestion() {
+      document.getElementById('explanation-modal').classList.add('hidden');
+      gameState.currentQuestionIndex++;
+      
+      if (gameState.heroHP <= 0) {
+        alert("⚔️ 生命值耗盡，挑戰失敗！回去練練再重新挑戰！");
+        showScreen('hero-select');
+        return;
+      }
+
+      loadQuestion();
+    }
+
+    // 勇者主動技能
+    function useHeroSkill() {
+      if (gameState.skillUsed) {
+        alert("⚠️ 每場戰鬥僅限使用一次職業技能！");
+        return;
+      }
+      gameState.skillUsed = true;
+      playSound('skill');
+
+      if (gameState.heroClass === 'paladin') {
+        gameState.heroHP = Math.min(gameState.heroMaxHP, gameState.heroHP + 30);
+        alert("🛡️ 【聖光護盾】啟動：成功恢復 30 點生命值！");
+      } else if (gameState.heroClass === 'elementalist') {
+        // 刪去兩個錯誤選項
+        const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        let removed = 0;
+        buttons.forEach((btn, idx) => {
+          if (idx !== q.correct && removed < 2) {
+            btn.style.opacity = '0.2';
+            btn.disabled = true;
+            removed++;
+          }
+        });
+        alert("✨ 【智慧之光】啟動：已為您排除兩個錯誤選項！");
+      } else if (gameState.heroClass === 'shinobi') {
+        gameState.timer += 15;
+        document.getElementById('timer-display').innerText = gameState.timer;
+        alert("⏱️ 【時空靜止】啟動：時間倒數增加 +15 秒！");
+      } else if (gameState.heroClass === 'scholar') {
+        gameState.doubleDamageNext = true;
+        alert("📖 【雙倍爆擊】啟動：下一次答對將造成雙倍神聖傷害！");
+      }
+
+      updateHPBars();
+    }
+
+
+    // 句型拼圖數據
+    const puzzleData = [
+      {
+        target: "雖然今天下著大雨，但是我們依然熱情不減地參加運動會。",
+        segments: ["雖然今天", "下著大雨，", "但是我們", "依然熱情不減地", "參加運動會。"]
+      },
+      {
+        target: "陽光溫暖地照耀著大地，花朵也綻放出了絢麗的微笑。",
+        segments: ["陽光溫暖地", "照耀著大地，", "花朵也", "綻放出了", "絢麗的微笑。"]
+      }
+    ];
+
+    let currentPuzzleIdx = 0;
+    let selectedPuzzleCards = [];
+
+    function startPuzzleArena() {
+      showScreen('puzzle');
+      currentPuzzleIdx = 0;
+      loadPuzzleStep();
+    }
+
+    function loadPuzzleStep() {
+      const p = puzzleData[currentPuzzleIdx];
+      document.getElementById('puzzle-step').innerText = currentPuzzleIdx + 1;
+      
+      const dropZone = document.getElementById('puzzle-drop-zone');
+      dropZone.innerHTML = `<span class="text-slate-500 text-lg italic select-none">請點擊下方卡片填入此處...</span>`;
+      selectedPuzzleCards = [];
+
+      // 打亂卡片
+      const shuffled = [...p.segments].sort(() => Math.random() - 0.5);
+      const pool = document.getElementById('puzzle-cards-pool');
+      pool.innerHTML = '';
+
+      shuffled.forEach(seg => {
+        const card = document.createElement('div');
+        card.className = "word-card bg-amber-100 text-amber-950 rounded-2xl border-2 border-amber-400 cursor-pointer shadow-md";
+        card.innerText = seg;
+        card.onclick = () => selectPuzzleCard(card, seg);
+        pool.appendChild(card);
+      });
+    }
+
+    function selectPuzzleCard(cardElem, text) {
+      playSound('click');
+      const dropZone = document.getElementById('puzzle-drop-zone');
+
+      if (dropZone.querySelector('span.italic')) {
+        dropZone.innerHTML = '';
+      }
+
+      // 移至 drop zone
+      cardElem.remove();
+      selectedPuzzleCards.push(text);
+
+      const activeCard = document.createElement('div');
+      activeCard.className = "word-card bg-indigo-500 text-white rounded-2xl border-2 border-indigo-300 cursor-pointer shadow-md";
+      activeCard.innerText = text;
+      activeCard.onclick = () => {
+        // 點擊歸還
+        activeCard.remove();
+        selectedPuzzleCards = selectedPuzzleCards.filter(t => t !== text);
+        
+        cardElem.onclick = () => selectPuzzleCard(cardElem, text);
+        document.getElementById('puzzle-cards-pool').appendChild(cardElem);
+
+        if (selectedPuzzleCards.length === 0) {
+          dropZone.innerHTML = `<span class="text-slate-500 text-lg italic select-none">請點擊下方卡片填入此處...</span>`;
+        }
+      };
+
+      dropZone.appendChild(activeCard);
+    }
+
+    function resetPuzzle() {
+      loadPuzzleStep();
+    }
+
+    function checkPuzzleAnswer() {
+      const currentSentence = selectedPuzzleCards.join('');
+      const targetSentence = puzzleData[currentPuzzleIdx].segments.join('');
+
+      if (currentSentence === targetSentence) {
+        playSound('correct');
+        alert("🎉 拼圖正確！文理通順！獲得金幣 +50！");
+        addExpAndCoins(50, 50);
+        currentPuzzleIdx = (currentPuzzleIdx + 1) % puzzleData.length;
+        loadPuzzleStep();
+      } else {
+        playSound('wrong');
+        alert("❌ 語意稍微不順暢喔，請再檢查一下關聯詞與語序排列！");
+      }
+    }
+
+    function startEndlessTower() {
+      alert("⚔️ 無盡 Boss 塔即將開啟，將隨機抽調所有題庫進行刷分大挑戰！");
+      startBattle('cat1');
+    }
+
+
+    // 商店系統
+    function openShop() {
+      showScreen('shop');
+      const container = document.getElementById('shop-items-container');
+      container.innerHTML = `
+        <div class="bg-slate-800 p-6 rounded-3xl border-2 border-slate-700 flex flex-col justify-between">
+          <div>
+            <div class="text-4xl text-amber-400 mb-3"><i class="fa-solid fa-crown"></i></div>
+            <h3 class="text-2xl font-black text-amber-300">稱號【語文大魔導】</h3>
+            <p class="ui-large-text text-slate-300 mt-2">炫彩頭銜，裝備後答題金幣加成 +20%。</p>
+          </div>
+          <button onclick="buyShopItem(150)" class="mt-4 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-lg">
+            購買 (150 金幣)
+          </button>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-3xl border-2 border-slate-700 flex flex-col justify-between">
+          <div>
+            <div class="text-4xl text-cyan-400 mb-3"><i class="fa-solid fa-cat"></i></div>
+            <h3 class="text-2xl font-black text-cyan-300">夥伴【智慧貓頭鷹】</h3>
+            <p class="ui-large-text text-slate-300 mt-2">隨身吉祥物，戰鬥每題額外獲得 +10 分。</p>
+          </div>
+          <button onclick="buyShopItem(200)" class="mt-4 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-lg">
+            購買 (200 金幣)
+          </button>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-3xl border-2 border-slate-700 flex flex-col justify-between">
+          <div>
+            <div class="text-4xl text-purple-400 mb-3"><i class="fa-solid fa-hat-wizard"></i></div>
+            <h3 class="text-2xl font-black text-purple-300">造型【大賢者法袍】</h3>
+            <p class="ui-large-text text-slate-300 mt-2">解鎖限定外觀與帥氣技能光效。</p>
+          </div>
+          <button onclick="buyShopItem(300)" class="mt-4 py-3 bg-purple-500 hover:bg-purple-400 text-slate-950 font-black rounded-xl text-lg">
+            購買 (300 金幣)
+          </button>
+        </div>
+      `;
+    }
+
+    function buyShopItem(cost) {
+      if (gameState.coins >= cost) {
+        gameState.coins -= cost;
+        updateHeaderStats();
+        playSound('correct');
+        alert("🛍️ 購買成功！已解鎖並裝備該項目！");
+      } else {
+        playSound('wrong');
+        alert("💰 金幣不足，請多挑戰關卡賺取獎勵！");
+      }
+    }
+
+    // 國語學習能力診斷分析表
+    function openDiagnostic() {
+      showScreen('diagnostic');
+      const container = document.getElementById('diagnostic-bars-container');
+      container.innerHTML = '';
+
+      let overallPercentSum = 0;
+      let catCount = 0;
+
+      STAGE_CONFIGS.forEach(stg => {
+        const stats = gameState.diagnosticStats[stg.id] || { correct: 0, total: 0 };
+        const percent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 80;
+        overallPercentSum += percent;
+        catCount++;
+
+        const bar = document.createElement('div');
+        bar.className = "space-y-1.5";
+        bar.innerHTML = `
+          <div class="flex justify-between items-center text-lg font-black text-slate-200">
+            <span><i class="fa-solid ${stg.icon} text-amber-400 mr-2"></i> ${stg.name}</span>
+            <span class="text-amber-300 font-mono">${percent}%</span>
+          </div>
+          <div class="w-full bg-slate-800 h-5 rounded-full border border-slate-700 overflow-hidden">
+            <div class="bg-gradient-to-r from-cyan-500 to-amber-400 h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+          </div>
+        `;
+        container.appendChild(bar);
+      });
+
+      const avg = Math.round(overallPercentSum / catCount);
+      const rec = document.getElementById('diagnostic-recommendation');
+      if (avg >= 85) {
+        rec.innerText = `🌟 國語綜合表現卓越（指標均分 ${avg}%）！字形理解與修辭邏輯非常紮實，建議挑戰高階無盡 Boss 塔！`;
+      } else if (avg >= 60) {
+        rec.innerText = `👍 國語基礎良好（指標均分 ${avg}%）！在「多音字」與「關聯詞複句」方面表現不錯，建議針對錯別字與閱讀測驗進行加強。`;
+      } else {
+        rec.innerText = `💪 正在穩步成長中（指標均分 ${avg}%）！建議關閉答題時間限制，仔細閱讀引文與題目解析，累積詞彙量！`;
+      }
+    }
+
+    // 教師專區功能
+    function openTeacherPortal() {
+      showScreen('teacher');
+      document.getElementById('teacher-timer-input').value = gameState.defaultTimerConfig;
+    }
+
+    function saveTimerConfig() {
+      const val = parseInt(document.getElementById('teacher-timer-input').value, 10);
+      gameState.defaultTimerConfig = isNaN(val) ? 20 : val;
+      playSound('correct');
+      alert(`⏱️ 答題時間設定已更新為：${gameState.defaultTimerConfig === 0 ? '無時間限制' : gameState.defaultTimerConfig + ' 秒'}`);
+    }
+
+    function addNewQuestion() {
+      const cat = document.getElementById('new-q-cat').value;
+      const text = document.getElementById('new-q-text').value.trim();
+      const correct = parseInt(document.getElementById('new-q-correct').value, 10);
+      const opt0 = document.getElementById('new-q-opt0').value.trim();
+      const opt1 = document.getElementById('new-q-opt1').value.trim();
+      const opt2 = document.getElementById('new-q-opt2').value.trim();
+      const opt3 = document.getElementById('new-q-opt3').value.trim();
+      const explanation = document.getElementById('new-q-explanation').value.trim();
+
+      if (!text || !opt0 || !opt1 || !opt2 || !opt3) {
+        alert("⚠️ 請確實填寫題目內容與 4 個選項！");
+        return;
+      }
+
+      const newQ = {
+        id: "custom_" + Date.now(),
+        cat: cat,
+        text: text,
+        options: [opt0, opt1, opt2, opt3],
+        correct: correct,
+        explanation: explanation || "自訂題目解析"
+      };
+
+      gameState.questionBank.push(newQ);
+      saveToLocalStorage();
+      playSound('correct');
+      alert("✅ 成功新增題目至題庫！");
+
+      // 清空表格
+      document.getElementById('new-q-text').value = '';
+      document.getElementById('new-q-opt0').value = '';
+      document.getElementById('new-q-opt1').value = '';
+      document.getElementById('new-q-opt2').value = '';
+      document.getElementById('new-q-opt3').value = '';
+      document.getElementById('new-q-explanation').value = '';
+    }
+
+    function exportQuestionBank() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState.questionBank, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Mandarin_QuestionBank_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importQuestionBank(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            gameState.questionBank = imported;
+            saveToLocalStorage();
+            playSound('correct');
+            alert(`🎉 成功匯入 ${imported.length} 筆題目！`);
+          } else {
+            alert("⚠️ 檔案格式不符合 JSON 題目陣列結構！");
+          }
+        } catch (err) {
+          alert("❌ JSON 檔案解析失敗，請確認檔案格式！");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // 輔助功能: EXP & Coin
+    function addExpAndCoins(expAdd, coinAdd) {
+      gameState.exp += expAdd;
+      gameState.coins += coinAdd;
+
+      if (gameState.exp >= 100) {
+        gameState.level += Math.floor(gameState.exp / 100);
+        gameState.exp = gameState.exp % 100;
+        playSound('skill');
+        alert(`🌟 恭喜勇者升級至 LV.${gameState.level}！`);
+      }
+
+      updateHeaderStats();
+      saveToLocalStorage();
+    }
+
+    function updateHeaderStats() {
+      document.getElementById('player-level').innerText = gameState.level;
+      document.getElementById('player-exp-text').innerText = `${gameState.exp}/100`;
+      document.getElementById('player-exp-bar').style.width = `${gameState.exp}%`;
+      document.getElementById('player-coins').innerText = gameState.coins;
+    }
+
+    // LocalStorage 持久化存檔
+    function saveToLocalStorage() {
+      try {
+        localStorage.setItem('mandarin_hero_save_v2', JSON.stringify({
+          level: gameState.level,
+          exp: gameState.exp,
+          coins: gameState.coins,
+          diagnosticStats: gameState.diagnosticStats,
+          questionBank: gameState.questionBank
+        }));
+      } catch (e) {}
+    }
+
+    function loadFromLocalStorage() {
+      try {
+        const data = localStorage.getItem('mandarin_hero_save_v2');
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (parsed.level) gameState.level = parsed.level;
+          if (parsed.exp) gameState.exp = parsed.exp;
+          if (parsed.coins) gameState.coins = parsed.coins;
+          if (parsed.diagnosticStats) gameState.diagnosticStats = parsed.diagnosticStats;
+          if (parsed.questionBank && parsed.questionBank.length > 0) gameState.questionBank = parsed.questionBank;
+        }
+      } catch (e) {}
+    }
+
+
+    // 網頁載入初始化
+    window.onload = function() {
+      loadFromLocalStorage();
+      updateHeaderStats();
+      showScreen('hero-select');
+    };
+  </script>
+</body>
+</html>
