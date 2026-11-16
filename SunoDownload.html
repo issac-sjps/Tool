@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分頁錄音書籤工具</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 12px 0;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+      text-align: center;
+    }
+    .bm-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #2563eb;
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      cursor: grab;
+      transition: background-color 0.2s;
+    }
+    .bm-btn:hover {
+      background-color: #1d4ed8;
+    }
+    .bm-tip {
+      margin: 8px 0 0 0;
+      font-size: 13px;
+      color: #666666;
+    }
+  </style>
+</head>
+<body>
+  <a class="bm-btn"
+     href="javascript:(async()=>{try{const s=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});const a=s.getAudioTracks()[0];if(!a){alert('未偵測到音訊！請確認在彈出視窗中有勾選「同時分享分頁音訊」。');s.getTracks().forEach(t=>t.stop());return;}const r=new MediaRecorder(new MediaStream([a]));const c=[];r.ondataavailable=e=>c.push(e.data);r.onstop=()=>{const u=URL.createObjectURL(new Blob(c,{type:'audio/webm'}));const l=document.createElement('a');l.href=u;l.download=`tab-audio-${Date.now()}.webm`;l.click();s.getTracks().forEach(t=>t.stop());};r.start();s.getVideoTracks()[0].onended=()=>r.stop();}catch(e){console.log(e);}})();"
+     onclick="alert('請直接用滑鼠按住這個按鈕，將它「拖曳」到瀏覽器上方的書籤列放開即可！'); return false;">
+    🎙️ 錄製分頁音訊（請拖曳我到書籤列）
+  </a>
+  <p class="bm-tip">💡 提示：按住上方藍色按鈕不放，直接拉到瀏覽器頂端的「書籤列」放開即可安裝。</p>
+</body>
+</html>
