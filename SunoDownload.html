@@ -3,44 +3,325 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>分頁錄音書籤工具</title>
+  <title>Suno 音樂錄音與下載工具</title>
   <style>
     body {
       margin: 0;
-      padding: 12px 0;
+      padding: 16px;
       background: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+      color: #1e293b;
+    }
+    .card {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
       text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      color: #0f172a;
+    }
+    p.desc {
+      margin: 0 0 16px 0;
+      font-size: 13px;
+      color: #64748b;
     }
     .bm-btn {
       display: inline-block;
       padding: 12px 24px;
-      background-color: #2563eb;
+      background: #111827;
       color: #ffffff;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 15px;
       text-decoration: none;
       border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
       cursor: grab;
-      transition: background-color 0.2s;
+      transition: background 0.2s;
     }
     .bm-btn:hover {
-      background-color: #1d4ed8;
+      background: #374151;
     }
-    .bm-tip {
-      margin: 8px 0 0 0;
+    .tip {
+      margin: 10px 0 0 0;
+      font-size: 12px;
+      color: #475569;
+    }
+    .divider {
+      margin: 18px 0;
+      border: 0;
+      border-top: 1px dashed #cbd5e1;
+    }
+    .copy-btn {
+      padding: 8px 16px;
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
       font-size: 13px;
-      color: #666666;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background: #1d4ed8;
     }
   </style>
 </head>
 <body>
-  <a class="bm-btn"
-     href="javascript:(async()=>{try{const s=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});const a=s.getAudioTracks()[0];if(!a){alert('未偵測到音訊！請確認在彈出視窗中有勾選「同時分享分頁音訊」。');s.getTracks().forEach(t=>t.stop());return;}const r=new MediaRecorder(new MediaStream([a]));const c=[];r.ondataavailable=e=>c.push(e.data);r.onstop=()=>{const u=URL.createObjectURL(new Blob(c,{type:'audio/webm'}));const l=document.createElement('a');l.href=u;l.download=`tab-audio-${Date.now()}.webm`;l.click();s.getTracks().forEach(t=>t.stop());};r.start();s.getVideoTracks()[0].onended=()=>r.stop();}catch(e){console.log(e);}})();"
-     onclick="alert('請直接用滑鼠按住這個按鈕，將它「拖曳」到瀏覽器上方的書籤列放開即可！'); return false;">
-    🎙️ 錄製分頁音訊（請拖曳我到書籤列）
-  </a>
-  <p class="bm-tip">💡 提示：按住上方藍色按鈕不放，直接拉到瀏覽器頂端的「書籤列」放開即可安裝。</p>
+  <div class="card">
+    <h3>🎙️ Suno 音樂下載 / 錄音浮動面板</h3>
+    <p class="desc">免安裝外掛！將下方按鈕拖曳至書籤列，在 Suno 播放頁面點擊即可呼出控制面板</p>
+
+    <a class="bm-btn"
+       href="javascript:(function(){if(document.getElementById('sr-box'))return;let r=null,c=[];const san=s=>(s||'').replace(/[\\/:*?&quot;<>|\n\r\t]/g,' ').replace(/\s+/g,' ').trim().slice(0,100)||'suno';const b=document.createElement('div');b.id='sr-box';b.style.cssText='position:fixed;right:16px;bottom:16px;z-index:999999;background:#111;color:#fff;padding:12px;border-radius:10px;font:13px/1.5 sans-serif;box-shadow:0 4px 16px #0008;width:210px;';b.innerHTML='<div style=&quot;display:flex;justify-content:space-between;font-weight:bold;margin-bottom:8px&quot;><span>🎙️ Suno 錄音</span><span id=&quot;sr-x&quot; style=&quot;cursor:pointer&quot;>✕</span></div><button id=&quot;sr-s&quot; style=&quot;width:100%;margin-bottom:5px;cursor:pointer;padding:4px&quot;>▶ 從頭錄製目前歌曲</button><button id=&quot;sr-n&quot; style=&quot;width:100%;margin-bottom:5px;cursor:pointer;padding:4px&quot;>⏺ 從目前位置開始錄</button><button id=&quot;sr-p&quot; style=&quot;width:100%;margin-bottom:5px;cursor:pointer;padding:4px&quot; disabled>⏹ 停止並存檔</button><button id=&quot;sr-d&quot; style=&quot;width:100%;margin-bottom:6px;cursor:pointer;padding:4px&quot;>⬇ 直接下載目前音檔</button><div id=&quot;sr-t&quot; style=&quot;opacity:.85;font-size:12px&quot;>待命</div>';document.body.appendChild(b);const $=s=>b.querySelector(s),st=t=>$('#sr-t').textContent=t;const find=()=>{const l=[...document.querySelectorAll('audio,video')].filter(m=>m.currentSrc||m.src);return l.find(m=>!m.paused)||l[0]||null;};const title=()=>san(document.title.replace(/\s*[\|\-]\s*Suno.*$/i,''));const save=(blob,name)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),10000);};async function rec(from0){if(r)return st('已在錄音中');const a=find();if(!a)return st('找不到播放器，請先播放歌曲');let s;try{s=a.captureStream?a.captureStream():a.mozCaptureStream();}catch(e){return st('無法擷取:'+e.message);}if(!s.getAudioTracks().length){try{await a.play();}catch(_){}await new Promise(x=>setTimeout(x,300));}const as=new MediaStream(s.getAudioTracks());if(!as.getAudioTracks().length)return st('無音訊軌，請確認正在播放');c=[];r=new MediaRecorder(as);r.ondataavailable=e=>e.data.size&&c.push(e.data);const t=title();r.onstop=()=>{const blob=new Blob(c,{type:r.mimeType||'audio/webm'});const ext=(r.mimeType||'').includes('mp4')?'m4a':'webm';save(blob,t+'.'+ext);st('已存檔:'+t+'.'+ext);r=null;c=[];$('#sr-p').disabled=true;};a.addEventListener('ended',()=>{if(r&&r.state!=='inactive')r.stop();},{once:true});if(from0)a.currentTime=0;r.start(1000);if(a.paused)try{await a.play();}catch(_){}$('#sr-p').disabled=false;st('錄音中…播完自動存檔');}async function dl(){const a=find();if(!a)return st('找不到播放器');const re=/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;const m=(a.currentSrc||a.src||'').match(re)||location.pathname.match(re);const lnk=[...document.querySelectorAll('a[href*=&quot;/song/&quot;]')].find(x=>re.test(x.href));const id=m?m[1].toLowerCase():(lnk?lnk.href.match(re)[1].toLowerCase():null);const url=(a.currentSrc&&!a.currentSrc.startsWith('blob:'))?a.currentSrc:(id?'https://cdn1.suno.ai/'+id+'.mp3':null);if(!url)return st('找不到音檔網址，請改用錄音');st('嘗試下載中…');try{const res=await fetch(url);if(!res.ok)throw 0;const blob=await res.blob();save(blob,title()+'.mp3');st('MP3 下載完成');}catch(_){window.open(url,'_blank');st('已開啟音檔分頁，請按右鍵另存');}}$('#sr-x').onclick=()=>b.remove();$('#sr-s').onclick=()=>rec(true);$('#sr-n').onclick=()=>rec(false);$('#sr-p').onclick=()=>{if(r&&r.state!=='inactive')r.stop();};$('#sr-d').onclick=dl;})();"
+       onclick="alert('請按住這個黑色按鈕不放，直接「拖曳」到瀏覽器上方的書籤列放開即可安裝！'); return false;">
+      🎙️ Suno 錄音下載器（拖曳我到書籤列）
+    </a>
+    <p class="tip">💡 提示：支援一鍵呼出右下角面板、關閉面板（✕），以及自動抓取歌曲名稱存檔。</p>
+
+    <hr class="divider" />
+
+    <p class="desc" style="margin-bottom: 8px;">需要 <strong>自動轉存 128kbps MP3</strong>？請使用 Tampermonkey 完整版：</p>
+    <button type="button" class="copy-btn" onclick="copyTampermonkey()">📋 複製 Tampermonkey 完整腳本</button>
+    <span id="copy-msg" style="display:block; margin-top:6px; font-size:12px; color:#16a34a; font-weight:bold;"></span>
+  </div>
+
+  <textarea id="tm-source" style="display:none;">// ==UserScript==
+// @name         Suno 目前播放錄音 / 下載
+// @namespace    https://suno.com/
+// @version      1.0.0
+// @description  錄下 Suno 目前播放的音樂(播完自動存檔),或直接下載目前播放的音檔
+// @match        https://suno.com/*
+// @match        https://*.suno.com/*
+// @grant        GM_download
+// @connect      cdn1.suno.ai
+// @connect      cdn2.suno.ai
+// @require      https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js
+// @run-at       document-idle
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  let recorder = null;
+  let chunks = [];
+  let currentAudio = null;
+
+  const sanitize = (s) =>
+    (s || '').replace(/[\\/:*?"<>|\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100) || 'suno';
+
+  // ---------- UI ----------
+  const box = document.createElement('div');
+  box.style.cssText =
+    'position:fixed;right:16px;bottom:16px;z-index:999999;background:#111;color:#fff;' +
+    'padding:10px 12px;border-radius:10px;font:13px/1.5 sans-serif;box-shadow:0 4px 16px #0008;width:210px;';
+  box.innerHTML = `
+    <div style="font-weight:bold;margin-bottom:6px">🎙️ Suno 錄音</div>
+    <button id="sr-start" style="width:100%;margin-bottom:4px;cursor:pointer">▶ 從頭錄製目前歌曲</button>
+    <button id="sr-now" style="width:100%;margin-bottom:4px;cursor:pointer">⏺ 從目前位置開始錄</button>
+    <button id="sr-stop" style="width:100%;margin-bottom:4px;cursor:pointer" disabled>⏹ 停止並存檔</button>
+    <button id="sr-direct" style="width:100%;margin-bottom:4px;cursor:pointer">⬇ 直接下載目前音檔</button>
+    <div id="sr-status" style="opacity:.8">待命</div>`;
+  document.body.appendChild(box);
+  const $ = (s) => box.querySelector(s);
+  const status = (t) => ($('#sr-status').textContent = t);
+
+  function findAudio() {
+    const list = [...document.querySelectorAll('audio, video')].filter((m) => m.currentSrc || m.src);
+    return list.find((m) => !m.paused) || list[0] || null;
+  }
+
+  function getTitle() {
+    const t = document.title.replace(/\s*\|\s*Suno.*$/i, '').replace(/\s*-\s*Suno.*$/i, '');
+    return sanitize(t);
+  }
+
+  function pickMime() {
+    const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    return types.find((t) => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  async function startRecording(fromStart) {
+    if (recorder) return status('已在錄音中');
+    const audio = findAudio();
+    if (!audio) return status('找不到播放器,請先播放一首歌');
+    currentAudio = audio;
+
+    let stream;
+    try {
+      stream = audio.captureStream ? audio.captureStream() : audio.mozCaptureStream();
+    } catch (e) {
+      return status('此頁面無法擷取音訊:' + e.message);
+    }
+    const audioTracks = stream.getAudioTracks();
+    if (!audioTracks.length) {
+      try { await audio.play(); } catch (_) {}
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    const aStream = new MediaStream(stream.getAudioTracks());
+    if (!aStream.getAudioTracks().length) return status('沒有音訊軌,請確認歌曲正在播放');
+
+    const mime = pickMime();
+    chunks = [];
+    recorder = new MediaRecorder(aStream, mime ? { mimeType: mime } : undefined);
+    recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    recorder.onstop = save;
+    const title = getTitle();
+    recorder._title = title;
+
+    audio.addEventListener('ended', stopRecording, { once: true });
+
+    if (fromStart) {
+      audio.currentTime = 0;
+    }
+    recorder.start(1000);
+    if (audio.paused) { try { await audio.play(); } catch (_) {} }
+
+    $('#sr-stop').disabled = false;
+    status('錄音中… 播完會自動存檔');
+  }
+
+  function stopRecording() {
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  }
+
+  function saveBlob(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  }
+
+  async function toMp3(blob) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+    ctx.close();
+    const channels = Math.min(buf.numberOfChannels, 2);
+    const enc = new lamejs.Mp3Encoder(channels, buf.sampleRate, 128);
+    const toInt16 = (f32) => {
+      const out = new Int16Array(f32.length);
+      for (let i = 0; i < f32.length; i++) {
+        const s = Math.max(-1, Math.min(1, f32[i]));
+        out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+      }
+      return out;
+    };
+    const left = toInt16(buf.getChannelData(0));
+    const right = channels > 1 ? toInt16(buf.getChannelData(1)) : null;
+    const parts = [];
+    const BLOCK = 1152 * 20;
+    for (let i = 0; i < left.length; i += BLOCK) {
+      const l = left.subarray(i, i + BLOCK);
+      const d = right ? enc.encodeBuffer(l, right.subarray(i, i + BLOCK)) : enc.encodeBuffer(l);
+      if (d.length) parts.push(new Uint8Array(d));
+      if ((i / BLOCK) % 10 === 0) {
+        status(`轉換 MP3 中… ${Math.round((i / left.length) * 100)}%`);
+        await new Promise((r) => setTimeout(r, 0));
+      }
+    }
+    const end = enc.flush();
+    if (end.length) parts.push(new Uint8Array(end));
+    return new Blob(parts, { type: 'audio/mpeg' });
+  }
+
+  async function save() {
+    const type = (recorder && recorder.mimeType) || 'audio/webm';
+    const title = (recorder && recorder._title) || 'suno';
+    const blob = new Blob(chunks, { type });
+    recorder = null;
+    chunks = [];
+    $('#sr-stop').disabled = true;
+    try {
+      status('轉換 MP3 中…');
+      const mp3 = await toMp3(blob);
+      saveBlob(mp3, `${title}.mp3`);
+      status(`已存檔:${title}.mp3`);
+    } catch (e) {
+      console.warn('[Suno] MP3 轉換失敗,改存原始格式', e);
+      const ext = type.includes('ogg') ? 'ogg' : type.includes('mp4') ? 'mp4' : 'webm';
+      saveBlob(blob, `${title}.${ext}`);
+      status(`MP3 轉換失敗,已存成 ${ext}`);
+    }
+  }
+
+  function downloadCdnMp3() {
+    const id = getSongId();
+    if (!id) return status('找不到歌曲 ID,請改用錄音');
+    status('從 CDN 下載 MP3…');
+    GM_download({
+      url: `https://cdn1.suno.ai/${id}.mp3`,
+      name: `${getTitle()}.mp3`,
+      onload: () => status('MP3 下載完成'),
+      onerror: () => status('CDN 下載失敗,請改用錄音'),
+    });
+  }
+
+  async function directDownload() {
+    const audio = findAudio();
+    if (!audio) return status('找不到播放器');
+    const src = audio.currentSrc || audio.src;
+    if (!src) return downloadCdnMp3();
+    if (src.startsWith('blob:')) {
+      try {
+        status('讀取 blob 中…');
+        const blob = await (await fetch(src)).blob();
+        if (!blob.size) throw new Error('empty');
+        const ext = /mpeg|mp3/.test(blob.type) ? 'mp3'
+          : /wav/.test(blob.type) ? 'wav'
+          : /mp4|aac/.test(blob.type) ? 'm4a'
+          : /ogg/.test(blob.type) ? 'ogg' : 'mp3';
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${getTitle()}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        return status(`已存檔:${a.download}`);
+      } catch (e) {
+        return downloadCdnMp3();
+      }
+    }
+    status('下載中…');
+    GM_download({
+      url: src,
+      name: `${getTitle()}.mp3`,
+      onload: () => status('下載完成'),
+      onerror: () => status('下載失敗,請改用錄音'),
+    });
+  }
+
+  function getSongId() {
+    const re = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    const audio = findAudio();
+    const m = (audio && (audio.currentSrc || audio.src || '').match(re)) || location.pathname.match(re);
+    if (m) return m[1].toLowerCase();
+    const a = [...document.querySelectorAll('a[href*="/song/"]')].find((x) => re.test(x.href));
+    return a ? a.href.match(re)[1].toLowerCase() : null;
+  }
+
+  $('#sr-start').onclick = () => startRecording(true);
+  $('#sr-now').onclick = () => startRecording(false);
+  $('#sr-stop').onclick = stopRecording;
+  $('#sr-direct').onclick = directDownload;
+})();</textarea>
+
+  <script>
+    function copyTampermonkey() {
+      const code = document.getElementById('tm-source').value;
+      navigator.clipboard.writeText(code).then(() => {
+        document.getElementById('copy-msg').textContent = '✅ 已複製！請打開 Tampermonkey 新增腳本並貼上。';
+      });
+    }
+  </script>
 </body>
 </html>
